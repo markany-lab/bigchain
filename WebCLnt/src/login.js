@@ -1,5 +1,6 @@
 import DAppAccount_ from './dappchain/dapp_account.js'
 import axios from 'axios'
+import env from '../../.env.json'
 
 export default class Login_ {
   static async InitDAppAccount(eth_account) {
@@ -12,8 +13,8 @@ export default class Login_ {
     else {
       console.log("login.js, ethereum account: " + EthAccount)
     }
-    const KeyServerUrl = 'http://127.0.0.1:3000'
-
+    
+    const KeyServerUrl = env.key_server_ip + ':' + env.key_server_port
     const QueryStrUrl = KeyServerUrl + '/query_string'
     const QueryKeyUrl = KeyServerUrl + '/query_key'
 
