@@ -39,7 +39,10 @@ function is_setup_already {
      [ $(check_directory_exists ./TruffLeBToken/node_modules) = 1 ] &&
      [ $(check_directory_exists ./TruffLeGateWay/node_modules) = 1 ] &&
      [ $(check_file_exists ./LoomNetwork/loom) = 1 ] &&
-     [ $(check_directory_exists ./TstBToken/node_modules) = 1 ]; then
+     [ $(check_directory_exists ./TstBToken/node_modules) = 1 ] &&
+     [ $(check_directory_exists ./ScriptS/SampLes/node_modules) = 1 ] &&
+     [ $(check_directory_exists ./ScriptS/Listener/node_modules) = 1 ] &&
+     [ $(check_directory_exists ./ScriptS/ApiS/node_modules) = 1 ]; then
     echo 1
   else
     echo 0
@@ -71,6 +74,21 @@ function setup {
   echo "install testcase"
   yarn
   cd ..
+
+  cd ./ScriptS/SampLe
+  echo "install sample scripts"
+  yarn
+  cd ../../
+
+  cd ./ScriptS/Listener
+  echo "install listener scripts"
+  yarn
+  cd ../../
+
+  cd ./ScriptS/ApiS
+  echo "install apis scripts"
+  yarn
+  cd ../../
 }
 
 function start_webclient {
