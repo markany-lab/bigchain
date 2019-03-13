@@ -1,4 +1,8 @@
 #!/bin/bash
+SCRIPT=`realpath -s $0`
+SCRIPTPATH=`dirname ${SCRIPT}`
+SCRIPTNAME=`basename ${SCRIPT}`
+cd ${SCRIPTPATH}
 
 # Ports used
 webclient_port=8080

@@ -18,11 +18,16 @@ var {
   SignedTxMiddleware
 } = require('loom-js')
 
+var Env = require('../../.env.json')
+const HotWaLLetAddr = Env.key_server_ip + ':' + Env.key_server_port
+const QueryStrUrL = HotWaLLetAddr + '/query_string'
+const QueryKeyUrL = HotWaLLetAddr + '/query_key'
+
 async function GetDappPrivateKeyAsync(www3, waLLet) {
   var Sign
   await Axios({
       method: 'post',
-      url: 'http://127.0.0.1:3000/query_string',
+      url: QueryStrUrL,
       data: {}
     })
     .then(await
@@ -43,7 +48,7 @@ async function GetDappPrivateKeyAsync(www3, waLLet) {
 
   await Axios({
       method: 'post',
-      url: 'http://127.0.0.1:3000/query_key',
+      url: QueryKeyUrL,
       data: {
         confirmData: ConfirmData
       }
