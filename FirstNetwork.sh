@@ -73,18 +73,15 @@ function setup {
   cd ../TstBToken
   echo "install testcase"
   yarn
-  cd ..
-
-  cd ./ScriptS/SampLe
+  cd ../
+  cd ./ScriptS/SampLeS
   echo "install sample scripts"
   yarn
   cd ../../
-
   cd ./ScriptS/Listener
   echo "install listener scripts"
   yarn
   cd ../../
-
   cd ./ScriptS/ApiS
   echo "install apis scripts"
   yarn
