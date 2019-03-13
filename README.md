@@ -10,20 +10,19 @@
 - //$ npm install -g truffle
 
 # nvm 설치(windows)
-- > nvm install v6.9.5
-- > nvm install v8.4
-- > nvm use v8.4
-- > npm install --global yarn
-- > npm install --global --production windows-build-tools # 관리자 권한으로 실행
-- > npm config set python C:\python27
--
+- $ nvm install v6.9.5
+- $ nvm install v8.4
+- $ nvm use v8.4
+- $ npm install --global yarn
+- $ npm install --global --production windows-build-tools # 관리자 권한으로 실행
+- $ npm config set python C:\python27
+
 # golang 설치
 - $ vim ~/.bashrc
-- +----+----+----+----+----+----
-- export GOPATH="$HOME/gopath"
-- export GOROOT="/opt/go"
-- PATH=$GOROOT/bin:$GOPATH/bin:$PATH
-- +----+----+----+----+----+----
+- > export GOPATH="$HOME/gopath"
+- > export GOROOT="/opt/go"
+- > PATH=$GOROOT/bin:$GOPATH/bin:$PATH
+
 - $ source ~/.bashrc
 - $ export GO_VER=1.11.1
 - $ export GO_URL=https://storage.googleapis.com/golang/go${GO_VER}.linux-amd64.tar.gz
