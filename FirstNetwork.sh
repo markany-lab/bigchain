@@ -168,9 +168,9 @@ function start_ganache {
 
 function start_geth {
   echo "start geth"
-  ./ethereum/geth/cleanup.sh
-  ./ethereum/geth/init.sh user
-  ./ethereum/geth/start.sh
+  ./geth/cleanup.sh
+  ./geth/init.sh user
+  ./geth/start.sh
 }
 
 # Mapping is necessary to "mirroring" the token on mainnet and dappchain
