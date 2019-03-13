@@ -1,0 +1,9 @@
+app.db/
+chaindata/
+genesis.json
+loom
+loom.log
+loom.pid
+loom.yaml
+oracle.log
+oracle_eth_priv.key
