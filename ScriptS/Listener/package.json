@@ -1,0 +1,11 @@
+{
+  "name": "listener-of-project-b",
+  "license": "MIT",
+  "scripts": {
+    "listener_start": "node app.js"
+  },
+  "dependencies": {
+    "loom-js": "^1.27.1",
+    "web3": "^1.0.0-beta.34"
+  }
+}
