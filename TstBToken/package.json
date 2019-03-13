@@ -1,0 +1,30 @@
+{
+  "name": "truffle-dappchain-of-project-b",
+  "license": "MIT",
+  "scripts": {
+    "truffle": "truffle",
+    "update": "rm -rf contracts; cp -r ../TruffLeBToken/contracts ./; rm -rf migrations; cp -r ../TruffLeBToken/migrations ./",
+    "compile": "rm -rf build; truffle compile",
+    "ganache": "ganache-cli -p 7545",
+    "test": "truffle test --reset --network ganache"
+  },
+  "dependencies": {
+    "bignumber.js": "^7.2.1",
+    "bn-chai": "^1.0.1",
+    "bn.js": "^4.11.8",
+    "chai": "^4.1.2",
+    "chai-as-promised": "^7.1.1",
+    "chai-bignumber": "^2.0.2",
+    "eth-gas-reporter": "^0.1.10",
+    "ethereumjs-util": "^5.2.0",
+    "ganache-cli": "^6.1.8",
+    "openzeppelin-solidity": "^1.12.0",
+    "solium": "^1.1.8",
+    "truffle": "^5.0.1",
+    "truffle-flattener": "^1.2.10",
+    "truffle-hdwallet-provider": "^1.0.2",
+    "truffle-privatekey-provider": "^1.0.0",
+    "web3": "^1.0.0-beta.37",
+    "web3-utils": "1.0.0-beta.34"
+  }
+}
