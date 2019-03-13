@@ -8,7 +8,9 @@
 - $ npm install --global yarn
 - $ sudo apt-get install python
 - $ npm install -g truffle
+- $ npm install -g express-generator
 - $ npm install -g forever
+- $ npm install -g nodemon
 
 # nvm 설치(windows)
 - $ nvm install v6.9.5
@@ -20,10 +22,9 @@
 
 # golang 설치
 - $ vim ~/.bashrc
-- > export GOPATH="$HOME/gopath"
-- > export GOROOT="/opt/go"
-- > PATH=$GOROOT/bin:$GOPATH/bin:$PATH
-
+  - > export GOPATH="$HOME/gopath"
+  - > export GOROOT="/opt/go"
+  - > PATH=$GOROOT/bin:$GOPATH/bin:$PATH
 - $ source ~/.bashrc
 - $ export GO_VER=1.11.1
 - $ export GO_URL=https://storage.googleapis.com/golang/go${GO_VER}.linux-amd64.tar.gz
