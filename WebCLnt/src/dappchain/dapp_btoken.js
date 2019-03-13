@@ -1,6 +1,6 @@
 import Web3 from 'web3'
-import jsonBToken from '../../../TruffleDAppChain/build/contracts/BToken.json'
-const json721ZToken = require('../../../TruffleDAppChain/build/contracts/ERC721ZToken.json')
+import jsonBToken from '../../../TruffLeBToken/build/contracts/BToken.json'
+const json721ZToken = require('../../../TruffLeBToken/build/contracts/ERC721ZToken.json')
 
 const {
   LocalAddress,

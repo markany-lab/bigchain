@@ -34,7 +34,7 @@ function check_port {
 function is_setup_already {
   if [ $(check_directory_exists ./WebCLnt/node_modules) = 1 ] &&
      [ $(check_directory_exists ./HotWaLLetSrv/node_modules) = 1 ] &&
-     [ $(check_directory_exists ./TruffleDAppChain/node_modules) = 1 ] &&
+     [ $(check_directory_exists ./TruffLeBToken/node_modules) = 1 ] &&
      [ $(check_directory_exists ./TruffleEthereum/node_modules) = 1 ] &&
      [ $(check_file_exists ./LoomNetwork/loom) = 1 ] &&
      [ $(check_directory_exists ./TstBToken/node_modules) = 1 ]; then
@@ -52,7 +52,7 @@ function setup {
   cd ../HotWaLLetSrv
   echo "install hot wallet server"
   yarn
-  cd ../TruffleDAppChain
+  cd ../TruffLeBToken
   echo "install truffle loom network"
   yarn
   cd ../TruffleEthereum
@@ -87,7 +87,7 @@ function start_hotwalletserver {
 
 function deploy_truffle_dappchain {
   echo "deploy truffle loom network"
-  cd ./TruffleDAppChain
+  cd ./TruffLeBToken
   yarn deploy
   cd ..
 }
