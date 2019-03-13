@@ -1,0 +1,22 @@
+{
+  "name": "truffle-ethereum-of-project-b",
+  "license": "MIT",
+  "scripts": {
+    "truffle": "truffle",
+    "compile": "rm -rf build; truffle compile",
+    "deploy:ganache": "rm -rf build; truffle deploy --reset --network ganache",
+    "deploy:geth": "rm -rf build; truffle deploy --reset --network geth",
+    "deploy:rinkeby": "rm -rf build; truffle deploy --network rinkeby",
+    "ganache-cli": "ganache-cli -h 0.0.0.0 -p 8545 -m gravity top burden flip student usage spell purchase hundred improve check genre"
+  },
+  "dependencies": {
+    "ganache-cli": "^6.2.5",
+    "js-yaml": "^3.12.2",
+    "openzeppelin-solidity": "^1.12.0",
+    "strip-hex-prefix": "^1.0.0",
+    "truffle": "^4.1.13",
+    "truffle-hdwallet-provider": "^1.0.2",
+    "truffle-privatekey-provider": "^1.0.0",
+    "write-yaml": "^1.0.0"
+  }
+}

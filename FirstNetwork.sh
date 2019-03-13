@@ -4,6 +4,8 @@
 webclient_port=8080
 hotwalletserver_port=3000
 ganache_port=8545
+geth_port_1=8545
+geth_port_2=8546
 loom_port_1=46657
 loom_port_2=46658
 
@@ -35,7 +37,7 @@ function is_setup_already {
   if [ $(check_directory_exists ./WebCLnt/node_modules) = 1 ] &&
      [ $(check_directory_exists ./HotWaLLetSrv/node_modules) = 1 ] &&
      [ $(check_directory_exists ./TruffLeBToken/node_modules) = 1 ] &&
-     [ $(check_directory_exists ./TruffleEthereum/node_modules) = 1 ] &&
+     [ $(check_directory_exists ./TruffLeGateWay/node_modules) = 1 ] &&
      [ $(check_file_exists ./LoomNetwork/loom) = 1 ] &&
      [ $(check_directory_exists ./TstBToken/node_modules) = 1 ]; then
     echo 1
@@ -53,10 +55,10 @@ function setup {
   echo "install hot wallet server"
   yarn
   cd ../TruffLeBToken
-  echo "install truffle loom network"
+  echo "install truffle btoken"
   yarn
-  cd ../TruffleEthereum
-  echo "install truffle Ethereum"
+  cd ../TruffLeGateWay
+  echo "install truffle gateway"
   yarn
   if [ $(check_directory_exists ../LoomNetwork) = 0 ]; then
     mkdir ../LoomNetwork
@@ -85,21 +87,42 @@ function start_hotwalletserver {
     cd ..
 }
 
-function deploy_truffle_dappchain {
-  echo "deploy truffle loom network"
+function deploy_truffle_btoken_loom {
+  echo "deploy truffle btoken to loom_dapp_chain"
   cd ./TruffLeBToken
-  yarn deploy
+  yarn deploy:loom:reset
   cd ..
 }
 
-function deploy_truffle_ethereum {
-  echo "deploy truffle Ethereum"
-  cd ./TruffleEthereum
-  yarn deploy
+function deploy_truffle_btoken_extdev {
+  echo "deploy truffle btoken to extdev_plasma_us1"
+  cd ./TruffLeBToken
+  yarn deploy:extdev:reset
   cd ..
 }
 
-function start_dappchain {
+function deploy_truffle_gateway_ganache {
+  echo "deploy truffle gateway to ganache"
+  cd ./TruffLeGateWay
+  yarn deploy:ganache
+  cd ..
+}
+
+function deploy_truffle_gateway_geth {
+  echo "deploy truffle gateway to geth"
+  cd ./TruffLeGateWay
+  yarn deploy:geth
+  cd ..
+}
+
+function deploy_truffle_gateway_rinkeby {
+  echo "deploy truffle gateway to rinkeby"
+  cd ./TruffLeGateWay
+  yarn deploy:rinkeby
+  cd ..
+}
+
+function start_loomnetwork {
   echo "start loom network"
   cd ./LoomNetwork
   ./loom init -f; cp ./genesis.example.json ./genesis.json; ./loom reset; ./loom run > ./loom.log 2>&1 &
@@ -111,8 +134,8 @@ function start_dappchain {
 }
 
 function start_ganache {
-  echo "start ethereum"
-  cd ./TruffleEthereum
+  echo "start ganache"
+  cd ./TruffLeGateWay
   #yarn ganache-cli --account \
   #  "0x70f1384b24df3d2cdaca7974552ec28f055812ca5e4da7a0ccd0ac0f8a4a9b00,100000000000000000000000" \
   #  > ./ganache.log 2>&1 &
@@ -122,6 +145,13 @@ function start_ganache {
   sleep 10
   cat ./ganache.log
   cd ..
+}
+
+function start_geth {
+  echo "start geth"
+  ./ethereum/geth/cleanup.sh
+  ./ethereum/geth/init.sh user
+  ./ethereum/geth/start.sh
 }
 
 # Mapping is necessary to "mirroring" the token on mainnet and dappchain
@@ -151,7 +181,7 @@ setup)
   ;;
 start_webclient)
   if [ $(is_setup_already) = 0 ]; then
-    echo "please use the setup command first: ./Network.sh setup"
+    echo "please use the setup command first: ./FirstNetwork.sh setup"
     echo
     exit -1
   fi
@@ -164,7 +194,7 @@ start_webclient)
   ;;
 start_hotwalletserver)
     if [ $(is_setup_already) = 0 ]; then
-      echo "please use the setup command first: ./Network.sh setup"
+      echo "please use the setup command first: ./FirstNetwork.sh setup"
       echo
       exit -1
     fi
@@ -175,9 +205,9 @@ start_hotwalletserver)
     fi
     start_hotwalletserver
     ;;
-start_dappchain)
+start_loomnetwork)
   if [ $(is_setup_already) = 0 ]; then
-    echo "please use the setup command first: ./Network.sh setup"
+    echo "please use the setup command first: ./FirstNetwork.sh setup"
     echo
     exit -1
   fi
@@ -186,27 +216,69 @@ start_dappchain)
     echo
     exit -1
   fi
-  start_dappchain
-  deploy_truffle_dappchain
+  start_loomnetwork
+  deploy_truffle_btoken_loom
   tail -f ./LoomNetwork/loom.log
   ;;
 start_ganache)
   if [ $(is_setup_already) = 0 ]; then
-    echo "please use the setup command first: ./Network.sh setup"
+    echo "please use the setup command first: ./FirstNetwork.sh setup"
     echo
     exit -1
   fi
   if [ $(check_port $ganache_port) != 0 ]; then
-    echo "Ganache port $ganache_port is already in use"
+    echo "ganache port $ganache_port is already in use"
     echo
     exit -1
   fi
   start_ganache
-  deploy_truffle_ethereum
-  tail -f ./TruffleEthereum/ganache.log
+  deploy_truffle_gateway_ganache
+  tail -f ./TruffLeGateWay/ganache.log
+  ;;
+start_geth)
+  if [ $(is_setup_already) = 0 ]; then
+    echo "please use the setup command first: ./FirstNetwork.sh setup"
+    echo
+    exit -1
+  fi
+  if [ $(check_port $geth_port_1) != 0 ] || [ $(check_port $geth_port_2) != 0 ]; then
+    echo "some port from geth already in use [$geth_port_1 or $geth_port_2]"
+    echo
+    exit -1
+  fi
+  start_geth
+  ;;
+deploy_gateway_geth)
+  if [ $(is_setup_already) = 0 ]; then
+    echo "please use the setup command first: ./FirstNetwork.sh setup"
+    echo
+    exit -1
+  fi
+  if [ $(check_port $geth_port_1) == 0 ] || [ $(check_port $geth_port_2) == 0 ]; then
+    echo "please start geth command first: ./FirstNetwork.sh start_geth"
+    echo
+    exit -1
+  fi
+  deploy_truffle_gateway_geth
+  ;;
+deploy_gateway_rinkeby)
+  if [ $(is_setup_already) = 0 ]; then
+    echo "please use the setup command first: ./FirstNetwork.sh setup"
+    echo
+    exit -1
+  fi
+  deploy_truffle_gateway_rinkeby
+  ;;
+deploy_btoken_extdev)
+  if [ $(is_setup_already) = 0 ]; then
+    echo "please use the setup command first: ./FirstNetwork.sh setup"
+    echo
+    exit -1
+  fi
+  deploy_truffle_btoken_extdev
   ;;
 *)
-   echo "usage: $0 {setup|start_webclient|start_hotwalletserver|start_dappchain|start_ganache}"
+   echo "usage: $0 {setup|start_webclient|start_hotwalletserver|start_loomnetwork|start_ganache|start_geth|deploy_gateway_geth|deploy_gateway_rinkeby|deploy_btoken_extdev}"
 esac
 
 exit 0
