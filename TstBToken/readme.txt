@@ -1,2 +1,4 @@
-yarn ganache-cli -p 7545
-yarn truffle test --network development
+$ yarn update
+$ yarn compile
+$ yarn ganache
+$ yarn test
