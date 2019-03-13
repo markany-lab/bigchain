@@ -6,4 +6,4 @@ cd ${SCRIPTPATH}
 
 NOW=`date +%y%m%d-%H%M%S`
 
-./node_modules/.bin/forever start -p ${SCRIPTPATH} -l ./log/${NOW}.log -a ./app.js
+forever start -p ${SCRIPTPATH} -l ./log/${NOW}.log -a ./app.js

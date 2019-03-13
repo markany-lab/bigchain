@@ -7,7 +7,8 @@
 - $ nvm alias default v8.9 #set default to v8.9
 - $ npm install --global yarn
 - $ sudo apt-get install python
-- //$ npm install -g truffle
+- $ npm install -g truffle
+- $ npm install -g forever
 
 # nvm 설치(windows)
 - $ nvm install v6.9.5
