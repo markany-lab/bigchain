@@ -1,0 +1,1 @@
+0 0 * * * /ext/markany/claymore/bin/rotate-log.sh

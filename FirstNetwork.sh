@@ -32,7 +32,7 @@ function check_port {
 }
 
 function is_setup_already {
-  if [ $(check_directory_exists ./WebCLient/node_modules) = 1 ] &&
+  if [ $(check_directory_exists ./WebCLnt/node_modules) = 1 ] &&
      [ $(check_directory_exists ./HotWaLLetSrv/node_modules) = 1 ] &&
      [ $(check_directory_exists ./TruffleDAppChain/node_modules) = 1 ] &&
      [ $(check_directory_exists ./TruffleEthereum/node_modules) = 1 ] &&
@@ -46,7 +46,7 @@ function is_setup_already {
 
 # Setup function does the first work of download node_packages and loom binary
 function setup {
-  cd ./WebCLient
+  cd ./WebCLnt
   echo "install web client"
   yarn
   cd ../HotWaLLetSrv
@@ -73,7 +73,7 @@ function setup {
 
 function start_webclient {
     echo "running web client"
-    cd ./WebCLient
+    cd ./WebCLnt
     yarn serve
     cd ..
 }
