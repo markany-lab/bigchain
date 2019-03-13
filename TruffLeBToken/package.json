@@ -1,0 +1,35 @@
+{
+  "name": "truffle-dappchain-of-project-b",
+  "license": "MIT",
+  "scripts": {
+    "truffle": "truffle",
+    "compile": "rm -rf build; truffle compile",
+    "deploy:geth": "rm -rf build; truffle deploy --network geth",
+    "deploy:geth:reset": "rm -rf build; truffle deploy --reset --network geth",
+    "deploy:rinkeby": "rm -rf build; truffle deploy --network rinkeby",
+    "deploy:rinkeby:reset": "rm -rf build; truffle deploy -reset --network rinkeby",
+    "deploy:loom": "rm -rf build; truffle deploy --network loom_dapp_chain",
+    "deploy:loom:reset": "rm -rf build; truffle deploy --reset --network loom_dapp_chain",
+    "deploy:extdev": "rm -rf build; truffle deploy --network extdev_plasma_us1",
+    "deploy:extdev:reset": "rm -rf build; truffle deploy --reset --network extdev_plasma_us1"
+  },
+  "dependencies": {
+    "bignumber.js": "^7.2.1",
+    "bn-chai": "^1.0.1",
+    "bn.js": "^4.11.8",
+    "chai": "^4.1.2",
+    "chai-as-promised": "^7.1.1",
+    "chai-bignumber": "^2.0.2",
+    "eth-gas-reporter": "^0.1.10",
+    "ethereumjs-util": "^5.2.0",
+    "loom-truffle-provider": "^0.8.0",
+    "openzeppelin-solidity": "^1.12.0",
+    "solium": "^1.1.8",
+    "truffle": "^4.1.13",
+    "truffle-flattener": "^1.2.10",
+    "truffle-hdwallet-provider": "^1.0.2",
+    "truffle-privatekey-provider": "^1.0.0",
+    "web3": "^1.0.0-beta.37",
+    "web3-utils": "1.0.0-beta.34"
+  }
+}

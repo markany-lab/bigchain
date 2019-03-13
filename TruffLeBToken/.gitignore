@@ -1,4 +1,5 @@
-_backup
+_backup/
 node_modules/
+build/
 rinkeby_api.token
 rinkeby_private.key
