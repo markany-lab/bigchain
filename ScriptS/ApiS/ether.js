@@ -1,83 +1,78 @@
 const jsonGateway = require('./Gateway.json')
 var Web3 = require('web3')
-var Web3Util = require('web3-utils')
-var Util = require('ethereumjs-util')
-var EtherWallet = require('ethereumjs-wallet')
-var Tx = require('ethereumjs-tx')
-var fs = require('fs')
-var axios = require('axios')
-var rinkeby = require('./rinkeby.json')
-var env = require('../../.env.json')
+var Web3UtiL = require('web3-utils')
+var EthUtiL = require('ethereumjs-util')
+var EthWaLLet = require('ethereumjs-wallet')
+var EthTx = require('ethereumjs-tx')
+var FiLeSystem = require('fs')
+var Https = require('https')
+var Axios = require('axios')
+var Rinkeby = require('./rinkeby.json')
 
-const KeyServerUrl = env.key_server_ip + ':' + env.key_server_port
-const QueryStrUrl = KeyServerUrl + '/query_string'
-const QueryKeyUrl = KeyServerUrl + '/query_key'
+var Env = require('../../.env.json')
+const HotWaLLetAddr = Env.key_server_ip + ':' + Env.key_server_port
+var Agent = Axios.create({
+  baseURL: HotWaLLetAddr,
+  httpsAgent: new Https.Agent({
+    rejectUnauthorized: false,
+  })
+})
 
 function saveKeyStore(path, wallet, password) {
   const filename = wallet.getV3Filename(Date.now())
   const v3 = wallet.toV3(password)
-  fs.writeFileSync(path + filename, JSON.stringify(v3), 'utf8')
+  FiLeSystem.writeFileSync(path + filename, JSON.stringify(v3), 'utf8')
 }
 
 function loadKeyStore(path, password) {
-  const v3 = JSON.parse(fs.readFileSync(path, 'utf8'))
-  return EtherWallet.fromV3(v3, password)
+  const v3 = JSON.parse(FiLeSystem.readFileSync(path, 'utf8'))
+  return EthWaLLet.fromV3(v3, password)
 }
 
 async function getDappPrivateKey(web3, wallet, method) {
   var Sign
-  await axios({
-    method: 'post',
-    url: QueryStrUrl,
-    data: {}
+  await Agent.post('/query_string', {})
+  .then(await function (data) {
+    var TgtStr = data.data.string;
+    if (method == 'web3') {
+      web3.eth.accounts.wallet.add(wallet.getPrivateKeyString())
+      return web3.eth.sign(TgtStr, wallet.getAddressString(), async function (error, result) {
+        Sign = result;
+      });
+    } else if (method == 'ether-util') {
+      var msg = Buffer.from(TgtStr, 'utf8')
+      const prefix = new Buffer("\x19Ethereum Signed Message:\n")
+      const prefixedMsg = Buffer.concat([prefix, new Buffer(String(msg.length)), msg])
+      const sign = EthUtiL.ecsign(EthUtiL.keccak256(prefixedMsg), wallet.getPrivateKey())
+      Sign = EthUtiL.bufferToHex(sign.r) + EthUtiL.bufferToHex(sign.s).substr(2) + EthUtiL.bufferToHex(sign.v).substr(2)
+    }
   })
-    .then(await
-      function (data) {
-        var TgtStr = data.data.string;
-        if (method == 'web3') {
-          web3.eth.accounts.wallet.add(wallet.getPrivateKeyString())
-          return web3.eth.sign(TgtStr, wallet.getAddressString(), async function (error, result) {
-            Sign = result;
-          });
-        } else if (method == 'ether-util') {
-          var msg = Buffer.from(TgtStr, 'utf8')
-          const prefix = new Buffer("\x19Ethereum Signed Message:\n")
-          const prefixedMsg = Buffer.concat([prefix, new Buffer(String(msg.length)), msg])
-          const sign = Util.ecsign(Util.keccak256(prefixedMsg), wallet.getPrivateKey())
-          Sign = Util.bufferToHex(sign.r) + Util.bufferToHex(sign.s).substr(2) + Util.bufferToHex(sign.v).substr(2)
-        }
-      })
-    .catch(err => console.log(err))
+  .catch(err => console.log(err))
 
   const ConfirmData = {
     ethAddress: wallet.getAddressString(),
     sign: Sign
   }
 
-  await axios({
-    method: 'post',
-    url: QueryKeyUrl,
-    data: {
+  await Agent.post('/query_prv_key', {
       confirmData: ConfirmData
+  })
+  .then(await function (data) {
+    var QueryStatus = data.data.status;
+    if (QueryStatus == 'verify failed') {
+      // console.log("login failed: verify signature failed");
+    } else {
+      if (QueryStatus == 'create') {
+        // console.log("login succeed: new key pair is generated");
+      }
+      if (QueryStatus == 'return') {
+        // console.log("login succeed: key pair is returned");
+      }
+      // console.log("private key: " + data.data.prv_key);
+      PrivateKey = data.data.prv_key;
     }
   })
-    .then(await
-      function (data) {
-        var QueryStatus = data.data.status;
-        if (QueryStatus == 'verify failed') {
-          // console.log("login failed: verify signature failed");
-        } else {
-          if (QueryStatus == 'create') {
-            // console.log("login succeed: new key pair is generated");
-          }
-          if (QueryStatus == 'return') {
-            // console.log("login succeed: key pair is returned");
-          }
-          // console.log("private key: " + data.data.prv_key);
-          PrivateKey = data.data.prv_key;
-        }
-      })
-    .catch(err => console.log(err))
+  .catch(err => console.log(err))
   return PrivateKey;
 }
 
@@ -90,10 +85,10 @@ function getEthContract(web3) {
 
 module.exports = class EtherInit_ {
   static async createAsync() {
-    var web3 = new Web3(new Web3.providers.HttpProvider('https://rinkeby.infura.io/' + rinkeby.api_token))
+    var web3 = new Web3(new Web3.providers.HttpProvider('https://rinkeby.infura.io/' + Rinkeby.api_token))
     console.log("# web3 version: " + web3.version)
 
-    const wallet = EtherWallet.fromPrivateKey(Util.toBuffer(rinkeby.prv_key))
+    const wallet = EthWaLLet.fromPrivateKey(EthUtiL.toBuffer(Rinkeby.prv_key))
     const dappPrvKey = await getDappPrivateKey(web3, wallet, 'ether-util')
     const con = getEthContract(web3)
 
@@ -124,7 +119,7 @@ module.exports = class EtherInit_ {
   }
 
   async WithdrawEthAsync(from, amount, sig) {
-    const inputAmount = Web3Util.toHex(amount)
+    const inputAmount = Web3UtiL.toHex(amount)
     const query = await this._GatewayCon.methods.withdrawETH(inputAmount, sig)
     const data = query.encodeABI()
 
@@ -145,7 +140,7 @@ module.exports = class EtherInit_ {
     console.log("# EstimateGas: " + EstimateGas)
 
     rawTx.gas = EstimateGas
-    var tx = new Tx(rawTx)
+    var tx = new EthTx(rawTx)
     tx.sign(this._Wallet.getPrivateKey())
     var serializedTx = tx.serialize()
     EstimateGas = await this._Web3.eth.estimateGas(rawTx)
@@ -160,7 +155,7 @@ module.exports = class EtherInit_ {
       from: from,
       to: this._GatewayCon.options.address,
       gasPrice: (await this._Web3.eth.getGasPrice()),
-      value: Web3Util.toHex(Web3Util.toWei(amount, unit)),
+      value: Web3UtiL.toHex(Web3UtiL.toWei(amount, unit)),
     }
 
     let EstimateGas = await this._Web3.eth.estimateGas(rawTx)
@@ -172,11 +167,11 @@ module.exports = class EtherInit_ {
       to: this._GatewayCon.options.address,
       gasPrice: (await this._Web3.eth.getGasPrice()),
       gas: EstimateGas,
-      value: Web3Util.toHex(Web3Util.toWei(amount, unit)),
+      value: Web3UtiL.toHex(Web3UtiL.toWei(amount, unit)),
     }
 
     EstimateGas = await this._Web3.eth.estimateGas(rawTx)
-    var tx = new Tx(rawTx)
+    var tx = new EthTx(rawTx)
     tx.sign(this._Wallet.getPrivateKey())
     var serializedTx = tx.serialize()
 
@@ -197,10 +192,10 @@ module.exports = class EtherInit_ {
       chunk_list:[0,1,2,3,4,5,6,7,8,9]
     }
     const Msg = Buffer.from(JSON.stringify(msg))
-    const ECSign = Util.ecsign(Util.keccak256(Msg), this._Wallet.getPrivateKey())
-    const Sign = Util.bufferToHex(ECSign.r) + Util.bufferToHex(ECSign.s).substr(2) + Util.bufferToHex(ECSign.v).substr(2)
+    const ECSign = EthUtiL.ecsign(EthUtiL.keccak256(Msg), this._Wallet.getPrivateKey())
+    const Sign = EthUtiL.bufferToHex(ECSign.r) + EthUtiL.bufferToHex(ECSign.s).substr(2) + EthUtiL.bufferToHex(ECSign.v).substr(2)
 
-    await axios({
+    await Axios({
       method: 'post',
       url: 'http://127.0.0.1:3003/get_receipt',
       data: {
@@ -210,7 +205,7 @@ module.exports = class EtherInit_ {
     })
     .then((res) => {
       console.log(JSON.stringify(res.data))
-       
+
       // console.log(JSON.stringify(res))
     })
   }

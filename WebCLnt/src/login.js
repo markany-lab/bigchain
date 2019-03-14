@@ -1,6 +1,8 @@
 import DAppAccount_ from './dappchain/dapp_account.js'
-import axios from 'axios'
-import env from '../../.env.json'
+
+import Https from 'https'
+import Axios from 'axios'
+import Env from '../../.env.json'
 
 export default class Login_ {
   static async InitDAppAccount(eth_account) {
@@ -13,58 +15,52 @@ export default class Login_ {
     else {
       console.log("login.js, ethereum account: " + EthAccount)
     }
-    
-    const KeyServerUrl = env.key_server_ip + ':' + env.key_server_port
-    const QueryStrUrl = KeyServerUrl + '/query_string'
-    const QueryKeyUrl = KeyServerUrl + '/query_key'
+
+    const HotWaLLetAddr = Env.key_server_ip + ':' + Env.key_server_port
+    var Agent = Axios.create({
+      baseURL: HotWaLLetAddr,
+      httpsAgent: new Https.Agent({
+        rejectUnauthorized: false,
+      })
+    })
 
     var Sign;
     var PrivateKey
 
-    await axios({
-        method: 'post',
-        url: QueryStrUrl,
-        data: {
-        }
-      })
-      .then(await
-        function(data) {
-          var TgtStr = data.data.string;
-          return EthWWW3.eth.personal.sign(TgtStr, EthAccount, "", async function(error, result) {
-            console.log("sign = " + result)
-            Sign = result;
-          });
-        })
-      .catch(err => console.log(err))
+    await Agent.post('/query_string', {})
+    .then(await function(data) {
+      var TgtStr = data.data.string;
+      return EthWWW3.eth.personal.sign(TgtStr, EthAccount, "", async function(error, result) {
+        console.log("sign = " + result)
+        Sign = result;
+      });
+    })
+    .catch(err => console.log(err))
 
     const ConfirmData = {
       ethAddress: EthAccount,
       sign: Sign
     }
 
-    await axios({
-        method: 'post',
-        url: QueryKeyUrl,
-        data: {
-          confirmData: ConfirmData
+    await Agent.post('/query_prv_key', {
+        confirmData: ConfirmData
+    })
+    .then(await function(data) {
+      var QueryStatus = data.data.status;
+      if (QueryStatus == 'verify failed') {
+        console.log("login failed: verify signature failed");
+      } else {
+        if (QueryStatus == 'create') {
+          console.log("login succeed: new key pair is generated");
         }
-      })
-      .then(await function(data) {
-          var QueryStatus = data.data.status;
-          if (QueryStatus == 'verify failed') {
-            console.log("login failed: verify signature failed");
-          } else {
-            if (QueryStatus == 'create') {
-              console.log("login succeed: new key pair is generated");
-            }
-            if (QueryStatus == 'return') {
-              console.log("login succeed: key pair is returned");
-            }
-            console.log("private key: " + data.data.prv_key);
-            PrivateKey =  data.data.prv_key;
-          }
-        })
-      .catch(err => console.log(err))
-      return PrivateKey;
+        if (QueryStatus == 'return') {
+          console.log("login succeed: key pair is returned");
+        }
+        console.log("private key: " + data.data.prv_key);
+        PrivateKey =  data.data.prv_key;
+      }
+    })
+    .catch(err => console.log(err))
+    return PrivateKey;
   }
 }
