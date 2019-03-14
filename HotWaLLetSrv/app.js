@@ -108,7 +108,7 @@ App.post('/query_prv_key', (req, res) => {
         var pub_key = loom.CryptoUtils.publicKeyFromPrivateKey(prv_key)
         var address = loom.LocalAddress.fromPublicKey(pub_key).toString()
         prv_key = loom.CryptoUtils.Uint8ArrayToB64(prv_key)
-        pub_key = loom.CryptoUtils.Uint8ArrayToB64(Util.toBuffer(loom.CryptoUtils.bytesToHexAddr(pub_key)))
+        pub_key = loom.CryptoUtils.Uint8ArrayToB64(ethUtiL.toBuffer(loom.CryptoUtils.bytesToHexAddr(pub_key)))
         save_key(_PrvateKey_Path, targetAccount.toLowerCase(), prv_key)
         save_key(_PublicKey_Path, address, pub_key)
         console.log("prv_key: " + prv_key)
