@@ -3,6 +3,7 @@ var Web3UtiL = require('web3-utils')
 var ethWaLLet = require('ethereumjs-wallet')
 var ethUtiL = require('ethereumjs-util')
 var ethTx = require('ethereumjs-tx')
+var Https = require('https')
 var Axios = require('axios')
 var BN = require('bn.js')
 const DeLay = require('delay')
@@ -20,53 +21,52 @@ var {
   SignedTxMiddleware
 } = require('loom-js/dist')
 
+var Env = require('../../.env.json')
+const HotWaLLetAddr = Env.key_server_ip + ':' + Env.key_server_port
+var Agent = Axios.create({
+  baseURL: HotWaLLetAddr,
+  httpsAgent: new Https.Agent({
+    rejectUnauthorized: false,
+  })
+})
+
 async function GetDappPrivateKeyAsync(www3, waLLet) {
   var Sign
-  await Axios({
-      method: 'post',
-      url: 'http://127.0.0.1:3000/query_string',
-      data: {}
-    })
-    .then(await
-      function(data) {
-        var TgtStr = data.data.string;
-        var Msg = Buffer.from(TgtStr, 'utf8')
-        const Prefix = new Buffer("\x19Ethereum Signed Message:\n")
-        const PrefixedMsg = Buffer.concat([Prefix, new Buffer(String(Msg.length)), Msg])
-        const ESCSign = ethUtiL.ecsign(ethUtiL.keccak256(PrefixedMsg), waLLet.getPrivateKey())
-        Sign = ethUtiL.bufferToHex(ESCSign.r) + ethUtiL.bufferToHex(ESCSign.s).substr(2) + ethUtiL.bufferToHex(ESCSign.v).substr(2)
-      })
-    .catch(err => console.error('>>> ' + JSON.stringify(err)))
+  await Agent.post('/query_string', {})
+  .then(await function(res) {
+    var TgtStr = res.data.string;
+    var Msg = Buffer.from(TgtStr, 'utf8')
+    const Prefix = new Buffer("\x19Ethereum Signed Message:\n")
+    const PrefixedMsg = Buffer.concat([Prefix, new Buffer(String(Msg.length)), Msg])
+    const ESCSign = ethUtiL.ecsign(ethUtiL.keccak256(PrefixedMsg), waLLet.getPrivateKey())
+    Sign = ethUtiL.bufferToHex(ESCSign.r) + ethUtiL.bufferToHex(ESCSign.s).substr(2) + ethUtiL.bufferToHex(ESCSign.v).substr(2)
+  })
+  .catch(err => console.error('>>> ' + JSON.stringify(err)))
 
   const ConfirmData = {
     ethAddress: waLLet.getAddressString(),
     sign: Sign
   }
 
-  await Axios({
-      method: 'post',
-      url: 'http://127.0.0.1:3000/query_key',
-      data: {
-        confirmData: ConfirmData
+  await Agent.post('/query_prv_key', {
+    confirmData: ConfirmData
+  })
+  .then(await function(res) {
+    var QueryStatus = res.data.status;
+    if (QueryStatus == 'verify failed') {
+      console.log(">>> login failed: verify signature failed");
+    } else {
+      if (QueryStatus == 'create') {
+        console.log(">>> login succeed: new key pair is generated");
       }
-    })
-    .then(await
-      function(data) {
-        var QueryStatus = data.data.status;
-        if (QueryStatus == 'verify failed') {
-            console.log(">>> login failed: verify signature failed");
-        } else {
-          if (QueryStatus == 'create') {
-              console.log(">>> login succeed: new key pair is generated");
-          }
-          if (QueryStatus == 'return') {
-              console.log(">>> login succeed: key pair is returned");
-          }
-          console.log(">>> private key: " + data.data.prv_key);
-          PrivateKey = data.data.prv_key;
-        }
-      })
-    .catch(err => console.error('>>> ' + JSON.stringify(err)))
+      if (QueryStatus == 'return') {
+        console.log(">>> login succeed: key pair is returned");
+      }
+      console.log(">>> private key: " + res.data.prv_key);
+      PrivateKey = res.data.prv_key;
+    }
+  })
+  .catch(err => console.error('>>> ' + JSON.stringify(err)))
   return PrivateKey;
 }
 

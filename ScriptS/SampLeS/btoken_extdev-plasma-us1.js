@@ -36,7 +36,6 @@ CLient.txMiddleware = [
   new SignedTxMiddleware(PrivateKey)
 ]
 
-
 /*
 const AddressMapper = Contracts.AddressMapper.createAsync(
   CLient,
