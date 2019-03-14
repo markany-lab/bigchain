@@ -28,8 +28,8 @@ export default class Login_ {
     var PrivateKey
 
     await Agent.post('/query_string', {})
-    .then(await function(data) {
-      var TgtStr = data.data.string;
+    .then(await function(res) {
+      var TgtStr = res.data.string;
       return EthWWW3.eth.personal.sign(TgtStr, EthAccount, "", async function(error, result) {
         console.log("sign = " + result)
         Sign = result;
@@ -45,8 +45,8 @@ export default class Login_ {
     await Agent.post('/query_prv_key', {
         confirmData: ConfirmData
     })
-    .then(await function(data) {
-      var QueryStatus = data.data.status;
+    .then(await function(res) {
+      var QueryStatus = res.data.status;
       if (QueryStatus == 'verify failed') {
         console.log("login failed: verify signature failed");
       } else {
@@ -56,8 +56,8 @@ export default class Login_ {
         if (QueryStatus == 'return') {
           console.log("login succeed: key pair is returned");
         }
-        console.log("private key: " + data.data.prv_key);
-        PrivateKey =  data.data.prv_key;
+        console.log("private key: " + res.data.prv_key);
+        PrivateKey =  res.data.prv_key;
       }
     })
     .catch(err => console.log(err))
