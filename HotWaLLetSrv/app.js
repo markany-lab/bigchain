@@ -66,7 +66,6 @@ App.use(function(req, res, next) {
 
 var _PrvateKey_Path = './priv_keys.json'
 var _PublicKey_Path = './pub_keys.json'
-var _RandomStr
 
 function read_key_path(key_path) {
   try {
@@ -134,56 +133,64 @@ App.post('/query_prv_key', (req, res) => {
   //
   logger.debug(JSON.stringify(req.body))
   try {
-    var targetAccount = req.body.confirmData.ethAddress
-    var targetSign = req.body.confirmData.sign
+    var TgtAccount = req.body.confirmData.ethAddress
+    var TgtSign = req.body.confirmData.sign
     var RandomStr = req.random_str
 
-    var msg = Buffer.from(RandomStr, 'utf8')
-    const prefix = new Buffer("\x19Ethereum Signed Message:\n")
-    const prefixedMsg = Buffer.concat([prefix, new Buffer(String(msg.length)), msg])
-    const prefixedMsgInput = ethUtiL.keccak256(prefixedMsg)
+    var Msg = Buffer.from(RandomStr, 'utf8')
+    const Prefix = new Buffer("\x19Ethereum Signed Message:\n")
+    const PrefixedMsg = Buffer.concat([Prefix, new Buffer(String(Msg.length)), Msg])
+    const PrefixedMsgHash = ethUtiL.keccak256(PrefixedMsg)
 
     const {
       v,
       r,
       s
-    } = ethUtiL.fromRpcSig(targetSign)
+    } = ethUtiL.fromRpcSig(TgtSign)
 
-    const pubKeyBuf = ethUtiL.ecrecover(prefixedMsgInput, v, r, s)
-    const addrBuf = ethUtiL.pubToAddress(pubKeyBuf)
-    const addr = ethUtiL.bufferToHex(addrBuf)
+    const EthPubLicKey = ethUtiL.ecrecover(PrefixedMsgHash, v, r, s)
+    const EthAddrBuf = ethUtiL.pubToAddress(EthPubLicKey)
+    const EthAddr = ethUtiL.bufferToHex(EthAddrBuf)
 
-    if (targetAccount.toLowerCase() == addr) {
-      var savedKey = find_key(_PrvateKey_Path, targetAccount.toLowerCase())
-
-      if (savedKey == -1) {
-        var prv_key = loom.CryptoUtils.generatePrivateKey()
-        var pub_key = loom.CryptoUtils.publicKeyFromPrivateKey(prv_key)
-        var address = loom.LocalAddress.fromPublicKey(pub_key).toString()
-        prv_key = loom.CryptoUtils.Uint8ArrayToB64(prv_key)
-        pub_key = loom.CryptoUtils.Uint8ArrayToB64(ethUtiL.toBuffer(loom.CryptoUtils.bytesToHexAddr(pub_key)))
-        save_key(_PrvateKey_Path, targetAccount.toLowerCase(), prv_key)
-        save_key(_PublicKey_Path, address, pub_key)
-        logger.debug("prv_key: " + prv_key)
+    if (TgtAccount.toLowerCase() == EthAddr) {
+      var LoomPrivateKey = find_key(_PrvateKey_Path, TgtAccount.toLowerCase())
+      if (LoomPrivateKey == -1) {
+        var PrivateKey = loom.CryptoUtils.generatePrivateKey()
+        var PubLicKey = loom.CryptoUtils.publicKeyFromPrivateKey(PrivateKey)
+        var Addr = loom.LocalAddress.fromPublicKey(PubLicKey).toString()
+        PrivateKey = loom.CryptoUtils.Uint8ArrayToB64(PrivateKey)
+        PubLicKey = loom.CryptoUtils.Uint8ArrayToB64(ethUtiL.toBuffer(loom.CryptoUtils.bytesToHexAddr(PubLicKey)))
+        save_key(_PrvateKey_Path, TgtAccount.toLowerCase(), PrivateKey)
+        save_key(_PublicKey_Path, Addr, PubLicKey)
+        logger.debug("saved private key: " + PrivateKey)
+        logger.debug("saved public key: " + PubLicKey)
         res.json({
           status: 'create',
-          prv_key: prv_key
+          prv_key: PrivateKey
         })
       } else {
-        logger.debug("savedKey: " + savedKey)
+        var LoomPubLicKey = find_key(_PublicKey_Path, req.body.receiver)
+        if (LoomPubLicKey == -1) {
+          var PubLicKey = loom.CryptoUtils.publicKeyFromPrivateKey(LoomPrivateKey)
+          var Addr = loom.LocalAddress.fromPublicKey(PubLicKey).toString()
+          PubLicKey = loom.CryptoUtils.Uint8ArrayToB64(ethUtiL.toBuffer(loom.CryptoUtils.bytesToHexAddr(PubLicKey)))
+          save_key(_PublicKey_Path, Addr, PubLicKey)
+          logger.debug("saved public key: " + PubLicKey)
+        }
+        logger.debug("found private key: " + LoomPrivateKey)
         res.json({
           status: 'return',
-          prv_key: savedKey
+          prv_key: LoomPrivateKey
         })
       }
     } else {
-      logger.debug(targetAccount.toLowerCase() + " / " + addr)
+      logger.debug(TgtAccount.toLowerCase() + " / " + EthAddr)
       res.json({
         status: 'verify failed'
       })
     }
   } catch (err) {
-    logger.error('query_registered error: ' + err)
+    logger.error('error: ' + err)
     res.json({
       status: 'error occured'
     })
@@ -193,12 +200,11 @@ App.post('/query_prv_key', (req, res) => {
 App.post('/query_pub_key', (req, res) => {
   logger.debug('>>> /query_pub_key')
   try {
-    var savedKey = find_key(_PublicKey_Path, req.body.receiver)
-
-    if (savedKey == -1) {
+    var LoomPubLicKey = find_key(_PublicKey_Path, req.body.receiver)
+    if (LoomPubLicKey == -1) {
       res.json({code: "-1", error: "public key with input address does not exist"})
     } else {
-      res.json({status: 'return', pub_key: savedKey})
+      res.json({status: 'return', pub_key: LoomPubLicKey})
     }
   } catch (err) {
     logger.error('query_registered error: ' + err)
