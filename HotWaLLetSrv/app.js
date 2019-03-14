@@ -1,5 +1,4 @@
 const fiLeSystem = require('fs')
-const bodyParser = require('body-parser')
 const randomString = require('randomstring')
 
 const ethUtiL = require('ethereumjs-util')
@@ -8,10 +7,14 @@ const loom = require('loom-js')
 const express = require('express')
 const http = require('http')
 const https = require('https')
-var cors = require('cors')
-const App = express()
 
-App.use(cors())
+const cookieParser = require('cookie-parser')
+const bodyParser = require('body-parser')
+var cors = require('cors')
+
+const App = express()
+App.use(cookieParser())
+//App.use(cors())
 App.use(bodyParser.json())
 App.use(bodyParser.urlencoded({
   extended: true
@@ -66,8 +69,11 @@ function save_key(key_path, account, key) {
   }
 }
 
-App.post('/query_string', (req, res) => {
+App.get('/query_string', (req, res) => {
   console.log('/query_string')
+  var RandomStr = randomString.generate({length: 256, charset: 'alphabetic'})
+  res.cookie('random_key', 'random_value', {maxAge: 10000})
+  console.log('random_key: ' + req.cookies.random_key)
   _RandomStr = randomString.generate({
     length: 256,
     charset: 'alphabetic'
@@ -80,6 +86,7 @@ App.post('/query_string', (req, res) => {
 
 App.post('/query_prv_key', (req, res) => {
   console.log('/query_prv_key() called')
+  console.log('random_key: ' + req.cookies.random_key)
   console.log(JSON.stringify(req.body))
   try {
     var targetAccount = req.body.confirmData.ethAddress
@@ -153,6 +160,24 @@ App.post('/query_pub_key', (req, res) => {
       status: 'error occured'
     })
   }
+})
+
+App.get('/count',function(req, res){
+    // 쿠키가 없다면 초기화 있다면 쿠키값을 받아옴
+    if(req.cookies.count){
+        var count = parseInt(req.cookies.count);
+    }else{
+        var count = 0;
+    }
+
+    res.cookie('count',count+1);
+    res.send('count: ' + req.cookies.count);
+})
+
+App.get('/count2',function(req, res){
+    var RandomStr = randomString.generate({length: 256, charset: 'alphabetic'});
+    res.cookie('count2', RandomStr, {maxAge: 10000})
+    res.send('count2: ' + req.cookies.count2);
 })
 
 const HttpPort = 3000
