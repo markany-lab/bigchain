@@ -6,6 +6,42 @@ var {
   CryptoUtils
 } = require('loom-js')
 var program = require('commander')
+var crypto = require('crypto')
+
+async function generateCID() {
+  try {
+    crypto.randomBytes(32, (err, buf) => {
+      if (err) {
+        console.log("error occured: " + err)
+      }
+      console.log(Util.bufferToHex(buf))
+    })
+  } catch (err) {
+    console.log("error occured: " + err)
+  }
+}
+
+async function account_generate(password) {
+  try {
+    const index = await Ether.generateAccount(password)
+
+    /* init Ethereum elements */
+    console.log('# init ethereum tools...')
+    var EtherTools = await Ether.createAsync(index, password)
+    console.log('# init complete')
+
+    /* init Dappchain elements */
+    console.log('# init dapp tools...')
+    var DappTools = await Dapp.createAsync(EtherTools.getDappPrivateKey())
+    console.log('# init complete')
+
+    console.log('# mapping ethereum account to dapp account...')
+    await DappTools.SignAsync(EtherTools.getWallet())
+    console.log('# mapping complete')
+  } catch (error) {
+    console.log('# error occured: ' + error)
+  }
+}
 
 async function initApp() {
   try {
@@ -16,7 +52,7 @@ async function initApp() {
 
     /* init Dappchain elements */
     console.log('# init dapp tools...')
-    // var DappTools = await Dapp.createAsync(EtherTools.getDappPrivateKey())
+    var DappTools = await Dapp.createAsync(EtherTools.getDappPrivateKey())
     console.log('# init complete')
 
     /* init Dapp contract */
@@ -359,7 +395,12 @@ async function sendAggregatedReceipt() {
   var EtherTools = await Ether.createAsync()
   console.log('# init complete')
 
-  await EtherTools.sendAggregatedReceipt()
+  /* init Dappchain elements */
+  console.log('# init dapp tools...')
+  var DappTools = await Dapp.createAsync(EtherTools.getDappPrivateKey())
+  console.log('# init complete')
+
+  await DappTools.sendAggregatedReceipt()
 }
 
 program
@@ -497,7 +538,6 @@ program
     settle(options.oid)
   })
 
-
 program
   .command('send_aggregated_receipt')
   .description('settle')
@@ -506,4 +546,29 @@ program
     sendAggregatedReceipt()
   })
 
+program
+  .command('generate_cid')
+  .description('generate cid')
+  .action(function () {
+    console.log("# generateCID() called")
+    generateCID()
+  })
+
+
+
+////////////////////////////////
+
+program
+  .command('account')
+  .option('-g, --generate', 'generate account')
+  .option('-p, --password <password>', 'account password')
+  .action(function (options) {
+    if (options.generate) {
+      console.log("account_generate() called")
+      account_generate(options.password)
+    }
+  })
+
 program.parse(process.argv)
+
+

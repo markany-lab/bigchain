@@ -24,16 +24,18 @@ export default class Login_ {
       })
     })
 
-    var Sign;
+    var Token
+    var Sign
     var PrivateKey
 
-    await Agent.post('/query_string', {})
+    await Agent.post('/query_token', {})
     .then(await function(res) {
       var TgtStr = res.data.string;
       return EthWWW3.eth.personal.sign(TgtStr, EthAccount, "", async function(error, result) {
         console.log("sign = " + result)
         Sign = result;
-      });
+        Token = res.data.token
+      })
     })
     .catch(err => console.log(err))
 
@@ -42,8 +44,11 @@ export default class Login_ {
       sign: Sign
     }
 
+    console.log('token: ' + Token)
     await Agent.post('/query_prv_key', {
-        confirmData: ConfirmData
+      confirmData: ConfirmData
+    }, {
+      headers: { Authorization: "Bearer " + Token }
     })
     .then(await function(res) {
       var QueryStatus = res.data.status;

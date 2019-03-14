@@ -1,24 +1,67 @@
-const fiLeSystem = require('fs')
-const randomString = require('randomstring')
+var fiLeSystem = require('fs')
+var log4js = require('log4js')
+var logger = log4js.getLogger('HotWalletServer')
+var randomString = require('randomstring')
+var utiL = require('util')
 
-const ethUtiL = require('ethereumjs-util')
-const loom = require('loom-js')
+var ethUtiL = require('ethereumjs-util')
+var loom = require('loom-js')
 
-const express = require('express')
-const http = require('http')
-const https = require('https')
+var express = require('express')
+var session = require('express-session')
+var cookieParser = require('cookie-parser')
+var bodyParser = require('body-parser')
+var http = require('http')
+var https = require('https')
 
-const cookieParser = require('cookie-parser')
-const bodyParser = require('body-parser')
+var expressJWT = require('express-jwt')
+var jwt = require('jsonwebtoken')
 var cors = require('cors')
-
+var bearerToken = require('express-bearer-token')
 const App = express()
-App.use(cookieParser())
-//App.use(cors())
+App.options('*', cors())
+App.use(cors())
+
 App.use(bodyParser.json())
 App.use(bodyParser.urlencoded({
   extended: true
 }))
+
+
+App.set('secret', 'thisismysecret')
+App.use(expressJWT({
+	secret: 'thisismysecret'
+}).unless({
+	path: ['/query_token']
+}));
+App.use(bearerToken())
+
+App.use(function(req, res, next) {
+	console.debug(' ------>>>>>> new request for %s',req.originalUrl);
+	if (req.originalUrl.indexOf('/query_token') >= 0) {
+		return next();
+	}
+
+	var Token = req.token;
+  console.log('token: ' + Token )
+	jwt.verify(Token, App.get('secret'), function(err, decoded) {
+		if (err) {
+			res.send({
+				success: false,
+				message: 'Failed to authenticate token. Make sure to include the ' +
+					'token returned from /query_token call in the authorization header ' +
+					' as a Bearer token'
+			});
+			return;
+		} else {
+			// add the decoded user name and org name to the request object
+			// for the downstream code to use
+			req.random_str = decoded.random_str;
+			logger.debug(utiL.format('Decoded from JWT token: random_str - %s', decoded.random_str));
+			return next();
+		}
+	});
+});
 
 var _PrvateKey_Path = './priv_keys.json'
 var _PublicKey_Path = './pub_keys.json'
@@ -69,30 +112,32 @@ function save_key(key_path, account, key) {
   }
 }
 
-App.get('/query_string', (req, res) => {
-  console.log('/query_string')
-  var RandomStr = randomString.generate({length: 256, charset: 'alphabetic'})
-  res.cookie('random_key', 'random_value', {maxAge: 10000})
-  console.log('random_key: ' + req.cookies.random_key)
-  _RandomStr = randomString.generate({
-    length: 256,
-    charset: 'alphabetic'
-  })
+App.post('/query_token', (req, res) => {
+  console.log('/query_token')
+  var RandomStr = randomString.generate({length: 256, charset: 'alphabetic'});
+  var Token = jwt.sign({
+  		exp: Math.floor(Date.now() / 1000) + 1000,
+  		random_str: RandomStr
+  	}, App.get('secret'));
+
   res.json({
     status: 'rs',
-    string: _RandomStr
+    string: RandomStr,
+    token: Token
   })
 })
 
 App.post('/query_prv_key', (req, res) => {
-  console.log('/query_prv_key() called')
-  console.log('random_key: ' + req.cookies.random_key)
+  console.log('/query_prv_key')
+
+  //
   console.log(JSON.stringify(req.body))
   try {
     var targetAccount = req.body.confirmData.ethAddress
     var targetSign = req.body.confirmData.sign
+    var RandomStr = req.random_str
 
-    var msg = Buffer.from(_RandomStr, 'utf8')
+    var msg = Buffer.from(RandomStr, 'utf8')
     const prefix = new Buffer("\x19Ethereum Signed Message:\n")
     const prefixedMsg = Buffer.concat([prefix, new Buffer(String(msg.length)), msg])
     const prefixedMsgInput = ethUtiL.keccak256(prefixedMsg)
@@ -145,7 +190,7 @@ App.post('/query_prv_key', (req, res) => {
 })
 
 App.post('/query_pub_key', (req, res) => {
-  console.log('/query_pub_key() called')
+  console.log('/query_pub_key')
   try {
     var savedKey = find_key(_PublicKey_Path, req.body.receiver)
 
@@ -162,22 +207,17 @@ App.post('/query_pub_key', (req, res) => {
   }
 })
 
-App.get('/count',function(req, res){
-    // 쿠키가 없다면 초기화 있다면 쿠키값을 받아옴
-    if(req.cookies.count){
-        var count = parseInt(req.cookies.count);
-    }else{
-        var count = 0;
-    }
-
-    res.cookie('count',count+1);
-    res.send('count: ' + req.cookies.count);
+App.get('/test1',function(req, res){
+  console.log('/test1')
+  var RandomStr = randomString.generate({length: 256, charset: 'alphabetic'});
+  res.send('random_str: ' + RandomStr);
 })
 
-App.get('/count2',function(req, res){
-    var RandomStr = randomString.generate({length: 256, charset: 'alphabetic'});
-    res.cookie('count2', RandomStr, {maxAge: 10000})
-    res.send('count2: ' + req.cookies.count2);
+App.get('/test2',function(req, res){
+  console.log('/test2')
+  //console.log('cookie: ' + req.cookies.random_str)
+  //console.log('session: ' + req.session.random_str)
+  //res.send('random_str: ' + req.cookies.random_str)
 })
 
 const HttpPort = 3000

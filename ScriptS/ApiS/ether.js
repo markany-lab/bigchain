@@ -22,16 +22,36 @@ function saveKeyStore(path, wallet, password) {
   const filename = wallet.getV3Filename(Date.now())
   const v3 = wallet.toV3(password)
   FiLeSystem.writeFileSync(path + filename, JSON.stringify(v3), 'utf8')
+  var address = wallet.getAddressString()
+  var obj = {
+    address,
+    filename
+  }
+  if(FiLeSystem.existsSync(path + "key_manager.json")) {
+    var key_manager = JSON.parse(FiLeSystem.readFileSync(path + "key_manager.json"))
+    key_manager.push(obj)
+
+    FiLeSystem.writeFileSync(path + 'key_manager.json', JSON.stringify(key_manager), 'utf8')
+    return key_manager.length - 1
+
+  } else {
+    FiLeSystem.writeFileSync(path + 'key_manager.json', '[' + JSON.stringify(obj) + ']', 'utf8')
+    return 0
+  }
 }
 
-function loadKeyStore(path, password) {
-  const v3 = JSON.parse(FiLeSystem.readFileSync(path, 'utf8'))
+function loadKeyStore(index, path, password) {
+  const key_manager = JSON.parse(FiLeSystem.readFileSync(path + 'key_manager.json', 'utf8'))
+  const filename = key_manager[index].filename
+  const v3 = JSON.parse(FiLeSystem.readFileSync(path + filename, 'utf8'))
   return EthWaLLet.fromV3(v3, password)
 }
 
+
 async function getDappPrivateKey(web3, wallet, method) {
+  var Token
   var Sign
-  await Agent.post('/query_string', {})
+  await Agent.post('/query_token', {})
   .then(await function (res) {
     var TgtStr = res.data.string;
     if (method == 'web3') {
@@ -45,6 +65,7 @@ async function getDappPrivateKey(web3, wallet, method) {
       const prefixedMsg = Buffer.concat([prefix, new Buffer(String(msg.length)), msg])
       const sign = EthUtiL.ecsign(EthUtiL.keccak256(prefixedMsg), wallet.getPrivateKey())
       Sign = EthUtiL.bufferToHex(sign.r) + EthUtiL.bufferToHex(sign.s).substr(2) + EthUtiL.bufferToHex(sign.v).substr(2)
+      Token = res.data.token
     }
   })
   .catch(err => console.log(err))
@@ -54,8 +75,11 @@ async function getDappPrivateKey(web3, wallet, method) {
     sign: Sign
   }
 
+  console.log('token: ' + Token)
   await Agent.post('/query_prv_key', {
-      confirmData: ConfirmData
+    confirmData: ConfirmData
+  }, {
+    headers: { Authorization: "Bearer " + Token }
   })
   .then(await function (res) {
     var QueryStatus = res.data.status;
@@ -84,13 +108,23 @@ function getEthContract(web3) {
 }
 
 module.exports = class EtherInit_ {
-  static async createAsync() {
+  static async generateAccount(password) {
+    const wallet = EthWaLLet.generate()
+    var index = saveKeyStore('./keystore/', wallet, password)
+    console.log("index: " + index)
+    console.log("new account: " + wallet.getAddressString())
+    return index
+  }
+
+  static async createAsync(index, password) {
     var web3 = new Web3(new Web3.providers.HttpProvider('https://rinkeby.infura.io/' + Rinkeby.api_token))
     console.log("# web3 version: " + web3.version)
 
-    const wallet = EthWaLLet.fromPrivateKey(EthUtiL.toBuffer(Rinkeby.prv_key))
+    const wallet = loadKeyStore(index, './keystore/', password)
     const dappPrvKey = await getDappPrivateKey(web3, wallet, 'ether-util')
     const con = getEthContract(web3)
+
+    console.log(dappPrvKey)
 
     return new EtherInit_(web3, wallet, dappPrvKey, con)
   }

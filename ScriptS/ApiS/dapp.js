@@ -5,6 +5,7 @@ const jsonBToken = require('../../TruffLeBToken/build/contracts/BToken.json')
 const json721ZToken = require('../../TruffLeBToken/build/contracts/ERC721ZToken.json')
 const dappGatewayAddress = require('../../WebCLnt/src/gateway_dappchain_address_extdev-plasma-us1.json')
 const { web3Signer } = require('./web3Signer.js')
+var axios = require('axios')
 
 const {
   NonceTxMiddleware,
@@ -23,7 +24,7 @@ module.exports = class DappInit_ {
     const PrivateKey = CryptoUtils.B64ToUint8Array(b64_private_key);
     const PubLicKey = CryptoUtils.publicKeyFromPrivateKey(PrivateKey)
     const CLient = new Client(
-      'extdev-plasma-us1',
+      'extdev-plasma-us1',  
       'wss://extdev-plasma-us1.dappchains.com/websocket',
       'wss://extdev-plasma-us1.dappchains.com/queryws'
     )
@@ -163,6 +164,13 @@ module.exports = class DappInit_ {
     const From = new Address('eth', LocalAddress.fromHexString(wallet.getAddressString()))
     const To = new Address(this._CLient.chainId, LocalAddress.fromPublicKey(this._PubLicKey))
     const WWW3Signer = new web3Signer(wallet.getPrivateKey())
+    if(await this._AddressMapper.hasMappingAsync(From)) {
+      const mappingInfo = await this._AddressMapper.getMappingAsync(From)
+      const etherAddress = Util.bufferToHex(mappingInfo.from.local)
+      console.log(etherAddress)
+      console.log("already mapped: " + JSON.stringify(mappingInfo))
+      return
+    }
     return await this._AddressMapper.addIdentityMappingAsync(From, To, WWW3Signer)
   }
 
@@ -389,5 +397,30 @@ module.exports = class DappInit_ {
       .on("error", function (error) {
         console.log("# error occured: " + error)
       })
+  }
+
+  async sendAggregatedReceipt() {
+    let msg = {
+      channel_id: "0",
+      receiver: this._Address,
+      sender: '0xb73C9506cb7f4139A4D6Ac81DF1e5b6756Fab7A2',
+      count: 10,
+      chunk_list:[0,1,2,3,4,5,6,7,8,9]
+    }
+    const Msg = Buffer.from(JSON.stringify(msg))
+    const sign = CryptoUtils.sign(Msg, this._PrivateKey)
+
+    await axios({
+      method: 'post',
+      url: 'http://127.0.0.1:3003/get_receipt',
+      data: {
+        sign,
+        msg,
+        public_key: this._PubLicKey
+      }
+    })
+    .then((res) => {
+      console.log(JSON.stringify(res.data))
+    })
   }
 }

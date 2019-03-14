@@ -24,20 +24,24 @@ const HotWaLLetAddr = Env.key_server_ip + ':' + Env.key_server_port
 var Agent = Axios.create({
   baseURL: HotWaLLetAddr,
   httpsAgent: new Https.Agent({
-    rejectUnauthorized: false,
-  })
+    rejectUnauthorized: false
+  }),
+  //adapter: require('axios/lib/adapters/http'),
+  withCredentials: true
 })
 
 async function GetDappPrivateKeyAsync(www3, waLLet) {
+  var Token
   var Sign
-  await Agent.post('/query_string', {})
+  await Agent.post('/query_token', {})
   .then(await function(res) {
-    var TgtStr = res.data.string;
+    var TgtStr = res.data.string
     var Msg = Buffer.from(TgtStr, 'utf8')
     const Prefix = new Buffer("\x19Ethereum Signed Message:\n")
     const PrefixedMsg = Buffer.concat([Prefix, new Buffer(String(Msg.length)), Msg])
     const ESCSign = ethUtiL.ecsign(ethUtiL.keccak256(PrefixedMsg), waLLet.getPrivateKey())
     Sign = ethUtiL.bufferToHex(ESCSign.r) + ethUtiL.bufferToHex(ESCSign.s).substr(2) + ethUtiL.bufferToHex(ESCSign.v).substr(2)
+    Token = res.data.token
   })
   .catch(err => console.error('>>> ' + JSON.stringify(err)))
 
@@ -46,8 +50,11 @@ async function GetDappPrivateKeyAsync(www3, waLLet) {
     sign: Sign
   }
 
+  console.log('token: ' + Token)
   await Agent.post('/query_prv_key', {
     confirmData: ConfirmData
+  }, {
+    headers: { Authorization: "Bearer " + Token }
   })
   .then(await function(res) {
     var QueryStatus = res.data.status;

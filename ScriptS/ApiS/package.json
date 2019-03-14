@@ -21,7 +21,11 @@
       "channel:off": "node app.js channel_off",
       "channel:details": "node app.js channel_details",
       "channel:settle": "node app.js settle",
-      "test": "node app.js send_aggregated_receipt"
+      "test": "node app.js send_aggregated_receipt",
+
+      "account:generate": "node app.js account --generate --password",
+
+      "account:generate:default": "node app.js account --generate --password p@ssw0rd "
    },
    "dependencies": {
       "@babel/core": "^7.0.0-beta.46",
