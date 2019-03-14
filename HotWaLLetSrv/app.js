@@ -84,17 +84,17 @@ function write_key_path(key_path, obj) {
 }
 
 function find_key(key_path, account) {
-  var keys = read_key_path(key_path)
+  var KeyS = read_key_path(key_path)
   logger.debug("account = " + account)
-  if (keys == -1) {
+  if (KeyS == -1) {
     return -1
   } else {
-    var key = JSON.parse(keys)[account]
-    logger.debug("key = " + key)
-    if (typeof key === "undefined") {
+    var Key = JSON.parse(KeyS)[account]
+    logger.debug("key: " + Key)
+    if (typeof Key === "undefined") {
       return -1
     } else {
-      return key
+      return Key
     }
   }
 }
@@ -169,9 +169,11 @@ App.post('/query_prv_key', (req, res) => {
           prv_key: PrivateKey
         })
       } else {
-        var LoomPubLicKey = find_key(_PublicKey_Path, req.body.receiver)
+        // public key가 저장되어 있지 않다면 생성(기존 rinkeby어드레스 매핑 유지)
+        var LoomPubLicKey = find_key(_PublicKey_Path, TgtAccount.toLowerCase())
         if (LoomPubLicKey == -1) {
-          var PubLicKey = loom.CryptoUtils.publicKeyFromPrivateKey(LoomPrivateKey)
+          var PrivateKey = loom.CryptoUtils.B64ToUint8Array(LoomPrivateKey)
+          var PubLicKey = loom.CryptoUtils.publicKeyFromPrivateKey(PrivateKey)
           var Addr = loom.LocalAddress.fromPublicKey(PubLicKey).toString()
           PubLicKey = loom.CryptoUtils.Uint8ArrayToB64(ethUtiL.toBuffer(loom.CryptoUtils.bytesToHexAddr(PubLicKey)))
           save_key(_PublicKey_Path, Addr, PubLicKey)
@@ -207,7 +209,7 @@ App.post('/query_pub_key', (req, res) => {
       res.json({status: 'return', pub_key: LoomPubLicKey})
     }
   } catch (err) {
-    logger.error('query_registered error: ' + err)
+    logger.error('error: ' + err)
     res.json({
       status: 'error occured'
     })
