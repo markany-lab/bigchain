@@ -1,6 +1,8 @@
 var fiLeSystem = require('fs')
 var log4js = require('log4js')
 var logger = log4js.getLogger('HotWalletServer')
+logger.level = 'debug'
+
 var randomString = require('randomstring')
 var utiL = require('util')
 
@@ -27,7 +29,6 @@ App.use(bodyParser.urlencoded({
   extended: true
 }))
 
-
 App.set('secret', 'thisismysecret')
 App.use(expressJWT({
 	secret: 'thisismysecret'
@@ -37,13 +38,13 @@ App.use(expressJWT({
 App.use(bearerToken())
 
 App.use(function(req, res, next) {
-	console.debug(' ------>>>>>> new request for %s',req.originalUrl);
+	logger.debug(' ------>>>>>> new request for %s',req.originalUrl);
 	if (req.originalUrl.indexOf('/query_token') >= 0) {
 		return next();
 	}
 
 	var Token = req.token;
-  console.log('token: ' + Token )
+  logger.debug('token: ' + Token )
 	jwt.verify(Token, App.get('secret'), function(err, decoded) {
 		if (err) {
 			res.send({
@@ -79,18 +80,18 @@ function write_key_path(key_path, obj) {
   try {
     fiLeSystem.writeFileSync(key_path, JSON.stringify(obj), 'utf-8')
   } catch (err) {
-    console.log(err)
+    logger.error(err)
   }
 }
 
 function find_key(key_path, account) {
   var keys = read_key_path(key_path)
-  console.log("account = " + account)
+  logger.debug("account = " + account)
   if (keys == -1) {
     return -1
   } else {
     var key = JSON.parse(keys)[account]
-    console.log("key = " + key)
+    logger.debug("key = " + key)
     if (typeof key === "undefined") {
       return -1
     } else {
@@ -113,7 +114,7 @@ function save_key(key_path, account, key) {
 }
 
 App.post('/query_token', (req, res) => {
-  console.log('/query_token')
+  logger.debug('>>> /query_token')
   var RandomStr = randomString.generate({length: 256, charset: 'alphabetic'});
   var Token = jwt.sign({
   		exp: Math.floor(Date.now() / 1000) + 1000,
@@ -128,10 +129,10 @@ App.post('/query_token', (req, res) => {
 })
 
 App.post('/query_prv_key', (req, res) => {
-  console.log('/query_prv_key')
+  logger.debug('>>> /query_prv_key')
 
   //
-  console.log(JSON.stringify(req.body))
+  logger.debug(JSON.stringify(req.body))
   try {
     var targetAccount = req.body.confirmData.ethAddress
     var targetSign = req.body.confirmData.sign
@@ -163,26 +164,26 @@ App.post('/query_prv_key', (req, res) => {
         pub_key = loom.CryptoUtils.Uint8ArrayToB64(ethUtiL.toBuffer(loom.CryptoUtils.bytesToHexAddr(pub_key)))
         save_key(_PrvateKey_Path, targetAccount.toLowerCase(), prv_key)
         save_key(_PublicKey_Path, address, pub_key)
-        console.log("prv_key: " + prv_key)
+        logger.debug("prv_key: " + prv_key)
         res.json({
           status: 'create',
           prv_key: prv_key
         })
       } else {
-        console.log("savedKey: " + savedKey)
+        logger.debug("savedKey: " + savedKey)
         res.json({
           status: 'return',
           prv_key: savedKey
         })
       }
     } else {
-      console.log(targetAccount.toLowerCase() + " / " + addr)
+      logger.debug(targetAccount.toLowerCase() + " / " + addr)
       res.json({
         status: 'verify failed'
       })
     }
   } catch (err) {
-    console.log('query_registered error: ' + err)
+    logger.error('query_registered error: ' + err)
     res.json({
       status: 'error occured'
     })
@@ -190,7 +191,7 @@ App.post('/query_prv_key', (req, res) => {
 })
 
 App.post('/query_pub_key', (req, res) => {
-  console.log('/query_pub_key')
+  logger.debug('>>> /query_pub_key')
   try {
     var savedKey = find_key(_PublicKey_Path, req.body.receiver)
 
@@ -200,29 +201,16 @@ App.post('/query_pub_key', (req, res) => {
       res.json({status: 'return', pub_key: savedKey})
     }
   } catch (err) {
-    console.log('query_registered error: ' + err)
+    logger.error('query_registered error: ' + err)
     res.json({
       status: 'error occured'
     })
   }
 })
 
-App.get('/test1',function(req, res){
-  console.log('/test1')
-  var RandomStr = randomString.generate({length: 256, charset: 'alphabetic'});
-  res.send('random_str: ' + RandomStr);
-})
-
-App.get('/test2',function(req, res){
-  console.log('/test2')
-  //console.log('cookie: ' + req.cookies.random_str)
-  //console.log('session: ' + req.session.random_str)
-  //res.send('random_str: ' + req.cookies.random_str)
-})
-
 const HttpPort = 3000
 var Server = http.createServer(App).listen(HttpPort, function() {
-  console.log("Http server listening on port " + HttpPort);
+  logger.info("Http server listening on port " + HttpPort);
 })
 
 const HttpsPort = 3001
@@ -232,5 +220,5 @@ var OptionS = {
 }
 
 var Server = https.createServer(OptionS, App).listen(HttpsPort, function() {
-  console.log("Https server listening on port " + HttpsPort);
+  logger.info("Https server listening on port " + HttpsPort);
 })
