@@ -11,3 +11,5 @@ echo '> list forever process'
 forever list
 echo '> start hot wallwt server'
 forever start -p ${SCRIPTPATH} -l ./log/${NOW}.log -a ./app.js
+
+tail -f ./log/${NOW}.log
