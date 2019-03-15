@@ -133,6 +133,8 @@ async function Mapping() {
   const WWW3Signer = new web3Signer(EthWaLLet.getPrivateKey())
 
   const From = new Address('eth', LocalAddress.fromHexString(EthWaLLet.getAddressString()))
+
+  // 매핑만 테스트...
   //const bMapped = await AddressMapper.hasMappingAsync(From)
   const bMapped = false
   if (bMapped)
