@@ -166,8 +166,6 @@ module.exports = class DappInit_ {
     const WWW3Signer = new web3Signer(wallet.getPrivateKey())
     if(await this._AddressMapper.hasMappingAsync(From)) {
       const mappingInfo = await this._AddressMapper.getMappingAsync(From)
-      const etherAddress = Util.bufferToHex(mappingInfo.from.local)
-      console.log(etherAddress)
       console.log("already mapped: " + JSON.stringify(mappingInfo))
       return
     }

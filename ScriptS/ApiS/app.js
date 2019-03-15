@@ -25,6 +25,28 @@ async function account_generate(password) {
   try {
     const index = await Ether.generateAccount(password)
 
+    //   /* init Ethereum elements */
+    //   console.log('# init ethereum tools...')
+    //   var EtherTools = await Ether.createAsync(index, password)
+    //   console.log('# init complete')
+
+    //   /* init Dappchain elements */
+    //   console.log('# init dapp tools...')
+    //   var DappTools = await Dapp.createAsync(EtherTools.getDappPrivateKey())
+    //   console.log('# init complete')
+
+    //   console.log('# mapping ethereum account to dapp account...')
+    //   await DappTools.SignAsync(EtherTools.getWallet())
+    //   console.log('# mapping complete')
+  } catch (error) {
+    console.log('# error occured: ' + error)
+  }
+}
+
+async function account_import(privateKey, password) {
+  try {
+    const index = await Ether.importAccount(privateKey, password)
+
     /* init Ethereum elements */
     console.log('# init ethereum tools...')
     var EtherTools = await Ether.createAsync(index, password)
@@ -43,11 +65,36 @@ async function account_generate(password) {
   }
 }
 
-async function initApp() {
+async function account_export(index, password) {
+  try {
+    const privateKey = await Ether.exportAccount(index, password)
+    console.log("# private key: " + privateKey)
+  } catch (error) {
+    console.log("# error occured: " + error)
+  }
+}
+
+async function account_remove(index) {
+  try {
+    const removedAccount = await Ether.removeAccount(index)
+    console.log("# removed: " + removedAccount)
+  } catch (error) {
+    console.log("# error occured: " + error)
+  }
+}
+
+async function account_list() {
+  const accountList = await Ether.listAccount()
+  for (var i = 0; i < accountList.length; i++) {
+    console.log(i + '\'s account: ' + accountList[i])
+  }
+}
+
+async function account_blance(index, password) {
   try {
     /* init Ethereum elements */
     console.log('# init ethereum tools...')
-    var EtherTools = await Ether.createAsync()
+    var EtherTools = await Ether.createAsync(index, password)
     console.log('# init complete')
 
     /* init Dappchain elements */
@@ -55,39 +102,25 @@ async function initApp() {
     var DappTools = await Dapp.createAsync(EtherTools.getDappPrivateKey())
     console.log('# init complete')
 
-    /* init Dapp contract */
-    // await DappTools.initContract()
+    /* basic information about both accounts */
+    const ethereumAccount = EtherTools.getWallet().getAddressString()
+    const etherBalance = await EtherTools.GetBaLanceAsync(ethereumAccount)
+    const dappBalance = await DappTools.GetBaLanceAsync()
+    const mappingInfo = await DappTools.GetAddressMappingAsync(ethereumAccount)
+
+    console.log(' - ethereum account: ' + ethereumAccount)
+    console.log(' - ethereum balance: ' + etherBalance)
+    console.log(' - dapp balance: ' + dappBalance)
   } catch (error) {
     console.log('# error occured: ' + error)
   }
 }
 
-async function mappingAddress() {
+async function send_ethereum(index, password, unit, amount) {
   try {
     /* init Ethereum elements */
     console.log('# init ethereum tools...')
-    var EtherTools = await Ether.createAsync()
-    console.log('# init complete')
-
-    /* init Dappchain elements */
-    console.log('# init dapp tools...')
-    var DappTools = await Dapp.createAsync(EtherTools.getDappPrivateKey())
-    console.log('# init complete')
-
-    /* map ethereum account to dapp account */
-    console.log('\n# map ethereum account to dapp account...')
-    await DappTools.SignAsync(EtherTools.getWallet())
-    console.log('# address mapping complete')
-  } catch (error) {
-    console.log('# error occured: ' + error)
-  }
-}
-
-async function sendEtherToDapp(unit, amount) {
-  try {
-    /* init Ethereum elements */
-    console.log('# init ethereum tools...')
-    var EtherTools = await Ether.createAsync()
+    var EtherTools = await Ether.createAsync(index, password)
     console.log('# init complete')
 
     /* send ether from ethereum account to dapp account */
@@ -102,11 +135,11 @@ async function sendEtherToDapp(unit, amount) {
   }
 }
 
-async function sendDappToGateway(unit, amount) {
+async function send_dappchain(index, password, unit, amount) {
   try {
     /* init Ethereum elements */
     console.log('# init ethereum tools...')
-    var EtherTools = await Ether.createAsync()
+    var EtherTools = await Ether.createAsync(index, password)
     console.log('# init complete')
 
     /* init Dappchain elements */
@@ -135,11 +168,11 @@ async function sendDappToGateway(unit, amount) {
   }
 }
 
-async function withdrawEther() {
+async function withdraw(index, password) {
   try {
     /* init Ethereum elements */
     console.log('# init ethereum tools...')
-    var EtherTools = await Ether.createAsync()
+    var EtherTools = await Ether.createAsync(index, password)
     console.log('# init complete')
 
     /* init Dappchain elements */
@@ -169,124 +202,11 @@ async function withdrawEther() {
   }
 }
 
-async function statusBasic() {
+async function contents_register(index, password, title, cid, fee, hash, supply) {
   try {
     /* init Ethereum elements */
     console.log('# init ethereum tools...')
-    var EtherTools = await Ether.createAsync()
-    console.log('# init complete')
-
-    /* init Dappchain elements */
-    console.log('# init dapp tools...')
-    var DappTools = await Dapp.createAsync(EtherTools.getDappPrivateKey())
-    console.log('# init complete')
-
-    /* basic information about both accounts */
-    console.log('# basic status:')
-    const ethereumAccount = EtherTools.getWallet().getAddressString()
-    const etherBalance = await EtherTools.GetBaLanceAsync(ethereumAccount)
-    const dappAccount = DappTools.GetAccount()
-    const dappBalance = await DappTools.GetBaLanceAsync()
-    const mappingInfo = await DappTools.GetAddressMappingAsync(ethereumAccount)
-
-    console.log(' - ethereum account: ' + ethereumAccount)
-    console.log(' - ethereum balance: ' + etherBalance)
-    console.log(' - dapp account: ' + dappAccount)
-    console.log(' - dapp balance: ' + dappBalance)
-    console.log(' - address mapping:')
-    console.log('  * from: ' + mappingInfo.from.chainId + '_' + mappingInfo.from.local)
-    console.log('  * to: ' + mappingInfo.to.chainId + '_' + mappingInfo.to.local)
-  } catch (error) {
-    console.log('# error occured: ' + error)
-  }
-}
-
-async function statusToken(cTokenId, uTokenId, oTokenId) {
-  try {
-    /* init Ethereum elements */
-    console.log('# init ethereum tools...')
-    var EtherTools = await Ether.createAsync()
-    console.log('# init complete')
-
-    /* init Dappchain elements */
-    console.log('# init dapp tools...')
-    var DappTools = await Dapp.createAsync(EtherTools.getDappPrivateKey())
-    console.log('# init complete')
-
-    /* infromation about dapp tokens */
-    const havedIds = await DappTools.GetOwnedUTsAsync()
-    const ownedIds = await DappTools.GetOwnedCTsAsync()
-
-    if (typeof cTokenId == 'undefined' && typeof uTokenId == 'undefined' && typeof oTokenId == 'undefined') {
-      console.log('# you have UTokens with ids ' + havedIds)
-      console.log('# you own CTokens with ids ' + ownedIds)
-    } else if (typeof cTokenId != 'undefined') {
-      if (!(await DappTools.IsExistsCToken(cTokenId))) {
-        console.log('# contents token with id ' + cTokenId + ' is not exist')
-        return
-      }
-      const details = await DappTools.GetCTWithID(cTokenId)
-      const status = details._DisabLed == true ? 'disable' : 'enable'
-      console.log('# contents token with id ' + cTokenId + ' details')
-      console.log(' - balance: ' + details.balance)
-      console.log(' - title: ' + details._TitLe)
-      console.log(' - cid: ' + details._CID)
-      console.log(' - hash: ' + details._Hash)
-      console.log(' - fee: ' + details._Fee)
-      console.log(' - status: ' + status)
-
-    } else if (typeof uTokenId != 'undefined') {
-      if (!(await DappTools.IsExistsUToken(uTokenId))) {
-        console.log('# user token with id ' + uTokenId + ' is not exist')
-        return
-      }
-      const details = await DappTools.GetUTWithID(uTokenId)
-      var state
-      switch (details.state) {
-        case '0':
-          state = 'sold';
-          break;
-        case '1':
-          state = 'in progess';
-          break;
-        case '2':
-          state = 'settled';
-          break;
-        default:
-          state = 'unknown state';
-          break;
-      }
-      console.log('# user token with id ' + uTokenId + ' details')
-      console.log(' - user: ' + details.user)
-      console.log(' - contents token: ' + details.cTokenId)
-      console.log(' - token state: ' + state)
-
-    } else if (typeof oTokenId != 'undefiend') {
-      if (!(await DappTools.IsExistsOToken(oTokenId))) {
-        console.log('# offchain token with id ' + oTokenId + ' is not exist')
-        return
-      }
-      const details = await DappTools.GetOTWithID(oTokenId)
-      const state = details.state == 0 ? 'open' : 'off'
-      console.log('# off chain token with id ' + oTokenId + 'details')
-      console.log(' - orderer: ' + details.orderer)
-      console.log(' - user token id: ' + details.uTokenId)
-      console.log(' - contents token id: ' + details.cTokenId)
-      console.log(' - deposit: ' + details.deposit)
-      console.log(' - state: ' + state)
-      console.log(' - timestamp: ' + details.timestamp)
-      console.log(' - left time: ' + details.leftTime)
-    }
-  } catch (error) {
-    console.log('# error occured: ' + error)
-  }
-}
-
-async function createCToken(title, cid, fee, hash, supply) {
-  try {
-    /* init Ethereum elements */
-    console.log('# init ethereum tools...')
-    var EtherTools = await Ether.createAsync()
+    var EtherTools = await Ether.createAsync(index, password)
     console.log('# init complete')
 
     /* init Dappchain elements */
@@ -301,11 +221,11 @@ async function createCToken(title, cid, fee, hash, supply) {
   }
 }
 
-async function mintB(cTokenId, supply) {
+async function contents_list(index, password) {
   try {
     /* init Ethereum elements */
     console.log('# init ethereum tools...')
-    var EtherTools = await Ether.createAsync()
+    var EtherTools = await Ether.createAsync(index, password)
     console.log('# init complete')
 
     /* init Dappchain elements */
@@ -314,16 +234,48 @@ async function mintB(cTokenId, supply) {
     console.log('# init complete')
 
     /* create Dapp token */
-    await DappTools.MintB(cTokenId, supply)
+    const cTokenIds = await DappTools.GetOwnedCTsAsync()
+    console.log(JSON.stringify(cTokenIds))
   } catch (error) {
     console.log('# error occured: ' + error)
   }
 }
 
-async function buyToken(cTokenId) {
+async function contents_details(index, password, cTokenId) {
+  try {
+    /* init Ethereum elements */
+    console.log('# init ethereum tools...')
+    var EtherTools = await Ether.createAsync(index, password)
+    console.log('# init complete')
+
+    /* init Dappchain elements */
+    console.log('# init dapp tools...')
+    var DappTools = await Dapp.createAsync(EtherTools.getDappPrivateKey())
+    console.log('# init complete')
+
+    /* create Dapp token */
+    if (!(await DappTools.IsExistsCToken(cTokenId))) {
+      console.log('# contents token with id ' + cTokenId + ' is not exist')
+      return
+    }
+    const details = await DappTools.GetCTWithID(cTokenId)
+    const status = details._DisabLed == true ? 'disable' : 'enable'
+    console.log('# contents token with id ' + cTokenId + ' details')
+    console.log(' - balance: ' + details.balance)
+    console.log(' - title: ' + details._TitLe)
+    console.log(' - cid: ' + details._CID)
+    console.log(' - hash: ' + details._Hash)
+    console.log(' - fee: ' + details._Fee)
+    console.log(' - status: ' + status)
+  } catch (error) {
+    console.log('# error occured: ' + error)
+  }
+}
+
+async function contents_buy(index, password, cTokenId) {
   /* init Ethereum elements */
   console.log('# init ethereum tools...')
-  var EtherTools = await Ether.createAsync()
+  var EtherTools = await Ether.createAsync(index, password)
   console.log('# init complete')
 
   /* init Dappchain elements */
@@ -334,10 +286,10 @@ async function buyToken(cTokenId) {
   await DappTools.BuyToken(cTokenId)
 }
 
-async function channelOpen(uTokenId) {
+async function token_list(index, password) {
   /* init Ethereum elements */
   console.log('# init ethereum tools...')
-  var EtherTools = await Ether.createAsync()
+  var EtherTools = await Ether.createAsync(index, password)
   console.log('# init complete')
 
   /* init Dappchain elements */
@@ -345,13 +297,14 @@ async function channelOpen(uTokenId) {
   var DappTools = await Dapp.createAsync(EtherTools.getDappPrivateKey())
   console.log('# init complete')
 
-  await DappTools.ChannelOpen(uTokenId)
+  const havedIds = await DappTools.GetOwnedUTsAsync()
+  console.log("# token list: " + JSON.stringify(havedIds))
 }
 
-async function channelOff(oTokenId) {
+async function token_details(index, password, uTokenId) {
   /* init Ethereum elements */
   console.log('# init ethereum tools...')
-  var EtherTools = await Ether.createAsync()
+  var EtherTools = await Ether.createAsync(index, password)
   console.log('# init complete')
 
   /* init Dappchain elements */
@@ -359,35 +312,30 @@ async function channelOff(oTokenId) {
   var DappTools = await Dapp.createAsync(EtherTools.getDappPrivateKey())
   console.log('# init complete')
 
-  await DappTools.ChannelOff(oTokenId)
-}
-
-async function channelDetails(oTokenId) {
-  /* init Ethereum elements */
-  console.log('# init ethereum tools...')
-  var EtherTools = await Ether.createAsync()
-  console.log('# init complete')
-
-  /* init Dappchain elements */
-  console.log('# init dapp tools...')
-  var DappTools = await Dapp.createAsync(EtherTools.getDappPrivateKey())
-  console.log('# init complete')
-
-  await DappTools.GetOTWithID(oTokenId)
-}
-
-async function settle(oTokenId) {
-  /* init Ethereum elements */
-  console.log('# init ethereum tools...')
-  var EtherTools = await Ether.createAsync()
-  console.log('# init complete')
-
-  /* init Dappchain elements */
-  console.log('# init dapp tools...')
-  var DappTools = await Dapp.createAsync(EtherTools.getDappPrivateKey())
-  console.log('# init complete')
-
-  await DappTools.Settle(oTokenId)
+  if (!(await DappTools.IsExistsUToken(uTokenId))) {
+    console.log('# user token with id ' + uTokenId + ' is not exist')
+    return
+  }
+  const details = await DappTools.GetUTWithID(uTokenId)
+  var state
+  switch (details.state) {
+    case '0':
+      state = 'sold';
+      break;
+    case '1':
+      state = 'in progess';
+      break;
+    case '2':
+      state = 'settled';
+      break;
+    default:
+      state = 'unknown state: ' + details.state;
+      break;
+  }
+  console.log('# user token with id ' + uTokenId + ' details')
+  console.log(' - user: ' + details.user)
+  console.log(' - contents token: ' + details.cTokenId)
+  console.log(' - token state: ' + state)
 }
 
 async function sendAggregatedReceipt() {
@@ -406,41 +354,6 @@ async function sendAggregatedReceipt() {
 program
   .version('0.1.0')
   .option('-K, --keypath <path>', 'designate private key path')
-
-program
-  .command('init')
-  .description('init ethereum & dappchain')
-  .action(function () {
-    console.log("# initApp() called")
-    initApp()
-  })
-
-program
-  .command('mapping')
-  .description('mapping address')
-  .action(function () {
-    console.log("# mappingAddress() called")
-    mappingAddress()
-  })
-
-program
-  .command('status_basic')
-  .description('output basic status')
-  .action(function () {
-    console.log("# statusBasic() called")
-    statusBasic()
-  })
-
-program
-  .command('status_token')
-  .option('-C, --cid <tid>', 'contents token id')
-  .option('-U, --uid <tid>', 'user token id')
-  .option('-O, --oid <oid>', 'off chain token id')
-  .description('output token details if you enter the id. otherwise, output token ids')
-  .action(function (options) {
-    console.log("# statusToken() called")
-    statusToken(options.cid, options.uid, options.oid)
-  })
 
 program
   .command('send_ether')
@@ -471,71 +384,116 @@ program
   })
 
 program
-  .command('create_ct')
-  .description('create contents token')
-  .option('-T, --title <title>', 'contents title')
-  .option('-C, --cid <cid>', 'contents cid')
-  .option('-F, --fee <fee>', 'contents fee')
-  .option('-H, --hash <hash>', 'contents hash')
-  .option('-S, --supply <supply>', 'contents supply')
+  .command('account')
+  .option('-g, --generate', 'generate account')
+  .option('-i, --import', 'import account')
+  .option('-e, --export', 'export account')
+  .option('-r, --remove', 'remove account')
+  .option('-l, --list', 'list up account')
+  .option('-b, --balance', 'balance info')
+  .option('-I, --index <index>', 'account index')
+  .option('-p, --password <password>', 'account password')
+  .option('-P, --prvKey <prvKey>', 'private key')
   .action(function (options) {
-    console.log("# createCToken() called")
-    createCToken(options.title, options.cid, options.fee, options.hash, options.supply)
+    if (options.generate) {
+      console.log("account_generate() called")
+      account_generate(options.password)
+    }
+    if (options.import) {
+      console.log("account_import() called")
+      account_import(options.prvKey, options.password)
+    }
+    if (options.export) {
+      console.log("account_export() called")
+      account_export(options.index, options.password)
+    }
+    if (options.list) {
+      console.log("account_list() called")
+      account_list()
+    }
+    if (options.remove) {
+      console.log("account_remove() called")
+      account_remove(options.index)
+    }
+    if (options.balance) {
+      console.log("account_blance() called")
+      account_blance(options.index, options.password)
+    }
   })
 
 program
-  .command('mint_b')
-  .description('mint B')
-  .option('-C, --cid <cid>', 'contents token id to mint')
-  .option('-S, --supply <supply>', 'supply amount to mint')
+  .command('send')
+  .option('-e, --ethereum', 'send ether from ethereum to dappchain')
+  .option('-d, --dappchain', 'send ether from dappchain to ethereum')
+  .option('-w, --withdraw', 'withdraw from gateway')
+  .option('-i, --index <index>', 'account index')
+  .option('-p, --password <password>', 'account password')
+  .option('-u, --unit <unit>', 'ethereum currency unit wei|ether')
+  .option('-a, --amount <amount>', 'ethere amount')
   .action(function (options) {
-    console.log("# mintB() called")
-    mintB(options.cid, options.supply)
+    if (options.ethereum) {
+      console.log("send_ethereum() called")
+      send_ethereum(options.index, options.password, options.unit, options.amount)
+    }
+    if (options.dappchain) {
+      console.log("send_dappchain() called")
+      send_dappchain(options.index, options.password, options.unit, options.amount)
+    }
+    if (options.withdraw) {
+      console.log("withdraw() called")
+      withdraw(otions.index, options.password)
+    }
   })
 
 program
-  .command('buy_token')
-  .description('buy token')
-  .option('-C, --cid <cid>', 'contents token id you want to buy')
+  .command('contents')
+  .option('-r, --register', 'register contents')
+  .option('-l, --list', 'list up contents')
+  .option('-d, --details', 'details of contents')
+  .option('-b, --buy', 'buy contents')
+  .option('-I, --index <index>', 'account index')
+  .option('-p, --password <password>', 'account password')
+  .option('-C, --cTokenId <cTokenId>', 'contents token id')
+  .option('-t, --title <title>', 'contents title')
+  .option('-c, --cid <cid>', 'contents cid')
+  .option('-f, --fee <fee>', 'contents fee')
+  .option('-h, --hash <hash>', 'contents hash')
+  .option('-s, --supply <supply>', 'contents supply')
   .action(function (options) {
-    console.log("# buyToken() called")
-    buyToken(options.cid)
+    if (options.register) {
+      console.log('contents_register() called')
+      contents_register(options.index, options.password, options.title, options.cid, options.fee, options.hash, options.supply)
+    }
+    if (options.list) {
+      console.log("contents_list() called")
+      contents_list(options.index, options.password)
+    }
+    if (options.details) {
+      console.log("contents_details() called")
+      contents_details(options.index, options.password, options.cTokenId)
+    }
+    if (options.buy) {
+      console.log("contents_buy() called")
+      contents_buy(options.index, options.password, options.cTokenId)
+    }
   })
 
 program
-  .command('channel_open')
-  .description('channel open')
-  .option('-U, --uid <uid>', 'user token id you want to get')
+  .command('token')
+  .option('-l, --list', 'list up token')
+  .option('-d, --details', 'details of token')
+  .option('-I, --index <index>', 'account index')
+  .option('-p, --password <password>', 'account password')
+  .option('-c, --uTokenId <uTokenId>', 'token id')
   .action(function (options) {
-    console.log("# channelOpen() called")
-    channelOpen(options.uid)
-  })
-
-program
-  .command('channel_off')
-  .description('channel off')
-  .option('-O, --oid <oid>', 'off chain token id you want to off')
-  .action(function (options) {
-    console.log("# channelOff() called")
-    channelOff(options.oid)
-  })
-
-program
-  .command('channel_details')
-  .description('channel details')
-  .option('-O, --oid <oid>', 'off chain details')
-  .action(function (options) {
-    console.log("# channelDetails() called")
-    channelDetails(options.oid)
-  })
-
-program
-  .command('settle')
-  .description('settle')
-  .option('-O, --oid <oid>', 'off chain details')
-  .action(function (options) {
-    console.log("# settle() called")
-    settle(options.oid)
+    if (options.list) {
+      console.log("token_list() called")
+      token_list(options.index, options.password)
+    }
+    if (options.details) {
+      console.log("token_details() called")
+      token_details(options.index, options.password, options.uTokenId)
+    }
   })
 
 program
@@ -544,29 +502,6 @@ program
   .action(function () {
     console.log("# settle() called")
     sendAggregatedReceipt()
-  })
-
-program
-  .command('generate_cid')
-  .description('generate cid')
-  .action(function () {
-    console.log("# generateCID() called")
-    generateCID()
-  })
-
-
-
-////////////////////////////////
-
-program
-  .command('account')
-  .option('-g, --generate', 'generate account')
-  .option('-p, --password <password>', 'account password')
-  .action(function (options) {
-    if (options.generate) {
-      console.log("account_generate() called")
-      account_generate(options.password)
-    }
   })
 
 program.parse(process.argv)
