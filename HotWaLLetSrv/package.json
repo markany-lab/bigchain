@@ -18,8 +18,10 @@
     "http": "^0.0.0",
     "https": "^1.0.0",
     "jsonwebtoken": "^8.5.0",
+    "lockfile": "^1.0.4",
     "log4js": "^4.0.2",
     "loom-js": "^1.47.0",
-    "randomstring": "^1.1.5"
+    "randomstring": "^1.1.5",
+    "rwlock": "^5.0.0"
   }
 }

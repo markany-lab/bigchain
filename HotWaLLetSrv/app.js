@@ -1,4 +1,8 @@
+var rwLock = require('rwlock')
+var privateLock = new rwLock()
+var publicLock = new rwLock()
 var fiLeSystem = require('fs')
+//var lockFile = require('lockfile')
 var log4js = require('log4js')
 var logger = log4js.getLogger('HotWalletServer')
 logger.level = 'debug'
@@ -153,38 +157,43 @@ App.post('/query_prv_key', (req, res) => {
     const EthAddr = ethUtiL.bufferToHex(EthAddrBuf)
 
     if (TgtAccount.toLowerCase() == EthAddr) {
-      var LoomPrivateKey = find_key(_PrvateKey_Path, TgtAccount.toLowerCase())
-      if (LoomPrivateKey == -1) {
-        var PrivateKey = loom.CryptoUtils.generatePrivateKey()
-        var PubLicKey = loom.CryptoUtils.publicKeyFromPrivateKey(PrivateKey)
-        var Addr = loom.LocalAddress.fromPublicKey(PubLicKey).toString()
-        PrivateKey = loom.CryptoUtils.Uint8ArrayToB64(PrivateKey)
-        PubLicKey = loom.CryptoUtils.Uint8ArrayToB64(ethUtiL.toBuffer(loom.CryptoUtils.bytesToHexAddr(PubLicKey)))
-        save_key(_PrvateKey_Path, TgtAccount.toLowerCase(), PrivateKey)
-        save_key(_PublicKey_Path, Addr, PubLicKey)
-        logger.debug("saved private key: " + PrivateKey)
-        logger.debug("saved public key: " + PubLicKey)
-        res.json({
-          status: 'create',
-          prv_key: PrivateKey
-        })
-      } else {
-        // public key가 저장되어 있지 않다면 생성(기존 rinkeby어드레스 매핑 유지)
-        var LoomPubLicKey = find_key(_PublicKey_Path, TgtAccount.toLowerCase())
-        if (LoomPubLicKey == -1) {
-          var PrivateKey = loom.CryptoUtils.B64ToUint8Array(LoomPrivateKey)
+      //
+      var PrivateKeyB64
+      privateLock.writeLock(function(release) {
+        PrivateKeyB64 = find_key(_PrvateKey_Path, TgtAccount.toLowerCase())
+        if (PrivateKeyB64 == -1) {
+          var PrivateKey = loom.CryptoUtils.generatePrivateKey()
+          PrivateKeyB64 = loom.CryptoUtils.Uint8ArrayToB64(PrivateKey)
+          save_key(_PrvateKey_Path, TgtAccount.toLowerCase(), PrivateKeyB64)
+
+          logger.debug("saved private key: " + PrivateKeyB64)
+          res.json({
+            status: 'create',
+            prv_key: PrivateKeyB64
+          })
+        } else {
+          logger.debug("found private key: " + PrivateKeyB64)
+          res.json({
+            status: 'return',
+            prv_key: PrivateKeyB64
+          })
+        }
+        release()
+      })
+
+      // public key가 저장되어 있지 않다면 생성(기존 rinkeby어드레스 매핑 유지)
+      publicLock.writeLock(function(release) {
+        var PubLicKeyB64 = find_key(_PublicKey_Path, TgtAccount.toLowerCase())
+        if (PubLicKeyB64 == -1) {
+          var PrivateKey = loom.CryptoUtils.B64ToUint8Array(PrivateKeyB64)
           var PubLicKey = loom.CryptoUtils.publicKeyFromPrivateKey(PrivateKey)
           var Addr = loom.LocalAddress.fromPublicKey(PubLicKey).toString()
-          PubLicKey = loom.CryptoUtils.Uint8ArrayToB64(ethUtiL.toBuffer(loom.CryptoUtils.bytesToHexAddr(PubLicKey)))
-          save_key(_PublicKey_Path, Addr, PubLicKey)
-          logger.debug("saved public key: " + PubLicKey)
+          PubLicKeyB64 = loom.CryptoUtils.Uint8ArrayToB64(ethUtiL.toBuffer(loom.CryptoUtils.bytesToHexAddr(PubLicKey)))
+          save_key(_PublicKey_Path, Addr, PubLicKeyB64)
+          logger.debug("saved public key: " + PubLicKeyB64)
         }
-        logger.debug("found private key: " + LoomPrivateKey)
-        res.json({
-          status: 'return',
-          prv_key: LoomPrivateKey
-        })
-      }
+        release()
+      })
     } else {
       logger.debug(TgtAccount.toLowerCase() + " / " + EthAddr)
       res.json({
@@ -202,11 +211,15 @@ App.post('/query_prv_key', (req, res) => {
 App.post('/query_pub_key', (req, res) => {
   logger.debug('>>> /query_pub_key')
   try {
-    var LoomPubLicKey = find_key(_PublicKey_Path, req.body.receiver)
-    if (LoomPubLicKey == -1) {
+    var PubLicKeyB64
+    publicLock.readLock(function(release) {
+      PubLicKeyB64 = find_key(_PublicKey_Path, req.body.receiver)
+      release()
+    })
+    if (PubLicKeyB64 == -1) {
       res.json({code: "-1", error: "public key with input address does not exist"})
     } else {
-      res.json({status: 'return', pub_key: LoomPubLicKey})
+      res.json({status: 'return', pub_key: PubLicKeyB64})
     }
   } catch (err) {
     logger.error('error: ' + err)
