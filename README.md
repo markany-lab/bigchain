@@ -20,17 +20,6 @@
 - $ npm install --global --production windows-build-tools # 관리자 권한으로 실행
 - $ npm config set python C:\python27
 
-# golang 설치
-- $ vim ~/.bashrc
-  - > export GOPATH="$HOME/gopath"
-  - > export GOROOT="/opt/go"
-  - > PATH=$GOROOT/bin:$GOPATH/bin:$PATH
-- $ source ~/.bashrc
-- $ export GO_VER=1.11.1
-- $ export GO_URL=https://storage.googleapis.com/golang/go${GO_VER}.linux-amd64.tar.gz
-- $ sudo mkdir -p $GOROOT
-- $ sudo curl -sL $GO_URL | (cd $GOROOT && sudo tar --strip-components 1 -xz)
-
 # MetaMask 설치
  - https://metamask.io/
 
@@ -42,3 +31,43 @@
 
 # 프로젝트 코드 생성
 - https://infura.io
+
+# golang 설치
+- $ vim ~/.bashrc
+  - > export GOPATH="$HOME/gopath"
+  - > export GOROOT="/opt/go"
+  - > PATH=$GOROOT/bin:$GOPATH/bin:$PATH
+- $ source ~/.bashrc
+- $ export GO_VER=1.11.1
+- $ export GO_URL=https://storage.googleapis.com/golang/go${GO_VER}.linux-amd64.tar.gz
+- $ sudo mkdir -p $GOROOT
+- $ sudo curl -sL $GO_URL | (cd $GOROOT && sudo tar --strip-components 1 -xz)
+
+# go-ethereum 설치
+- $cd $GOPATH
+- $ git clone https://github.com/ethereum/go-ethereum.git
+- $ cd go-ethereum
+- $ make geth
+- $ vim ~/.bashrc
+  - > PATH=$GOPATH/go-ethereum/build/bin/:$PATH
+- $ source ~/.bashrc
+
+# ipfs 설치
+- $ go get -u -d github.com/ipfs/go-ipfs
+- $ cd $GOPATH/src/github.com/ipfs/go-ipfs
+- $ make install
+- $ ipfs init
+- $ ipfs daemon
+
+# Loom Network 설치
+- $ curl https://raw.githubusercontent.com/loomnetwork/loom-sdk-documentation/master/scripts/get_loom.sh | sh
+- $ ./loom genkey -k priv_key -a pub_key > ./loc_addr
+- $ ./loom init
+- $ ./loom run
+
+# Loom 샘플코드 실행
+- $ git clone https://github.com/loomnetwork/truffle-dappchain-example
+- $ cd truffle-dappchain-example
+- $ cp ../priv_key extdev_private_key
+- $ yarn install
+- $ yarn deploy

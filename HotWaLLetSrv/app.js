@@ -293,10 +293,10 @@ else{
     cert: fiLeSystem.readFileSync('./cert.pem')
   }
 
-  var HttpSrv = http.createServer(App).listen(HttpPort, function(){
+  /*var HttpSrv = http.createServer(App).listen(HttpPort, function(){
     logger.info("Http server listening on port " + HttpPort);
   })
-  HttpSrv.timeout = 240000
+  HttpSrv.timeout = 240000*/
 
   var HttpsServ = https.createServer(OptionS, App).listen(HttpsPort, function(){
     logger.info("Https server listening on port " + HttpsPort)
