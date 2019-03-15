@@ -10,6 +10,8 @@ var utiL = require('util')
 var ethUtiL = require('ethereumjs-util')
 var loom = require('loom-js')
 
+var mongoose = require('mongoose')
+
 var express = require('express')
 var session = require('express-session')
 var cookieParser = require('cookie-parser')
@@ -25,6 +27,14 @@ var bearerToken = require('express-bearer-token')
 var cLuster = require('cluster')
 var cLusterLock = require("cluster-readwrite-lock");
 var numCPU = require( 'os' ).cpus().length
+
+
+var DB = mongoose.connection
+DB.on('error', console.error)
+DB.once('open', function(){
+  logger.info(">>> connected to mongod server")
+})
+mongoose.connect('mongodb://localhost/waLLet')
 
 //워커 스케쥴을 OS에 맡긴다
 //cLuster.schedulingPolicy = cLuster.SCHED_NONE
@@ -151,7 +161,7 @@ App.post('/query_token', (req, res)=>{
   })
 })
 
-App.post('/query_prv_key', (req, res)=>{
+App.post('/query_prv_key', async function(req, res) {
   logger.debug('>>> /query_prv_key')
 
   //
@@ -180,7 +190,7 @@ App.post('/query_prv_key', (req, res)=>{
       //
       var PrivateKeyB64
       //PrivateLock.writeLock(function(release){
-      CLusterLock.acquireWrite('PrivateLock', ()=>{
+      await CLusterLock.acquireWrite('PrivateLock', ()=>{
         PrivateKeyB64 = find_key(_PrvateKey_Path, TgtAccount.toLowerCase())
         if(PrivateKeyB64 == -1){
           var PrivateKey = loom.CryptoUtils.generatePrivateKey()
@@ -211,12 +221,12 @@ App.post('/query_prv_key', (req, res)=>{
 
       // public key가 저장되어 있지 않다면 생성(기존 rinkeby어드레스 매핑 유지)
       //PublicLock.writeLock(function(release){
-      CLusterLock.acquireWrite('PublicLock', ()=>{
-        var PubLicKeyB64 = find_key(_PublicKey_Path, TgtAccount.toLowerCase())
+      await CLusterLock.acquireWrite('PublicLock', ()=>{
+        var PrivateKey = loom.CryptoUtils.B64ToUint8Array(PrivateKeyB64)
+        var PubLicKey = loom.CryptoUtils.publicKeyFromPrivateKey(PrivateKey)
+        var Addr = loom.LocalAddress.fromPublicKey(PubLicKey).toString()
+        var PubLicKeyB64 = find_key(_PublicKey_Path, Addr.toLowerCase())
         if(PubLicKeyB64 == -1){
-          var PrivateKey = loom.CryptoUtils.B64ToUint8Array(PrivateKeyB64)
-          var PubLicKey = loom.CryptoUtils.publicKeyFromPrivateKey(PrivateKey)
-          var Addr = loom.LocalAddress.fromPublicKey(PubLicKey).toString()
           PubLicKeyB64 = loom.CryptoUtils.Uint8ArrayToB64(ethUtiL.toBuffer(loom.CryptoUtils.bytesToHexAddr(PubLicKey)))
           save_key(_PublicKey_Path, Addr, PubLicKeyB64)
           logger.debug("saved public key: " + PubLicKeyB64)
@@ -243,15 +253,15 @@ App.post('/query_prv_key', (req, res)=>{
   }
 })
 
-App.post('/query_pub_key', (req, res)=>{
+App.post('/query_pub_key', async function(req, res) {
   logger.debug('>>> /query_pub_key')
 
   //
   try{
     var PubLicKeyB64
     //PublicLock.readLock(function(release){
-    CLusterLock.acquireRead('PublicLock', ()=>{
-      PubLicKeyB64 = find_key(_PublicKey_Path, req.body.receiver)
+    await CLusterLock.acquireRead('PublicLock', ()=>{
+      PubLicKeyB64 = find_key(_PublicKey_Path, req.body.receiver.toLowerCase())
       //release()
     }).then((res)=>{
       if(typeof res !== 'undefined'){
@@ -294,12 +304,12 @@ else{
   }
 
   /*var HttpSrv = http.createServer(App).listen(HttpPort, function(){
-    logger.info("Http server listening on port " + HttpPort);
+    logger.info("http server listening on port " + HttpPort);
   })
   HttpSrv.timeout = 240000*/
 
   var HttpsServ = https.createServer(OptionS, App).listen(HttpsPort, function(){
-    logger.info("Https server listening on port " + HttpsPort)
+    logger.info("https server listening on port " + HttpsPort)
   })
   HttpsServ.timeout = 240000
 }

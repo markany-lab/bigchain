@@ -22,6 +22,7 @@
     "lockfile": "^1.0.4",
     "log4js": "^4.0.2",
     "loom-js": "^1.47.0",
+    "mongoose": "^5.4.19",
     "os": "^0.1.1",
     "randomstring": "^1.1.5",
     "rwlock": "^5.0.0"
