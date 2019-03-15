@@ -2,10 +2,12 @@ const Web3 = require('web3');
 const Util = require('ethereumjs-util')
 const BN = require('bn.js')
 const jsonBToken = require('../../TruffLeBToken/build/contracts/BToken.json')
+const jsonBChannel = require('../../TruffLeBToken/build/contracts/BChannel.json')
 const json721ZToken = require('../../TruffLeBToken/build/contracts/ERC721ZToken.json')
 const dappGatewayAddress = require('../../WebCLnt/src/gateway_dappchain_address_extdev-plasma-us1.json')
 const { web3Signer } = require('./web3Signer.js')
 var axios = require('axios')
+var Nacl = require('tweetnacl')
 
 const {
   NonceTxMiddleware,
@@ -64,10 +66,17 @@ module.exports = class DappInit_ {
       }
     )
 
-    return new DappInit_(WWW3, PrivateKey, PubLicKey, CLient, AddressMapper, EthCoin, TransferGateway, Addr, BTokenCon)
+    const BChannelCon = new WWW3.eth.Contract(
+      jsonBChannel.abi,
+      jsonBChannel.networks[NetworkID].address, {
+        Addr
+      }
+    )
+
+    return new DappInit_(WWW3, PrivateKey, PubLicKey, CLient, AddressMapper, EthCoin, TransferGateway, Addr, BTokenCon, BChannelCon)
   }
 
-  constructor(www3, private_key, pubLic_key, cLient, address_mapper, eth_coin, transfer_gateway, addr, con) {
+  constructor(www3, private_key, pubLic_key, cLient, address_mapper, eth_coin, transfer_gateway, addr, btoken_con, bchannel_con) {
     this._Web3 = www3
     this._PrivateKey = private_key
     this._PubLicKey = pubLic_key
@@ -76,7 +85,8 @@ module.exports = class DappInit_ {
     this._EthCoin = eth_coin
     this._TransferGateway = transfer_gateway
     this._Address = addr
-    this._Contract = con
+    this._BToken = btoken_con
+    this._BChannel = bchannel_con
     this._TransferGateway.on(Contracts.TransferGateway.EVENT_TOKEN_WITHDRAWAL, event => {
       if (this._OnTokenWithdrawaL) {
         this._OnTokenWithdrawaL(event)
@@ -108,56 +118,6 @@ module.exports = class DappInit_ {
     } catch (_) {
       return null
     }
-  }
-
-  async initContract() {
-    var NetworkID = this._CLient.chainId
-    var Addr = this._Address
-
-    const ERC721ZTokenCon = new this._Web3.eth.Contract(
-      json721ZToken.abi,
-      json721ZToken.networks[NetworkID].address, {
-        Addr
-      }
-    )
-
-    console.log("# set permissioned contract to ERC721Z Token")
-    await ERC721ZTokenCon.methods.setOnlyContract(jsonBToken.networks[NetworkID].address)
-      .send({
-        from: Addr,
-      })
-      .on("receipt", function (receipt) {
-        console.log("# successfully finished!")
-        // console.log("# receipt: " + JSON.stringify(receipt))
-      })
-      .on("error", function (error) {
-        console.log("# error occured: " + error)
-      })
-
-    console.log("\n# init ERC721ZToken to BToken")
-    await this._Contract.methods.setERC721ZInterface(json721ZToken.networks[NetworkID].address)
-      .send({
-        from: Addr,
-      })
-      .on("receipt", function (receipt) {
-        console.log("# successfully finished!")
-        // console.log("# receipt: " + JSON.stringify(receipt))
-      })
-      .on("error", function (error) {
-        console.log("# error occured: " + error)
-      })
-
-    console.log("\n# set minimum deposit")
-    await this._Contract.methods.setConfig(1000000, 10).send({
-      from: Addr,
-    })
-      .on("receipt", function (receipt) {
-        console.log("# successfully finished!")
-        // console.log("# receipt: " + JSON.stringify(receipt))
-      })
-      .on("error", function (error) {
-        console.log("# error occured: " + error)
-      })
   }
 
   async SignAsync(wallet) {
@@ -211,7 +171,7 @@ module.exports = class DappInit_ {
   // dapp_btoken
   async SetEvent(address) {
     const To = this._Address
-    this._Contract.events.NewB({
+    this._BToken.events.NewB({
       filter: {
         _to: To
       }
@@ -226,10 +186,10 @@ module.exports = class DappInit_ {
 
   async GetCTWithID(cTokenId) {
     const From = this._Address
-    const DetaiL = await this._Contract.methods._CTs(cTokenId).call({
+    const DetaiL = await this._BToken.methods._CTs(cTokenId).call({
       from: From
     })
-    const balance = await this._Contract.methods.balanceOf(From, cTokenId).call({
+    const balance = await this._BToken.methods.balanceOf(From, cTokenId).call({
       from: From
     })
     DetaiL.balance = balance
@@ -238,49 +198,49 @@ module.exports = class DappInit_ {
 
   async GetUTWithID(uTokenId) {
     const From = this._Address
-    return this._Contract.methods.GetUTokenDetails(uTokenId).call({
+    return this._BToken.methods.GetUTokenDetails(uTokenId).call({
       from: From
     })
   }
 
   async GetOTWithID(oTokenId) {
     const From = this._Address
-    return await this._Contract.methods.getOTokenDetails(oTokenId).call({
+    return await this._BChannel.methods.getOTokenDetails(oTokenId).call({
       from: From
     })
   }
 
   async GetOwnedUTsAsync() {
     const From = this._Address
-    return this._Contract.methods.GetOwnedUTokens().call({
+    return this._BChannel.methods.GetOwnedUTokens().call({
       from: From
     })
   }
 
   async GetOwnedCTsAsync() {
     const From = this._Address
-    return this._Contract.methods.GetOwnedCTokens().call({
+    return this._BToken.methods.GetOwnedCTokens().call({
       from: From
     })
   }
 
   async IsExistsCToken(cTokenId) {
     const From = this._Address
-    return this._Contract.methods.exists(cTokenId).call({
+    return this._BToken.methods.exists(cTokenId).call({
       from: From
     })
   }
 
   async IsExistsUToken(uTokenId) {
     const From = this._Address
-    return this._Contract.methods.existsU(uTokenId).call({
+    return this._BToken.methods.existsU(uTokenId).call({
       from: From
     })
   }
 
   async IsExistsOToken(oTokenId) {
     const From = this._Address
-    return this._Contract.methods.existsO(oTokenId).call({
+    return this._BChannel.methods.existsO(oTokenId).call({
       from: From
     })
   }
@@ -288,7 +248,7 @@ module.exports = class DappInit_ {
   async CreateCToken(titLe, cid, fee, hash, suppLy) {
     const From = this._Address
     console.log("# minting new ERC721Z token(" + titLe + ", " + cid + ", " + fee + ", " + hash + ", " + suppLy + ") on the dapp chain. this may take a while...");
-    return this._Contract.methods.mintX(titLe, cid, fee, hash, suppLy)
+    return this._BToken.methods.mintX(titLe, cid, fee, hash, suppLy)
       /*.send({from: From, gas: 4712388})*/
       .send({
         from: From
@@ -305,7 +265,7 @@ module.exports = class DappInit_ {
   async MintB(cTokenId, suppLy) {
     const From = this._Address
     console.log("# minting the ERC721Z token with id " + cTokenId + " on the dapp chain. this may take a while...");
-    return this._Contract.methods.mintX_withTokenID(cTokenId, suppLy)
+    return this._BToken.methods.mintX_withTokenID(cTokenId, suppLy)
       /*.send({from: From, gas: 4712388})*/
       .send({
         from: From
@@ -330,7 +290,7 @@ module.exports = class DappInit_ {
     console.log(' - fee: ' + tokenDetails._Fee)
     console.log(' - hash: ' + tokenDetails._Hash)
 
-    this._Contract.methods.buyToken(cTokenId)
+    this._BToken.methods.buyToken(cTokenId)
       .send({
         from: From,
         value: WWW3.utils.toWei(tokenDetails._Fee, 'wei')
@@ -344,12 +304,11 @@ module.exports = class DappInit_ {
       })
   }
 
-  async ChannelOpen(uTokenId) {
+  async ChannelOpen(cid, hash) {
     const From = this._Address
     const WWW3 = this._Web3
-    var oTokenId;
 
-    await this._Contract.methods.channelOpen(uTokenId)
+    await this._BChannel.methods.channelOpen(cid, hash)
       .send({
         from: From,
         value: WWW3.utils.toWei("0.001")
@@ -367,7 +326,7 @@ module.exports = class DappInit_ {
 
   async ChannelOff(oTokenId) {
     const From = this._Address
-    await this._Contract.methods.channelOff(oTokenId)
+    await this._BChannel.methods.channelOff(oTokenId)
       .send({
         from: From,
       })
@@ -384,7 +343,7 @@ module.exports = class DappInit_ {
     const From = this._Address
     var addresses = ['0x16db17db1113c9d409e37c820ff0e5dd5b229f64', '0x101b70635498929bf4b14b0ecaf55d0a19a02ade'];
     var portions = [70, 30]
-    await this._Contract.methods.settleChannel(oTokenId, addresses, portions)
+    await this._BChannel.methods.settleChannel(oTokenId, addresses, portions)
       .send({
         from: From,
       })
@@ -400,21 +359,21 @@ module.exports = class DappInit_ {
   async sendAggregatedReceipt() {
     let msg = {
       channel_id: "0",
-      receiver: this._Address,
       sender: '0xb73C9506cb7f4139A4D6Ac81DF1e5b6756Fab7A2',
       count: 10,
       chunk_list:[0,1,2,3,4,5,6,7,8,9]
     }
     const Msg = Buffer.from(JSON.stringify(msg))
-    const sign = CryptoUtils.sign(Msg, this._PrivateKey)
+    const sign = CryptoUtils.Uint8ArrayToB64(Nacl.sign(Msg, this._PrivateKey))
+    const public_key = CryptoUtils.Uint8ArrayToB64(Util.toBuffer(CryptoUtils.bytesToHexAddr(this._PubLicKey)))
+    
 
     await axios({
       method: 'post',
       url: 'http://127.0.0.1:3003/get_receipt',
       data: {
         sign,
-        msg,
-        public_key: this._PubLicKey
+        public_key
       }
     })
     .then((res) => {

@@ -10,7 +10,9 @@
     "cors": "^2.8.5",
     "ethereumjs-util": "^6.1.0",
     "express": "^4.16.4",
+    "https": "^1.0.0",
     "loom-js": "^1.46.2",
+    "tweetnacl": "^1.0.1",
     "web3": "1.0.0-beta.33",
     "web3-provider-engine": "13.3.2"
   }

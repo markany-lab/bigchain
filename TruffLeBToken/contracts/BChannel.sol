@@ -1,11 +1,13 @@
 pragma solidity ^0.4.24;
 
-contract BChannel {
+import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
+
+contract BChannel is Ownable {
 
   uint minDeposit = 0;
   uint unitPrice = 0;
 
-  event channelOpened(uint oTokenId, address orderer, uint cid, bytes32 contents_hash, uint deposit);
+  event channelOpened(uint oTokenId, address orderer, uint cid, string contents_hash, uint deposit);
   event settleFinished(address[] contributors, uint[] portions);
 
   // config
@@ -23,7 +25,8 @@ contract BChannel {
   struct OToken_ {
     address _Orderer;
     uint _CID;
-    bytes32 _CHash;
+    string _CHash;
+    uint16 _NumOfChunks;
     OTokenState_ _State;
     uint _TimeStamp;
     uint _TimeOut;
@@ -37,23 +40,25 @@ contract BChannel {
     return oTokenId + 1 <= _OTs.length;
   }
 
-  function getOTokenDetails(uint oTokenId) public view returns(address orderer, uint cid, uint cHash, uint deposit, uint8 state, uint timestamp, uint leftTime ) {
+  function getOTokenDetails(uint oTokenId) public view returns(address orderer, uint cid, string cHash, uint16 numOfChunks, uint deposit, uint8 state, uint timestamp, uint leftTime ) {
+    OToken_ memory O = _OTs[oTokenId];
     return (
-      _OTs[oTokenId]._Orderer,
-      _OTs[oTokenId]._CID,
-      _OTs[oTokenId]._CHash,
-      OToken2Deposit[oTokenId]
-      uint8(_OTs[oTokenId]._State),
-      _OTs[oTokenId]._TimeStamp,
-      _OTs[oTokenId]._TimeOut - (now - _OTs[oTokenId]._TimeStamp)
+      O._Orderer,
+      O._CID,
+      O._CHash,
+      O._NumOfChunks,
+      OToken2Deposit[oTokenId],
+      uint8(O._State),
+      O._TimeStamp,
+      O._TimeOut - (now - O._TimeStamp)
     );
   }
 
   // off-chain APIs
-  function channelOpen(uint cid, bytes32 contentsHash) payable public returns (uint oTokenId) {
+  function channelOpen(uint cid, string contentsHash, uint16 numOfChunks) payable public returns (uint oTokenId) {
     require(minDeposit <= msg.value, "deposit is too little");
 
-    oTokenId = _OTs.push(OToken_(msg.sender, cid, contentsHash, OTokenState_.open, now, 1000000/*timeout*/ )) - 1;
+    oTokenId = _OTs.push(OToken_(msg.sender, cid, contentsHash, numOfChunks, OTokenState_.open, now, 1000000/*timeout*/ )) - 1;
     OToken2Deposit[oTokenId] = msg.value;
     emit channelOpened(oTokenId, msg.sender, cid, contentsHash, msg.value);
   }

@@ -2,6 +2,7 @@ const { readFileSync, writeFileSync } = require('fs')
 
 const ObjectLib = artifacts.require('./Libraries/ObjectLib.sol')
 const BToken = artifacts.require("./BToken.sol")
+const BChannel = artifacts.require("./BChannel.sol")
 const ERC721ZToken = artifacts.require("./Core/ERC721Z/ERC721ZToken.sol")
 
 module.exports = function(deployer, network, accounts) {
@@ -17,9 +18,11 @@ module.exports = function(deployer, network, accounts) {
     await deployer.link(ObjectLib, ERC721ZToken)
     const ERC721ZTokenInst = await deployer.deploy(ERC721ZToken)
     const BTokenInst = await deployer.deploy(BToken)
+    const BChannelInst = await deployer.deploy(BChannel)
 
     await ERC721ZTokenInst.setOnlyContract(BTokenInst.address)
     await BTokenInst.setERC721ZInterface(ERC721ZTokenInst.address)
+    await BChannelInst.setConfig(1000000, 100)
 
     const OnlyContract = await ERC721ZTokenInst.getOnlyContract.call();
     console.log('>>> only contract: ' + OnlyContract)

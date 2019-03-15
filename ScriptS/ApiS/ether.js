@@ -72,7 +72,6 @@ async function getDappPrivateKey(web3, wallet, method) {
     sign: Sign
   }
 
-  console.log('token: ' + Token)
   await Agent.post('/query_prv_key', {
     confirmData: ConfirmData
   }, {
@@ -116,8 +115,6 @@ module.exports = class EtherInit_ {
     const wallet = loadKeyStore(index, './keystore/', password)
     const dappPrvKey = await getDappPrivateKey(web3, wallet, 'ether-util')
     const con = getEthContract(web3)
-
-    console.log(dappPrvKey)
 
     return new EtherInit_(web3, wallet, dappPrvKey, con)
   }

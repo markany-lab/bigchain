@@ -338,9 +338,52 @@ async function token_details(index, password, uTokenId) {
   console.log(' - token state: ' + state)
 }
 
+async function channel_open(index, password, cid, hash) {
+  /* init Ethereum elements */
+  console.log('# init ethereum tools...')
+  var EtherTools = await Ether.createAsync(index, password)
+  console.log('# init complete')
+
+  /* init Dappchain elements */
+  console.log('# init dapp tools...')
+  var DappTools = await Dapp.createAsync(EtherTools.getDappPrivateKey())
+  console.log('# init complete')
+
+  await DappTools.ChannelOpen(cid, hash)
+}
+
+async function channel_off(index, password, oTokenId) {
+  /* init Ethereum elements */
+  console.log('# init ethereum tools...')
+  var EtherTools = await Ether.createAsync(index, password)
+  console.log('# init complete')
+
+  /* init Dappchain elements */
+  console.log('# init dapp tools...')
+  var DappTools = await Dapp.createAsync(EtherTools.getDappPrivateKey())
+  console.log('# init complete')
+
+  await DappTools.ChannelOff(oTokenId)
+}
+
+async function channel_details(index, password, oTokenId) {
+  /* init Ethereum elements */
+  console.log('# init ethereum tools...')
+  var EtherTools = await Ether.createAsync(index, password)
+  console.log('# init complete')
+
+  /* init Dappchain elements */
+  console.log('# init dapp tools...')
+  var DappTools = await Dapp.createAsync(EtherTools.getDappPrivateKey())
+  console.log('# init complete')
+
+  const details = await DappTools.GetOTWithID(oTokenId)
+  console.log("details: " + JSON.stringify(details))
+}
+
 async function sendAggregatedReceipt() {
   console.log('# init ethereum tools...')
-  var EtherTools = await Ether.createAsync()
+  var EtherTools = await Ether.createAsync(0, 'p@ssw0rd')
   console.log('# init complete')
 
   /* init Dappchain elements */
@@ -493,6 +536,31 @@ program
     if (options.details) {
       console.log("token_details() called")
       token_details(options.index, options.password, options.uTokenId)
+    }
+  })
+
+program
+  .command('channel')
+  .option('-o, --open', 'channel open')
+  .option('-O, --off', 'channel off')
+  .option('-d, --details', 'channel details')
+  .option('-I, --index <index>', 'account index')
+  .option('-p, --password <password>', 'account password')
+  .option('-c, --cid <cid>', 'contents cid')
+  .option('-h, --hash <hash>', 'contents hash')
+  .option('-t, --oTokenId <oTokenId>', 'off-chain channel token id')
+  .action(function(options) {
+    if(options.open) {
+      console.log("channel_open() called")
+      channel_open(options.index, options.password, options.cid, options.hash)
+    }
+    if(options.off) {
+      console.log("channel_off() called")
+      channel_off(options.index, options.password, options.oTokenId)
+    }
+    if(options.details) {
+      console.log("channel_details() called")
+      channel_details(options.index, options.password, options.oTokenId)
     }
   })
 

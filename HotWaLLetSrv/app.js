@@ -28,13 +28,7 @@ var cLuster = require('cluster')
 var cLusterLock = require("cluster-readwrite-lock");
 var numCPU = require( 'os' ).cpus().length
 
-
-var DB = mongoose.connection
-DB.on('error', console.error)
-DB.once('open', function(){
-  logger.info(">>> connected to mongod server")
-})
-mongoose.connect('mongodb://localhost/waLLet')
+var privateSchema = require('./modeLS/private.js')
 
 //워커 스케쥴을 OS에 맡긴다
 //cLuster.schedulingPolicy = cLuster.SCHED_NONE
@@ -91,7 +85,6 @@ App.use(function(req, res, next){
 })
 
 var _PrvateKey_Path = './priv_keys.json'
-var _PublicKey_Path = './pub_keys.json'
 
 function read_key_path(key_path){
   try{
@@ -112,14 +105,23 @@ function write_key_path(key_path, obj){
   }
 }
 
-function find_key(key_path, account){
+function find_key(key_path, address){
+  privateSchema.findOne({addr: address}, function(err, key){
+      if(err){
+        logger.debug('----------database failure')
+      }
+      else {
+        logger.debug('----------key: ' + key + 'account: ' + address)
+      }
+  })
+
   var KeyS = read_key_path(key_path)
-  //logger.debug("account: " + account)
+  //logger.debug("address: " + address)
   if(KeyS == -1){
     return -1
   }
   else{
-    var Key = JSON.parse(KeyS)[account]
+    var Key = JSON.parse(KeyS)[address]
     //logger.debug("key: " + Key)
     if(typeof Key === 'undefined'){
       return -1
@@ -130,16 +132,16 @@ function find_key(key_path, account){
   }
 }
 
-function save_key(key_path, account, key){
+function save_key(key_path, address, key){
   var KeyS = read_key_path(key_path)
   if(KeyS == -1){
     var Obj = new Object()
-    Obj[account] = key
+    Obj[address] = key
     write_key_path(key_path, Obj)
   }
   else{
     var ObjS = JSON.parse(KeyS)
-    ObjS[account] = key
+    ObjS[address] = key
     write_key_path(key_path, ObjS)
   }
 }
@@ -218,27 +220,6 @@ App.post('/query_prv_key', async function(req, res) {
       }).catch((err)=>{
         logger.error('private write lock, error: ' + err)
       })
-
-      // public key가 저장되어 있지 않다면 생성(기존 rinkeby어드레스 매핑 유지)
-      //PublicLock.writeLock(function(release){
-      await CLusterLock.acquireWrite('PublicLock', ()=>{
-        var PrivateKey = loom.CryptoUtils.B64ToUint8Array(PrivateKeyB64)
-        var PubLicKey = loom.CryptoUtils.publicKeyFromPrivateKey(PrivateKey)
-        var Addr = loom.LocalAddress.fromPublicKey(PubLicKey).toString()
-        var PubLicKeyB64 = find_key(_PublicKey_Path, Addr.toLowerCase())
-        if(PubLicKeyB64 == -1){
-          PubLicKeyB64 = loom.CryptoUtils.Uint8ArrayToB64(ethUtiL.toBuffer(loom.CryptoUtils.bytesToHexAddr(PubLicKey)))
-          save_key(_PublicKey_Path, Addr, PubLicKeyB64)
-          logger.debug("saved public key: " + PubLicKeyB64)
-        }
-        //release()
-      }).then((res)=>{
-        if(typeof res !== 'undefined'){
-          logger.debug('public write lock, result: ' + res)
-        }
-      }).catch((err)=>{
-        logger.error('public write lock, error: ' + err)
-      })
     }
     else{
       res.json({
@@ -253,38 +234,63 @@ App.post('/query_prv_key', async function(req, res) {
   }
 })
 
-App.post('/query_pub_key', async function(req, res) {
-  logger.debug('>>> /query_pub_key')
+async function start_server(){
+  mongoose.connect('mongodb://127.0.0.1/waLLet2', {useNewUrlParser: true})
+  var DB = mongoose.connection
+  DB.on('error', function(err){
+    logger.error("start_server, err: " + err)
+  })
+  DB.once('open', function(){
+    logger.info(">>> connected to mongod server")
+  })
 
-  //
-  try{
-    var PubLicKeyB64
-    //PublicLock.readLock(function(release){
-    await CLusterLock.acquireRead('PublicLock', ()=>{
-      PubLicKeyB64 = find_key(_PublicKey_Path, req.body.receiver.toLowerCase())
-      //release()
-    }).then((res)=>{
-      if(typeof res !== 'undefined'){
-        logger.debug('public read lock, result: ' + res)
+
+  await privateSchema.find({addr: '0xd53000e41163a892b4d83b19a2fec184677a1272'}, function(err, key){
+      if(err){
+        logger.debug('----------database failure')
       }
-    }).catch((err)=>{
-      logger.error('public read lock, error: ' + err)
-    })
-    if(PubLicKeyB64 == -1){
-      res.json({code: "-1", error: "public key with input address does not exist"})
-    }
-    else{
-      res.json({status: 'return', pub_key: PubLicKeyB64})
-    }
-  }
-  catch(err){
-    logger.error('/query_pub_key, error: ' + err)
-    res.json({
-      status: 'error occured'
-    })
-  }
-})
+      else {
+        logger.debug('----------key: ' + key)
+      }
+  })
 
+
+  var newPrivate = new privateSchema({addr:'aaaaaaaaa', key:'bbbbbbbbbbbb', enc:false})
+  newPrivate.save(function(error, data){
+      if(error){
+          console.log(error);
+      }else{
+          console.log('----------Saved! ' + data)
+      }
+  })
+
+  await privateSchema.find(function(err, keyS){
+      if(err){
+        logger.debug('----------database failure')
+      }
+      else {
+        logger.debug('----------keys: ' +keyS +  JSON.stringify(keyS))
+      }
+  })
+  /*const HttpPort = 3000
+  var HttpSrv = http.createServer(App).listen(HttpPort, function(){
+    logger.info("http server listening on port " + HttpPort);
+  })
+  HttpSrv.timeout = 240000*/
+
+  const HttpsPort = 3001
+  var OptionS = {
+    key: fiLeSystem.readFileSync('./key.pem'),
+    cert: fiLeSystem.readFileSync('./cert.pem')
+  }
+
+  var HttpsServ = https.createServer(OptionS, App).listen(HttpsPort, function(){
+    logger.info("https server listening on port " + HttpsPort)
+  })
+  HttpsServ.timeout = 240000
+}
+
+numCPU = (numCPU < 4) ? numCPU * 2 : numCPU
 logger.info("num of cpus: " + numCPU)
 if(cLuster.isMaster){
 	for(let i = 0; i < numCPU; i++){
@@ -296,20 +302,5 @@ if(cLuster.isMaster){
 }
 else{
 	logger.info( 'worker pid: %d', process.pid )
-  const HttpPort = 3000
-  const HttpsPort = 3001
-  var OptionS = {
-    key: fiLeSystem.readFileSync('./key.pem'),
-    cert: fiLeSystem.readFileSync('./cert.pem')
-  }
-
-  /*var HttpSrv = http.createServer(App).listen(HttpPort, function(){
-    logger.info("http server listening on port " + HttpPort);
-  })
-  HttpSrv.timeout = 240000*/
-
-  var HttpsServ = https.createServer(OptionS, App).listen(HttpsPort, function(){
-    logger.info("https server listening on port " + HttpsPort)
-  })
-  HttpsServ.timeout = 240000
+  start_server()
 }
