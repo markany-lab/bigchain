@@ -17,11 +17,6 @@ contract BFactory is Ownable {
     settled
   }
 
-  enum OTokenState_ {
-    open,
-    off
-  }
-
   // contents token
   struct CToken_ {
     string _TitLe;
@@ -38,26 +33,13 @@ contract BFactory is Ownable {
     UTokenState_ _State;
   }
 
-  // off-chain channel token
-  struct OToken_ {
-    address _Orderer;
-    uint _UTokenId;
-    uint _CTokenId;
-    uint _Deposit;
-    OTokenState_ _State;
-    uint _TimeStamp;
-    uint _TimeOut;
-  }
-
   CToken_[] public _CTs;    // contents tokens array
   UToken_[] internal _UTs;  // user tokens array
-  OToken_[] internal _OTs;  // offchain channel tokens array
 
   mapping (uint => address) public CToken2ContentProvider;     // cTokenId => owner
   mapping (uint => address) internal UToken2User;              // uTokenId => owner
   mapping (address => uint[]) public ContentProvider2CTokens;  // owner => cTokenIds
   mapping (address => uint[]) internal User2UTokens;           // owner => uTokenIds
-  mapping (uint => uint) public OToken2Deposit;                // otokenId => deposit
 
   uint _EnabLeFee = 0.001 ether;
 
@@ -88,10 +70,6 @@ contract BFactory is Ownable {
     return uTokenId + 1 <= _UTs.length;
   }
 
-  function existsO(uint256 oTokenId) view public returns (bool) {
-    return oTokenId + 1 <= _OTs.length;
-  }
-
   function _CreateCToken(string titLe, uint cid, uint fee, string hash) internal returns (uint) {
     uint cTokenId = _CTs.push(CToken_(titLe, cid, hash, fee, true)) - 1;
     CToken2ContentProvider[cTokenId] = msg.sender;
@@ -106,11 +84,6 @@ contract BFactory is Ownable {
     User2UTokens[msg.sender].push(uTokenId);
     emit NewUToken(msg.sender, uTokenId, cTokenId, uint8(state));
     return uTokenId;
-  }
-
-  function _CreateOToken(uint uTokenId, uint deposit) internal returns (uint) {
-    uint oTokenId = _OTs.push(OToken_(msg.sender, uTokenId, _UTs[uTokenId]._CToken, deposit, OTokenState_.open, now, 1000000/*timeout*/ )) - 1;
-    return oTokenId;
   }
 
   function _ModifyCTokenValue(uint cTokenId, string titLe, uint cid, uint fee, string hash) public onlyContentProviderOf(cTokenId) {
@@ -144,17 +117,5 @@ contract BFactory is Ownable {
 
   function GetUTokenDetails(uint uTokenId) view public onlyUTokenOwnerOf(uTokenId) returns (address user, uint cTokenId, uint8 state) {
     return (_UTs[uTokenId]._User, _UTs[uTokenId]._CToken, uint8(_UTs[uTokenId]._State));
-  }
-
-  function getOTokenDetails(uint oTokenId) public view returns(address orderer, uint uTokenId, uint cTokenId, uint deposit, uint8 state, uint timestamp, uint leftTime ) {
-    return (
-      _OTs[oTokenId]._Orderer,
-      _OTs[oTokenId]._UTokenId,
-      _OTs[oTokenId]._CTokenId,
-      _OTs[oTokenId]._Deposit,
-      uint8(_OTs[oTokenId]._State),
-      _OTs[oTokenId]._TimeStamp,
-      _OTs[oTokenId]._TimeOut - (now - _OTs[oTokenId]._TimeStamp)
-    );
   }
 }

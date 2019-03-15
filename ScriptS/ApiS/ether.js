@@ -30,10 +30,8 @@ function saveKeyStore(path, wallet, password) {
   if(FiLeSystem.existsSync(path + "key_manager.json")) {
     var key_manager = JSON.parse(FiLeSystem.readFileSync(path + "key_manager.json"))
     key_manager.push(obj)
-
     FiLeSystem.writeFileSync(path + 'key_manager.json', JSON.stringify(key_manager), 'utf8')
     return key_manager.length - 1
-
   } else {
     FiLeSystem.writeFileSync(path + 'key_manager.json', '[' + JSON.stringify(obj) + ']', 'utf8')
     return 0
@@ -46,7 +44,6 @@ function loadKeyStore(index, path, password) {
   const v3 = JSON.parse(FiLeSystem.readFileSync(path + filename, 'utf8'))
   return EthWaLLet.fromV3(v3, password)
 }
-
 
 async function getDappPrivateKey(web3, wallet, method) {
   var Token
@@ -84,15 +81,11 @@ async function getDappPrivateKey(web3, wallet, method) {
   .then(await function (res) {
     var QueryStatus = res.data.status;
     if (QueryStatus == 'verify failed') {
-      // console.log("login failed: verify signature failed");
     } else {
       if (QueryStatus == 'create') {
-        // console.log("login succeed: new key pair is generated");
       }
       if (QueryStatus == 'return') {
-        // console.log("login succeed: key pair is returned");
       }
-      // console.log("private key: " + res.data.prv_key);
       PrivateKey = res.data.prv_key;
     }
   })

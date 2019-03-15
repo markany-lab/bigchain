@@ -1,4 +1,3 @@
-var rwLock = require('rwlock')
 var fiLeSystem = require('fs')
 //var lockFile = require('lockfile')
 var log4js = require('log4js')
@@ -22,7 +21,9 @@ var expressJWT = require('express-jwt')
 var jwt = require('jsonwebtoken')
 var cors = require('cors')
 var bearerToken = require('express-bearer-token')
+//var rwLock = require('rwlock')
 var cLuster = require('cluster')
+var cLusterLock = require("cluster-readwrite-lock");
 var numCPU = require( 'os' ).cpus().length
 
 //워커 스케쥴을 OS에 맡긴다
@@ -31,8 +32,9 @@ var numCPU = require( 'os' ).cpus().length
 //워커 스케쥴을 Round Robin 방식으로 한다
 cLuster.schedulingPolicy = cLuster.SCHED_RR
 
-var PrivateLock = new rwLock()
-var PublicLock = new rwLock()
+//var PrivateLock = new rwLock()
+//var PublicLock = new rwLock()
+var CLusterLock = new cLusterLock(cLuster)
 const App = express()
 App.options('*', cors())
 App.use(cors())
@@ -51,7 +53,7 @@ App.use(expressJWT({
 App.use(bearerToken())
 
 App.use(function(req, res, next){
-	logger.debug(' ------>>>>>> new request for %s',req.originalUrl)
+	logger.debug('--->>> new request for %s',req.originalUrl)
 	if(req.originalUrl.indexOf('/query_token') >= 0){
 		return next()
 	}
@@ -102,14 +104,14 @@ function write_key_path(key_path, obj){
 
 function find_key(key_path, account){
   var KeyS = read_key_path(key_path)
-  logger.debug("account = " + account)
+  //logger.debug("account: " + account)
   if(KeyS == -1){
     return -1
   }
   else{
     var Key = JSON.parse(KeyS)[account]
     //logger.debug("key: " + Key)
-    if(typeof Key === "undefined"){
+    if(typeof Key === 'undefined'){
       return -1
     }
     else{
@@ -153,7 +155,7 @@ App.post('/query_prv_key', (req, res)=>{
   logger.debug('>>> /query_prv_key')
 
   //
-  logger.debug(JSON.stringify(req.body))
+  logger.debug('body: ' + JSON.stringify(req.body))
   try {
     var TgtAccount = req.body.confirmData.ethAddress
     var TgtSign = req.body.confirmData.sign
@@ -177,7 +179,8 @@ App.post('/query_prv_key', (req, res)=>{
     if(TgtAccount.toLowerCase() == EthAddr){
       //
       var PrivateKeyB64
-      PrivateLock.writeLock(function(release){
+      //PrivateLock.writeLock(function(release){
+      CLusterLock.acquireWrite('PrivateLock', ()=>{
         PrivateKeyB64 = find_key(_PrvateKey_Path, TgtAccount.toLowerCase())
         if(PrivateKeyB64 == -1){
           var PrivateKey = loom.CryptoUtils.generatePrivateKey()
@@ -197,11 +200,18 @@ App.post('/query_prv_key', (req, res)=>{
             prv_key: PrivateKeyB64
           })
         }
-        release()
+        //release()
+      }).then((res)=>{
+        if(typeof res !== 'undefined'){
+          logger.debug('private write lock, result: ' + res)
+        }
+      }).catch((err)=>{
+        logger.error('private write lock, error: ' + err)
       })
 
       // public key가 저장되어 있지 않다면 생성(기존 rinkeby어드레스 매핑 유지)
-      PublicLock.writeLock(function(release){
+      //PublicLock.writeLock(function(release){
+      CLusterLock.acquireWrite('PublicLock', ()=>{
         var PubLicKeyB64 = find_key(_PublicKey_Path, TgtAccount.toLowerCase())
         if(PubLicKeyB64 == -1){
           var PrivateKey = loom.CryptoUtils.B64ToUint8Array(PrivateKeyB64)
@@ -211,11 +221,16 @@ App.post('/query_prv_key', (req, res)=>{
           save_key(_PublicKey_Path, Addr, PubLicKeyB64)
           logger.debug("saved public key: " + PubLicKeyB64)
         }
-        release()
+        //release()
+      }).then((res)=>{
+        if(typeof res !== 'undefined'){
+          logger.debug('public write lock, result: ' + res)
+        }
+      }).catch((err)=>{
+        logger.error('public write lock, error: ' + err)
       })
     }
     else{
-      logger.debug(TgtAccount.toLowerCase() + " / " + EthAddr)
       res.json({
         status: 'verify failed'
       })
@@ -234,9 +249,16 @@ App.post('/query_pub_key', (req, res)=>{
   //
   try{
     var PubLicKeyB64
-    PublicLock.readLock(function(release){
+    //PublicLock.readLock(function(release){
+    CLusterLock.acquireRead('PublicLock', ()=>{
       PubLicKeyB64 = find_key(_PublicKey_Path, req.body.receiver)
-      release()
+      //release()
+    }).then((res)=>{
+      if(typeof res !== 'undefined'){
+        logger.debug('public read lock, result: ' + res)
+      }
+    }).catch((err)=>{
+      logger.error('public read lock, error: ' + err)
     })
     if(PubLicKeyB64 == -1){
       res.json({code: "-1", error: "public key with input address does not exist"})
@@ -253,29 +275,31 @@ App.post('/query_pub_key', (req, res)=>{
   }
 })
 
-const HttpPort = 3000
-var Server = http.createServer(App).listen(HttpPort, function(){
-  logger.info("Http server listening on port " + HttpPort);
-})
-
-
-logger.info("num of cpus: " + numCPU);
-/*if(cLuster.isMaster){
+logger.info("num of cpus: " + numCPU)
+if(cLuster.isMaster){
 	for(let i = 0; i < numCPU; i++){
-		var Worker = cLuster.fork();
+		var Worker = cLuster.fork()
 	}
 	cLuster.on('exit', function(worker, code, signal){
-		Logger.info( 'worker ' + worker.process.pid + ' died' );
-	} );
-}*/
-
-
-const HttpsPort = 3001
-var OptionS = {
-  key: fiLeSystem.readFileSync('./key.pem'),
-  cert: fiLeSystem.readFileSync('./cert.pem')
+		logger.info('worker ' + worker.process.pid + ' died')
+	})
 }
+else{
+	logger.info( 'worker pid: %d', process.pid )
+  const HttpPort = 3000
+  const HttpsPort = 3001
+  var OptionS = {
+    key: fiLeSystem.readFileSync('./key.pem'),
+    cert: fiLeSystem.readFileSync('./cert.pem')
+  }
 
-var Server = https.createServer(OptionS, App).listen(HttpsPort, function(){
-  logger.info("Https server listening on port " + HttpsPort);
-})
+  var HttpSrv = http.createServer(App).listen(HttpPort, function(){
+    logger.info("Http server listening on port " + HttpPort);
+  })
+  HttpSrv.timeout = 240000
+
+  var HttpsServ = https.createServer(OptionS, App).listen(HttpsPort, function(){
+    logger.info("Https server listening on port " + HttpsPort)
+  })
+  HttpsServ.timeout = 240000
+}

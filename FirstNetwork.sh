@@ -44,7 +44,7 @@ function is_setup_already {
      [ $(check_directory_exists ./TruffLeGateWay/node_modules) = 1 ] &&
      [ $(check_file_exists ./LoomNetwork/loom) = 1 ] &&
      [ $(check_directory_exists ./TstBToken/node_modules) = 1 ] &&
-     [ $(check_directory_exists ./ScriptS/SampLes/node_modules) = 1 ] &&
+     [ $(check_directory_exists ./ScriptS/SampLeS/node_modules) = 1 ] &&
      [ $(check_directory_exists ./ScriptS/Listener/node_modules) = 1 ] &&
      [ $(check_directory_exists ./ScriptS/ApiS/node_modules) = 1 ]; then
     echo 1

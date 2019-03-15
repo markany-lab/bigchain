@@ -375,6 +375,19 @@ clone@^1.0.2:
   resolved "https://registry.yarnpkg.com/clone/-/clone-1.0.4.tgz#da309cc263df15994c688ca902179ca3c7cd7c7e"
   integrity sha1-2jCcwmPfFZlMaIypAheco8fNfH4=
 
+cluster-hub@^0.1.2:
+  version "0.1.2"
+  resolved "https://registry.yarnpkg.com/cluster-hub/-/cluster-hub-0.1.2.tgz#738b2c1c0f0763707fa1b8dd8f39ff7d1958e532"
+  integrity sha1-c4ssHA8HY3B/objdjzn/fRlY5TI=
+
+cluster-readwrite-lock@^1.0.1:
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/cluster-readwrite-lock/-/cluster-readwrite-lock-1.0.1.tgz#9eae43a4721d5889cd0b2b71463fda932ec53e67"
+  integrity sha512-K5qHPberrXSUy4+9f73jsEyKJsvDvzJwTCI1p9mJhS63rFWlCMN+qHqGLCdTdz5Z2XnmcyDBk/Sb77E0mxaXyQ==
+  dependencies:
+    cluster-hub "^0.1.2"
+    readwrite-lock "^1.0.5"
+
 cluster@^0.7.7:
   version "0.7.7"
   resolved "https://registry.yarnpkg.com/cluster/-/cluster-0.7.7.tgz#e497e267cc956bd0b0513adb4aa393357d0085ef"
@@ -2122,6 +2135,11 @@ readable-stream@^2.3.0, readable-stream@^2.3.5:
     safe-buffer "~5.1.1"
     string_decoder "~1.1.1"
     util-deprecate "~1.0.1"
+
+readwrite-lock@^1.0.5:
+  version "1.0.5"
+  resolved "https://registry.yarnpkg.com/readwrite-lock/-/readwrite-lock-1.0.5.tgz#090cf97f983d7439572e53b79d16a42f24880c93"
+  integrity sha512-UcTjXtBvCuq3fFFfQBvJpTvqCLTIBuSQzy7haTj6pMBkiUBoHOWlYGQcQnpUck3BoJB7BvcWGbDjAR4HRWWXvg==
 
 rechoir@^0.6.2:
   version "0.6.2"

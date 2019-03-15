@@ -1,6 +1,7 @@
 {
    "name": "wallet-of-project-b",
    "license": "MIT",
+   "scripts": {
       "account:generate": "node app.js account --generate",
       "account:import": "node app.js account --import",
       "account:export": "node app.js account --export",

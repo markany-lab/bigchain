@@ -1,6 +1,6 @@
 const Web3 = require('web3');
 const jsonZombie = require('../../TruffLeBToken/build/contracts/BToken.json');
-const env = require('./env.json')
+const env = require('../../.env.json')
 
 const {
   NonceTxMiddleware,
@@ -42,7 +42,7 @@ const Con = new WWW3.eth.Contract(
 )
 
 Con.events.allEvents({
-  fromBlock: env.firstBlock,
+  fromBlock: env.first_block,
   toBlock: 'latest'
 })
 .on("data", (event) => {
