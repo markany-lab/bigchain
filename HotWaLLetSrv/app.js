@@ -84,66 +84,29 @@ App.use(function(req, res, next){
 	})
 })
 
-var _PrvateKey_Path = './priv_keys.json'
-
-function read_key_path(key_path){
-  try{
-    return fiLeSystem.readFileSync(key_path, 'utf-8')
-  }
-  catch(err){
-    logger.error('read_key_path, error: ' + err)
-    return -1
-  }
-}
-
-function write_key_path(key_path, obj){
-  try{
-    fiLeSystem.writeFileSync(key_path, JSON.stringify(obj), 'utf-8')
-  }
-  catch(err){
-    logger.error('write_key_path, error: ' + err)
-  }
-}
-
-function find_key(key_path, address){
-  privateSchema.findOne({addr: address}, function(err, key){
+function find_private_key(address){
+  privateSchema.findOne({addr: address}, function(err, item){
       if(err){
-        logger.debug('----------database failure')
+        logger.error('find_private_key, error: ' + err)
       }
       else {
-        logger.debug('----------key: ' + key + 'account: ' + address)
+        logger.debug('key: ' + item.key)
+        return item.key;
       }
   })
-
-  var KeyS = read_key_path(key_path)
-  //logger.debug("address: " + address)
-  if(KeyS == -1){
-    return -1
-  }
-  else{
-    var Key = JSON.parse(KeyS)[address]
-    //logger.debug("key: " + Key)
-    if(typeof Key === 'undefined'){
-      return -1
-    }
-    else{
-      return Key
-    }
-  }
+  return -1
 }
 
-function save_key(key_path, address, key){
-  var KeyS = read_key_path(key_path)
-  if(KeyS == -1){
-    var Obj = new Object()
-    Obj[address] = key
-    write_key_path(key_path, Obj)
-  }
-  else{
-    var ObjS = JSON.parse(KeyS)
-    ObjS[address] = key
-    write_key_path(key_path, ObjS)
-  }
+function insert_private_key(address, key){
+  var New_item = new privateSchema({addr: address, key: key, enc:false })
+  New_item.save(function(err, data){
+      if(err){
+          logger.error('insert_private_key, error: ' + err)
+      }
+      else{
+          console.log('----------Saved! ' + data)
+      }
+  })
 }
 
 App.post('/query_token', (req, res)=>{
@@ -193,11 +156,11 @@ App.post('/query_prv_key', async function(req, res) {
       var PrivateKeyB64
       //PrivateLock.writeLock(function(release){
       await CLusterLock.acquireWrite('PrivateLock', ()=>{
-        PrivateKeyB64 = find_key(_PrvateKey_Path, TgtAccount.toLowerCase())
+        PrivateKeyB64 = find_private_key(TgtAccount.toLowerCase())
         if(PrivateKeyB64 == -1){
           var PrivateKey = loom.CryptoUtils.generatePrivateKey()
           PrivateKeyB64 = loom.CryptoUtils.Uint8ArrayToB64(PrivateKey)
-          save_key(_PrvateKey_Path, TgtAccount.toLowerCase(), PrivateKeyB64)
+          insert_private_key(TgtAccount.toLowerCase(), PrivateKeyB64)
 
           logger.debug("saved private key: " + PrivateKeyB64)
           res.json({
@@ -235,43 +198,15 @@ App.post('/query_prv_key', async function(req, res) {
 })
 
 async function start_server(){
-  mongoose.connect('mongodb://127.0.0.1/waLLet2', {useNewUrlParser: true})
+  mongoose.connect('mongodb://127.0.0.1/waLLet', {useNewUrlParser: true})
   var DB = mongoose.connection
   DB.on('error', function(err){
-    logger.error("start_server, err: " + err)
+    logger.error("start_server, error: " + err)
   })
   DB.once('open', function(){
     logger.info(">>> connected to mongod server")
   })
 
-
-  await privateSchema.find({addr: '0xd53000e41163a892b4d83b19a2fec184677a1272'}, function(err, key){
-      if(err){
-        logger.debug('----------database failure')
-      }
-      else {
-        logger.debug('----------key: ' + key)
-      }
-  })
-
-
-  /*var newPrivate = new privateSchema({addr:'aaaaaaaaa', key:'bbbbbbbbbbbb', enc:false})
-  newPrivate.save(function(error, data){
-      if(error){
-          console.log(error);
-      }else{
-          console.log('----------Saved! ' + data)
-      }
-  })*/
-
-  await privateSchema.find(function(err, keyS){
-      if(err){
-        logger.debug('----------database failure')
-      }
-      else {
-        logger.debug('----------keys: ' +keyS +  JSON.stringify(keyS))
-      }
-  })
   /*const HttpPort = 3000
   var HttpSrv = http.createServer(App).listen(HttpPort, function(){
     logger.info("http server listening on port " + HttpPort);

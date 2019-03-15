@@ -1,11 +1,12 @@
 var mongoose = require('mongoose')
 
-var schema = mongoose.Schema
-
-var certSchema = new schema({
-  _id: String,
+var perivateSchema = new mongoose.Schema({
+  addr: String,
   key: String,
   enc: Boolean
-});
+},
+{
+  versionKey : false
+})
 
-module.exports = mongoose.model('cert', certSchema)
+module.exports = mongoose.model('private_keys', perivateSchema)
