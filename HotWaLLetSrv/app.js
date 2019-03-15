@@ -255,14 +255,14 @@ async function start_server(){
   })
 
 
-  var newPrivate = new privateSchema({addr:'aaaaaaaaa', key:'bbbbbbbbbbbb', enc:false})
+  /*var newPrivate = new privateSchema({addr:'aaaaaaaaa', key:'bbbbbbbbbbbb', enc:false})
   newPrivate.save(function(error, data){
       if(error){
           console.log(error);
       }else{
           console.log('----------Saved! ' + data)
       }
-  })
+  })*/
 
   await privateSchema.find(function(err, keyS){
       if(err){
