@@ -28,7 +28,7 @@ var cLuster = require('cluster')
 var cLusterLock = require("cluster-readwrite-lock");
 var numCPU = require( 'os' ).cpus().length
 
-var privateSchema = require('./modeLS/private.js')
+var privateSchema = require('./modeLS/private_keys.js')
 
 //워커 스케쥴을 OS에 맡긴다
 //cLuster.schedulingPolicy = cLuster.SCHED_NONE
