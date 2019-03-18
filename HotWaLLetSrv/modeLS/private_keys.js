@@ -4,7 +4,7 @@ var perivateSchema = new mongoose.Schema({
   addr: String,
   key: String,
   enc: Boolean,
-  timestamp: Data
+  timestamp: Date
 },
 {
   versionKey : false
@@ -12,5 +12,5 @@ var perivateSchema = new mongoose.Schema({
 
 module.exports = mongoose.model('private_keys', perivateSchema)
 
-// 전체 추가 
+// 전체 추가
 // db.private_keys.updateMany({}, {$set: {timestamp: new Date()}})

@@ -80,7 +80,7 @@ App.use(function(req, res, next){
 })
 
 async function insert_private_key(address, key){
-  var New_item = new privateSchema({addr: address, key: key, enc: false })
+  var New_item = new privateSchema({addr: address, key: key, enc: false, timestamp: new Date() })
   await New_item.save(function(err, item){
       if(err){
           logger.error('insert_private_key, error: ' + err)
