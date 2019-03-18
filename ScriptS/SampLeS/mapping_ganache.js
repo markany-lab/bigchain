@@ -55,13 +55,11 @@ async function GetLoomPrivateKeyAsync(waLLet){
   })
   .then(await function(res){
     var QueryStatus = res.data.status
-    if (QueryStatus == 'verify failed'){
+    if(QueryStatus == 'failed'){
       console.log(">>> login failed: verify signature failed")
-    } else {
-      if (QueryStatus == 'create'){
-        console.log(">>> login succeed: new key pair is generated")
-      }
-      if (QueryStatus == 'return'){
+    }
+    else{
+      if(QueryStatus == 'return'){
         console.log(">>> login succeed: key pair is returned")
       }
       console.log(">>> private key: " + res.data.prv_key)
@@ -125,7 +123,7 @@ async function Mapping(){
 
   const From = new Address('eth', LocalAddress.fromHexString(EthWaLLet.getAddressString()))
   const bMapped = await AddressMapper.hasMappingAsync(From)
-  if (bMapped)
+  if(bMapped)
   {
     const from = EthWaLLet.getAddressString()
     const to = EthCon.options.address

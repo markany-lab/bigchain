@@ -57,14 +57,12 @@ async function GetDappPrivateKeyAsync(www3, waLLet){
     headers: { Authorization: "Bearer " + Token }
   })
   .then(await function(res){
-    var QueryStatus = res.data.status
-    if (QueryStatus == 'verify failed'){
+    vaif(eryStatus = res.data.status
+    if(QueryStatus == 'failed'){
       console.log(">>> login failed: verify signature failed")
-    } else {
-      if (QueryStatus == 'create'){
-        console.log(">>> login succeed: new key pair is generated")
-      }
-      if (QueryStatus == 'return'){
+    }
+    else{
+      if(QueryStatus == 'succeed'){
         console.log(">>> login succeed: key pair is returned")
       }
       console.log(">>> private key: " + res.data.prv_key)
@@ -134,7 +132,7 @@ async function Mapping(){
 
   const From = new Address('eth', LocalAddress.fromHexString(EthWaLLet.getAddressString()))
   const bMapped = await AddressMapper.hasMappingAsync(From)
-  if (!bMapped)
+  if(!bMapped)
   {
     console.log('>>>> no mapping address')
     return
@@ -152,7 +150,7 @@ async function Mapping(){
 
   var GwBaLance = 0
   const WithdrawaLReceipt = await TransferGateway.withdrawalReceiptAsync(DAppAddress)
-  if (WithdrawaLReceipt){
+  if(WithdrawaLReceipt){
     switch (WithdrawaLReceipt.tokenKind){
       case 0:
         GwBaLance = +WithdrawaLReceipt.value.toString(10)
@@ -163,7 +161,7 @@ async function Mapping(){
 
   const GwAddr = new Address(DAppCLient.chainId, LocalAddress.fromHexString('0xE754d9518bF4a9C63476891eF9Aa7D91c8236a5d'))
   console.log('>>> gateway address: ' + GwAddr)
-  if (!GwBaLance)
+  if(!GwBaLance)
   {
     console.log('>>> start withdraw to gateway...')
     await DAppCoin.approveAsync(GwAddr, new BN('10000000000000000'))
@@ -174,7 +172,7 @@ async function Mapping(){
   else
   {
     /*const PendingTx = EthW3.eth.subscribe('pendingTransactions', function(err, res){
-      if (!err){
+      if(!err){
         console.log('>>> pending: ' + res)
       }
     })

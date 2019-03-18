@@ -8,11 +8,11 @@ export default class Login_ {
   static async InitDAppAccount(eth_account){
     const EthAccount = eth_account.GetAccount()
     const EthWWW3 = eth_account.GetWeb3()
-    if ( EthAccount === undefined ){
+    if( EthAccount === undefined ){
       console.error("login.js, ethereum account: " + EthAccount)
       return undefined
     }
-    else {
+    else{
       console.log("login.js, ethereum account: " + EthAccount)
     }
 
@@ -52,13 +52,11 @@ export default class Login_ {
     })
     .then(await function(res){
       var QueryStatus = res.data.status
-      if (QueryStatus == 'verify failed'){
+      if(QueryStatus == 'failed'){
         console.log("login failed: verify signature failed")
-      } else {
-        if (QueryStatus == 'create'){
-          console.log("login succeed: new key pair is generated")
-        }
-        if (QueryStatus == 'return'){
+      }
+      else{
+        if(QueryStatus == 'succeed'){
           console.log("login succeed: key pair is returned")
         }
         console.log("private key: " + res.data.prv_key)

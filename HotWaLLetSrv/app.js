@@ -80,7 +80,7 @@ App.use(function(req, res, next){
 })
 
 async function insert_private_key(address, key, enc){
-  var New_item = new privateSchema({addr: address, key: key, enc: enc, timestamp: new Date() })
+  var New_item = new privateSchema({addr: address, key: key, enc: enc, timestamp: new Date()})
   await New_item.save(function(err, item){
       if(err){
           logger.error('insert_private_key, error: ' + err)
@@ -154,11 +154,11 @@ App.post('/query_get_private_key', async function(req, res){
     const EthPubLicKey = ethUtiL.ecrecover(PrefixedMsgHash, v, r, s)
     const EthAddrBuf = ethUtiL.pubToAddress(EthPubLicKey)
     const EthAddr = ethUtiL.bufferToHex(EthAddrBuf)
-
-    if(ConfirmAddr.toLowerCase() == EthAddr){
+    const Addr = ConfirmAddr.toLowerCase()
+    if(Addr == EthAddr){
       //PrivateLock.writeLock(function(release){
       await CLusterLock.acquireWrite('PrivateLock', async function(){
-        const FoundKey = await privateSchema.findOne({addr: ConfirmAddr.toLowerCase()})
+        const FoundKey = await privateSchema.findOne({addr: Addr})
         if(!FoundKey){
           var LoomKeyB64
           var Enc
@@ -177,18 +177,19 @@ App.post('/query_get_private_key', async function(req, res){
             Enc = false
           }
 
-          await insert_private_key(ConfirmAddr.toLowerCase(), LoomKeyB64, Enc)
+          await insert_private_key(Addr, LoomKeyB64, Enc)
           logger.debug("saved private key: " + LoomKeyB64)
           res.json({
-            status: 'create',
+            status: 'succeed',
             prv_key: LoomKeyB64,
             enc: Enc
           })
         }
         else{
+          await privateSchema.updateOne({addr: Addr}, {$set:{timestamp: new Date()}})
           logger.debug("found item: " + JSON.stringify(FoundKey))
           res.json({
-            status: 'return',
+            status: 'succeed',
             prv_key: FoundKey.key,
             enc: FoundKey.enc
           })
@@ -204,7 +205,7 @@ App.post('/query_get_private_key', async function(req, res){
     }
     else{
       res.json({
-        status: 'verify failed'
+        status: 'failed'
       })
     }
   } catch(err){

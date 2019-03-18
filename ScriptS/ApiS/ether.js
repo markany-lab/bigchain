@@ -32,7 +32,7 @@ function saveKeyStore(path, wallet, password){
     key_manager.push(obj)
     FiLeSystem.writeFileSync(path + 'key_manager.json', JSON.stringify(key_manager), 'utf8')
     return key_manager.length - 1
-  } else {
+  } else{
     FiLeSystem.writeFileSync(path + 'key_manager.json', '[' + JSON.stringify(obj) + ']', 'utf8')
     return 0
   }
@@ -51,12 +51,12 @@ async function getDappPrivateKey(web3, wallet, method){
   await Agent.post('/query_get_token', {})
   .then(await function (res){
     var TgtStr = res.data.string
-    if (method == 'web3'){
+    if(method == 'web3'){
       web3.eth.accounts.wallet.add(wallet.getPrivateKeyString())
       return web3.eth.sign(TgtStr, wallet.getAddressString(), async function (error, result){
         Sign = result
       })
-    } else if (method == 'ether-util'){
+    } else if(method == 'ether-util'){
       var msg = Buffer.from(TgtStr, 'utf8')
       const prefix = new Buffer("\x19Ethereum Signed Message:\n")
       const prefixedMsg = Buffer.concat([prefix, new Buffer(String(msg.length)), msg])
@@ -79,11 +79,10 @@ async function getDappPrivateKey(web3, wallet, method){
   })
   .then(await function (res){
     var QueryStatus = res.data.status
-    if (QueryStatus == 'verify failed'){
-    } else {
-      if (QueryStatus == 'create'){
-      }
-      if (QueryStatus == 'return'){
+    if(QueryStatus == 'failed'){
+    }
+    else{
+      if(QueryStatus == 'succeed'){
       }
       PrivateKey = res.data.prv_key
     }
