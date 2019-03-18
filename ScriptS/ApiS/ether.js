@@ -65,7 +65,7 @@ async function getDappPrivateKey(web3, wallet, method) {
       Token = res.data.token
     }
   })
-  .catch(err=>console.log(err))
+  .catch(err=>console.log('error: ' + JSON.stringify(err)))
 
   const ConfirmData = {
     ethAddress: wallet.getAddressString(),
@@ -88,7 +88,7 @@ async function getDappPrivateKey(web3, wallet, method) {
       PrivateKey = res.data.prv_key
     }
   })
-  .catch(err=>console.log(err))
+  .catch(err=>console.log('error: ' + JSON.stringify(err)))
   return PrivateKey
 }
 

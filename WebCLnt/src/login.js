@@ -37,7 +37,7 @@ export default class Login_ {
         Token = res.data.token
       })
     })
-    .catch(err => console.log(err))
+    .catch(err => console.log('error: ' + JSON.stringify(err)))
 
     const ConfirmData = {
       ethAddress: EthAccount,

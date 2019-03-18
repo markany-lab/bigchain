@@ -40,7 +40,7 @@ async function GetLoomPrivateKeyAsync(waLLet) {
     Sign = ethUtiL.bufferToHex(ESCSign.r) + ethUtiL.bufferToHex(ESCSign.s).substr(2) + ethUtiL.bufferToHex(ESCSign.v).substr(2)
     Token = res.data.token
   })
-  .catch(err=>console.error('>>> ' + JSON.stringify(err)))
+  .catch(err=>console.error('>>> error: ' + JSON.stringify(err)))
 
   const ConfirmData = {
     ethAddress: waLLet.getAddressString(),
@@ -68,7 +68,7 @@ async function GetLoomPrivateKeyAsync(waLLet) {
       PrivateKey = res.data.prv_key
     }
   })
-  .catch(err=>console.error('>>> ' + JSON.stringify(err)))
+  .catch(err=>console.error('>>> error: ' + JSON.stringify(err)))
   return PrivateKey
 }
 

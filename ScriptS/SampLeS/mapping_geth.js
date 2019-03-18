@@ -68,7 +68,7 @@ async function GetLoomPrivateKeyAsync(waLLet) {
       PrivateKey = res.data.prv_key
     }
   })
-  .catch(err=>console.error('>>> ' + JSON.stringify(err)))
+  .catch(err=>console.error('>>> error: ' + JSON.stringify(err)))
   return PrivateKey
 }
 
