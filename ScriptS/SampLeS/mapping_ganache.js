@@ -84,8 +84,8 @@ async function Mapping() {
   var EthProvider = new Web3.providers.HttpProvider('http://localhost:8545')
   //var EthProvider = new Web3.providers.WebsocketProvider('ws://localhost:8546')
   var EthW3 = new Web3(EthProvider)
-  const DAppPrviteKey = await GetDappPrivateKeyAsync(EthW3, EthWaLLet)
-  console.log('>>> dapp api token: ' + DAppPrviteKey)
+  const LoomPrviteKey = await GetDappPrivateKeyAsync(EthW3, EthWaLLet)
+  console.log('>>> loom private key: ' + LoomPrviteKey)
 
   // balance 체크
   EthW3.eth.getBalance(EthWaLLet.getAddressString()).then( balance =>{
@@ -100,25 +100,25 @@ async function Mapping() {
   )
 
   //
-  const DAppPrivateKeyB64 = CryptoUtils.B64ToUint8Array(DAppPrviteKey);
-  const DAppPubLicKey = CryptoUtils.publicKeyFromPrivateKey(DAppPrivateKeyB64)
-  const DAppCLient = new Client(
+  const LoomPrivateKeyB64 = CryptoUtils.B64ToUint8Array(LoomPrviteKey);
+  const LoomPubLicKey = CryptoUtils.publicKeyFromPrivateKey(LoomPrivateKeyB64)
+  const LoomCLient = new Client(
     'default',
     'ws://127.0.0.1:46658/websocket',
     'ws://127.0.0.1:46658/queryws'
   )
 
-  DAppCLient.on('error', err => {
+  LoomCLient.on('error', err => {
     console.error('>>> ' + JSON.stringify(err))
   })
 
-  DAppCLient.txMiddleware = [
-    new NonceTxMiddleware(DAppPubLicKey, DAppCLient),
-    new SignedTxMiddleware(DAppPrivateKeyB64)
+  LoomCLient.txMiddleware = [
+    new NonceTxMiddleware(LoomPubLicKey, LoomCLient),
+    new SignedTxMiddleware(LoomPrivateKeyB64)
   ]
 
-  const DAppAddress = new Address(DAppCLient.chainId, LocalAddress.fromPublicKey(DAppPubLicKey))
-  const AddressMapper = await Contracts.AddressMapper.createAsync(DAppCLient, DAppAddress)
+  const LoomAddress = new Address(LoomCLient.chainId, LocalAddress.fromPublicKey(LoomPubLicKey))
+  const AddressMapper = await Contracts.AddressMapper.createAsync(LoomCLient, LoomAddress)
 
   const WWW3Signer = new web3Signer(EthWaLLet.getPrivateKey())
 
@@ -152,14 +152,14 @@ async function Mapping() {
   }
   else
   {
-    console.log('>>>> map ethereum account to dapp account...')
-    await AddressMapper.addIdentityMappingAsync(From, DAppAddress, WWW3Signer)
+    console.log('>>>> map ethereum account to loom account...')
+    await AddressMapper.addIdentityMappingAsync(From, LoomAddress, WWW3Signer)
     console.log('>>>> address mapping complete')
   }
 
-  const DAppCoin = await Contracts.EthCoin.createAsync(DAppCLient, DAppAddress)
-  const DAppBaLance = await DAppCoin.getBalanceOfAsync(DAppAddress)
-  console.log('>>> dapp balance: ' + DAppBaLance)
+  const LoomCoin = await Contracts.EthCoin.createAsync(LoomCLient, LoomAddress)
+  const LoomBaLance = await LoomCoin.getBalanceOfAsync(LoomAddress)
+  console.log('>>> loom balance: ' + LoomBaLance)
 }
 
 Mapping()

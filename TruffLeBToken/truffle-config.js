@@ -8,6 +8,9 @@ const LoomTruffleProvider = require('loom-truffle-provider')
 var Rinkeby = require(path.join(__dirname, './rinkeby.json'))
 var Env = require(path.join(__dirname, '../.env.json'))
 
+var Https = require('https')
+var Axios = require('axios')
+
 const HotWaLLetAddr = Env.key_server_ip + ':' + Env.key_server_port
 var Agent = Axios.create({
   baseURL: HotWaLLetAddr,
@@ -43,11 +46,11 @@ module.exports = {
         const HotWaLLetAddr = Env.key_server_ip + ':' + Env.key_server_port
         console.log('hot wallet address ' + HotWaLLetAddr)
 
-        //const LoomPrivateKey = readFileSync(path.join(__dirname, '../LoomNetwork/private_key'), 'utf-8')
-        //const ChainID = 'extdev-plasma-us1'
-        //const WriteURL = 'http://extdev-plasma-us1.dappchains.com:80/rpc'
-        //const ReadURL = 'http://extdev-plasma-us1.dappchains.com:80/query'
-        //return new LoomTruffleProvider(ChainID, WriteURL, ReadURL, LoomPrivateKey)
+        const LoomPrivateKey = readFileSync(path.join(__dirname, '../LoomNetwork/private_key'), 'utf-8')
+        const ChainID = 'extdev-plasma-us1'
+        const WriteURL = 'http://extdev-plasma-us1.dappchains.com:80/rpc'
+        const ReadURL = 'http://extdev-plasma-us1.dappchains.com:80/query'
+        return new LoomTruffleProvider(ChainID, WriteURL, ReadURL, LoomPrivateKey)
       },
       network_id: 'extdev-plasma-us1'
     },
