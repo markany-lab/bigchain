@@ -49,7 +49,6 @@ App.use(bodyParser.urlencoded({
   extended: true
 }))
 
-
 App.use(bearerToken())
 
 App.use(function(req, res, next){
@@ -150,7 +149,7 @@ App.post('/query_prv_key', async function(req, res){
           })
         }
         else{
-          logger.debug("found private key: " + FoundKey.key)
+          logger.debug("found item: " + JSON.stringify(FoundKey))
           res.json({
             status: 'return',
             prv_key: FoundKey.key
