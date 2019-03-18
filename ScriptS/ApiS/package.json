@@ -20,6 +20,7 @@
       "channel:open": "node app.js channel --open",
       "channel:off": "node app.js channel --off",
       "channel:details": "node app.js channel --details",
+      
       "account:generate:default": "node app.js account --generate --password p@ssw0rd",
       "account:import:default": "node app.js account --import --password p@ssw0rd --prvKey 0x4E97E81D425966C00422A8FC5602382DA74862A239E941B2777AB0CB968D115B",
       "account:export:default": "node app.js account --export --index 0 --password p@ssw0rd",
@@ -34,9 +35,9 @@
       "contents:buy:default": "node app.js contents --buy --index 0 --password p@ssw0rd --cTokenId 0",
       "token:list:default": "node app.js token --list --index 0 --password p@ssw0rd",
       "token:details:default": "node app.js token --details --index 0 --password p@ssw0rd --uTokenId 0",
-      "channel:open:default": "node app.js channel --open --index 0 --password p@ssw0rd --cid 1000000 --hash 0x123123",
-      "channel:off:default": "node app.js channel --off --index 0 --password p@ssw0rd --cid 1000000 --oTokenId 0",
-      "channel:details:default": "node app.js channel --details --index 0 --password p@ssw0rd --cid 1000000 --oTokenId 0",
+      "channel:open:default": "node app.js channel --open --index 0 --password p@ssw0rd --cid 1000000 --hash 0x123123 --numOfChunks 20",
+      "channel:off:default": "node app.js channel --off --index 0 --password p@ssw0rd --oTokenId 0",
+      "channel:details:default": "node app.js channel --details --index 0 --password p@ssw0rd --oTokenId 0",
       "test": "node app.js send_aggregated_receipt"
    },
    "dependencies": {

@@ -304,11 +304,11 @@ module.exports = class DappInit_ {
       })
   }
 
-  async ChannelOpen(cid, hash) {
+  async ChannelOpen(cid, hash, numOfChunks) {
     const From = this._Address
     const WWW3 = this._Web3
 
-    await this._BChannel.methods.channelOpen(cid, hash)
+    await this._BChannel.methods.channelOpen(cid, hash, numOfChunks)
       .send({
         from: From,
         value: WWW3.utils.toWei("0.001")
@@ -367,7 +367,6 @@ module.exports = class DappInit_ {
     const sign = CryptoUtils.Uint8ArrayToB64(Nacl.sign(Msg, this._PrivateKey))
     const public_key = CryptoUtils.Uint8ArrayToB64(Util.toBuffer(CryptoUtils.bytesToHexAddr(this._PubLicKey)))
     
-
     await axios({
       method: 'post',
       url: 'http://127.0.0.1:3003/get_receipt',

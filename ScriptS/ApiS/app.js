@@ -338,7 +338,7 @@ async function token_details(index, password, uTokenId) {
   console.log(' - token state: ' + state)
 }
 
-async function channel_open(index, password, cid, hash) {
+async function channel_open(index, password, cid, hash, numOfChunks) {
   /* init Ethereum elements */
   console.log('# init ethereum tools...')
   var EtherTools = await Ether.createAsync(index, password)
@@ -349,7 +349,7 @@ async function channel_open(index, password, cid, hash) {
   var DappTools = await Dapp.createAsync(EtherTools.getDappPrivateKey())
   console.log('# init complete')
 
-  await DappTools.ChannelOpen(cid, hash)
+  await DappTools.ChannelOpen(cid, hash, numOfChunks)
 }
 
 async function channel_off(index, password, oTokenId) {
@@ -548,11 +548,12 @@ program
   .option('-p, --password <password>', 'account password')
   .option('-c, --cid <cid>', 'contents cid')
   .option('-h, --hash <hash>', 'contents hash')
+  .option('-n, --numOfChunks <numOfChunks>', 'number of chunks')
   .option('-t, --oTokenId <oTokenId>', 'off-chain channel token id')
   .action(function(options) {
     if(options.open) {
       console.log("channel_open() called")
-      channel_open(options.index, options.password, options.cid, options.hash)
+      channel_open(options.index, options.password, options.cid, options.hash, options.numOfChunks)
     }
     if(options.off) {
       console.log("channel_off() called")

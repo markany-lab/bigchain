@@ -65,12 +65,15 @@ async function verifySignature(signB64, publicKeyB64) {
   const publicKeyOwner = LocalAddress.fromPublicKey(publicKey).toString()
 
   if (receiver.toLowerCase() != publicKeyOwner.toLowerCase()) {
+    console.log("# verification failed: ")
+    console.log(" - receiver: " + receiver.toLowerCase())
+    console.log(" - pub_key owner: " + publicKeyOwner.toLowerCase())
     return { code: -1, err: "you are not receiver" }
   }
   return { code: 1, msg, channelInfo: oTokenInfo }
 }
 
-async function aggregateReceipt(msg, channelInfo) {
+async function aggregateReceipt(msg) {
   const sender = msg.sender.toLowerCase()
   const channelPath = aggregatePath + msg.channel_id + '/'
   if (!fs.existsSync(channelPath)) {
@@ -80,7 +83,10 @@ async function aggregateReceipt(msg, channelInfo) {
   const timestamp = Date.now()
   const managerPath = channelPath + 'aggregate_manager.json'
   const fileName = channelPath + sender + '_' + timestamp + '.json'
+  var channelManager = JSON.parse(fs.readFileSync(channelManagerPath), 'utf8')
   if (!fs.existsSync(managerPath)) {
+    channelManager.open.push(msg.channel_id)
+    fs.writeFileSync(channelManagerPath, JSON.stringify(channelManager))
     var manager = new Object
     fs.writeFileSync(fileName, JSON.stringify(msg))
     manager[sender] = timestamp
