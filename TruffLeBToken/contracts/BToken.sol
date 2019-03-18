@@ -30,23 +30,31 @@ contract BToken is BFactory {
   }
 
   // register contents
-  function registerData(string titLe, uint256 suppLy) external {
-    uint cid = _CreateCToken(titLe);
-    ERC721ZInterface._mint(cid, msg.sender, suppLy);
+  function registerData(string titLe) public returns (uint cid) {
+    cid = _CIDs.push(Data_(titLe)) - 1;
+    CID2Provider[cid] = msg.sender;
+    Provider2CID[msg.sender].push(cid);
+    emit NewData(msg.sender, cid, titLe);
   }
 
   // increate the number of contents token
-  function mintX_withTokenID(uint cTokenId, uint256 suppLy) external onlyContentProviderOf(cTokenId) {
+  function mintX_withTokenID(uint cTokenId, uint256 suppLy) external onlyProviderOfCTokenID(cTokenId) {
     ERC721ZInterface._mint(cTokenId, msg.sender, suppLy);
+  }
+
+  function registerHash(uint cid, bytes32 hash, uint fee, uint supply) external onlyProviderOfCID(cid) {
+    require(existsD(cid), "unknown data");
+    uint cTokenId = _CreateCToken(cid, hash, fee, supply);
+    ERC721ZInterface._mint(cTokenId, msg.sender, supply);
   }
 
   // buy contents token
   function buyToken(uint cTokenId) payable public returns (uint uTokenId){
-    require(ERC721ZInterface.exists(cTokenId), "Token ID has not been minted");
-    // require(_CTs[cTokenId]._Fee == msg.value, "msg.value is not equal to token Fee");
+    require(ERC721ZInterface.exists(cTokenId), "unknown token");
+    require(_CTs[cTokenId]._Fee == msg.value, "msg.value is not equal to token Fee");
 
-    // CID2ContentProvider[cTokenId].transfer(_CTs[cTokenId]._Fee);
-    ERC721ZInterface.burn(CID2ContentProvider[cTokenId], cTokenId, 1);
+    CID2Provider[cTokenId].transfer(_CTs[cTokenId]._Fee);
+    ERC721ZInterface.burn(CID2Provider[cTokenId], cTokenId, 1);
     uTokenId = _CreateUToken(msg.sender, cTokenId, UTokenState_.sold);
   }
 }

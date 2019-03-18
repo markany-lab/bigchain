@@ -53,13 +53,29 @@
  - 메인넷 게이트웨이에서 이더리움으로 이더 전송
  $ node app.js send --withdraw --index <index> --password <password>
 
+## data
+ - 데이터 등록 관련 API
+
+### register
+ - 데이터 등록
+ - 데이터 등록시 CID가 반환됨
+ $ node app.js data --register --index <index> --password <password> --title <title>
+
+### list
+ - 선택한 계정이 등록한 데이터의 ID 리스트
+ $ node app.js data --list --index <index> --password <password>
+
+### details
+ - 선택한 CID의 세부 정보
+ $ node app.js data --details --index <index> --password <password> --cid <cid>
+
 ## contents
  - 컨텐츠 등록, 구매 등 컨텐츠 관련 API
 
 ### register
  - 컨텐츠 등록
  $ node app.js contents --register --index <index> --password <password> --title <title> --cid <cid> --fee <fee> --supply <supply>
- 
+
 ### list
  - 선택한 계정이 등록한 컨텐츠의 ID 리스트
  $ node app.js contents --list --index <index> --password <password>
@@ -82,4 +98,3 @@
 ### details
  - 선택한 컨텐츠 토큰 ID의 세부 정보
  $ node app.js token --details --index <index> --password <password> --uTokenId <uTokenId>
-

@@ -26,7 +26,7 @@ module.exports = class DappInit_ {
     const PrivateKey = CryptoUtils.B64ToUint8Array(b64_private_key);
     const PubLicKey = CryptoUtils.publicKeyFromPrivateKey(PrivateKey)
     const CLient = new Client(
-      'extdev-plasma-us1',  
+      'extdev-plasma-us1',
       'wss://extdev-plasma-us1.dappchains.com/websocket',
       'wss://extdev-plasma-us1.dappchains.com/queryws'
     )
@@ -184,6 +184,13 @@ module.exports = class DappInit_ {
       }))
   }
 
+  async GetDataWithCID(cid) {
+    const From = this._Address
+    return await this._BToken.methods._CIDs(cid).call({
+      from: From
+    })
+  }
+
   async GetCTWithID(cTokenId) {
     const From = this._Address
     const DetaiL = await this._BToken.methods._CTs(cTokenId).call({
@@ -210,9 +217,9 @@ module.exports = class DappInit_ {
     })
   }
 
-  async GetOwnedUTsAsync() {
+  async GetOwnedDatasAsync() {
     const From = this._Address
-    return this._BChannel.methods.GetOwnedUTokens().call({
+    return this._BToken.methods.GetOwnedDatas().call({
       from: From
     })
   }
@@ -220,6 +227,20 @@ module.exports = class DappInit_ {
   async GetOwnedCTsAsync() {
     const From = this._Address
     return this._BToken.methods.GetOwnedCTokens().call({
+      from: From
+    })
+  }
+
+  async GetOwnedUTsAsync() {
+    const From = this._Address
+    return this._BToken.methods.GetOwnedUTokens().call({
+      from: From
+    })
+  }
+
+  async IsExistsData(cid) {
+    const From = this._Address
+    return this._BToken.methods.existsD(cid).call({
       from: From
     })
   }
@@ -245,11 +266,26 @@ module.exports = class DappInit_ {
     })
   }
 
-  async CreateCToken(titLe, cid, fee, hash, suppLy) {
+  async RegisterData(titLe) {
     const From = this._Address
-    console.log("# minting new ERC721Z token(" + titLe + ", " + cid + ", " + fee + ", " + hash + ", " + suppLy + ") on the dapp chain. this may take a while...");
-    return this._BToken.methods.mintX(titLe, cid, fee, hash, suppLy)
-      /*.send({from: From, gas: 4712388})*/
+    console.log("# register data(" + titLe + ") on the dapp chain. this may take a while...");
+    return await this._BToken.methods.registerData(titLe)
+      .send({
+        from: From
+      })
+      .on("receipt", function (receipt) {
+        console.log("# successfully created!")
+        console.log("# receipt: " + JSON.stringify(receipt))
+      })
+      .on("error", function (error) {
+        console.log("# error occured: " + error)
+      })
+  }
+
+  async RegisterHash(cid, hash, fee, supply) {
+    const From = this._Address
+    console.log("# register contents(" + cid + " / " + hash + " / " + fee + " / " + supply + ") on the dapp chain. this may take a while...");
+    return await this._BToken.methods.registerHash(cid, hash, fee, supply)
       .send({
         from: From
       })
@@ -366,7 +402,7 @@ module.exports = class DappInit_ {
     const Msg = Buffer.from(JSON.stringify(msg))
     const sign = CryptoUtils.Uint8ArrayToB64(Nacl.sign(Msg, this._PrivateKey))
     const public_key = CryptoUtils.Uint8ArrayToB64(Util.toBuffer(CryptoUtils.bytesToHexAddr(this._PubLicKey)))
-    
+
     await axios({
       method: 'post',
       url: 'http://127.0.0.1:3003/get_receipt',

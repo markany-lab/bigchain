@@ -202,7 +202,7 @@ async function withdraw(index, password) {
   }
 }
 
-async function contents_register(index, password, title, cid, fee, hash, supply) {
+async function data_register(index, password, title) {
   try {
     /* init Ethereum elements */
     console.log('# init ethereum tools...')
@@ -215,7 +215,71 @@ async function contents_register(index, password, title, cid, fee, hash, supply)
     console.log('# init complete')
 
     /* create Dapp token */
-    await DappTools.CreateCToken(title, cid, fee, hash, supply)
+    await DappTools.RegisterData(title)
+  } catch (error) {
+    console.log('# error occured: ' + error)
+  }
+}
+
+async function data_list(index, password) {
+  try {
+    /* init Ethereum elements */
+    console.log('# init ethereum tools...')
+    var EtherTools = await Ether.createAsync(index, password)
+    console.log('# init complete')
+
+    /* init Dappchain elements */
+    console.log('# init dapp tools...')
+    var DappTools = await Dapp.createAsync(EtherTools.getDappPrivateKey())
+    console.log('# init complete')
+
+    /* create Dapp token */
+    const cTokenIds = await DappTools.GetOwnedDatasAsync()
+    console.log(JSON.stringify(cTokenIds))
+  } catch (error) {
+    console.log('# error occured: ' + error)
+  }
+}
+
+async function data_details(index, password, cid) {
+  try {
+    /* init Ethereum elements */
+    console.log('# init ethereum tools...')
+    var EtherTools = await Ether.createAsync(index, password)
+    console.log('# init complete')
+
+    /* init Dappchain elements */
+    console.log('# init dapp tools...')
+    var DappTools = await Dapp.createAsync(EtherTools.getDappPrivateKey())
+    console.log('# init complete')
+
+    /* create Dapp token */
+    if (!(await DappTools.IsExistsData(cid))) {
+      console.log('# data with cid ' + cid + ' is not exist')
+      return
+    }
+    const details = await DappTools.GetDataWithCID(cid)
+    console.log('# data with id ' + cid + ' details')
+    console.log(' - title: ' + details)
+  } catch (error) {
+    console.log('# error occured: ' + error)
+  }
+}
+
+async function contents_register(index, password, cid, hash, fee, supply) {
+  try {
+    /* init Ethereum elements */
+    console.log('# init ethereum tools...')
+    var EtherTools = await Ether.createAsync(index, password)
+    console.log('# init complete')
+
+    /* init Dappchain elements */
+    console.log('# init dapp tools...')
+    var DappTools = await Dapp.createAsync(EtherTools.getDappPrivateKey())
+    console.log('# init complete')
+
+    /* create Dapp token */
+    await DappTools.RegisterHash(cid, hash, fee, supply)
   } catch (error) {
     console.log('# error occured: ' + error)
   }
@@ -254,19 +318,19 @@ async function contents_details(index, password, cTokenId) {
     console.log('# init complete')
 
     /* create Dapp token */
-    if (!(await DappTools.IsExistsCToken(cTokenId))) {
-      console.log('# contents token with id ' + cTokenId + ' is not exist')
+    if (!(await DappTools.IsExistsData(cTokenId))) {
+      console.log('# data with cTokenId ' + cTokenId + ' is not exist')
       return
     }
     const details = await DappTools.GetCTWithID(cTokenId)
     const status = details._DisabLed == true ? 'disable' : 'enable'
-    console.log('# contents token with id ' + cTokenId + ' details')
-    console.log(' - balance: ' + details.balance)
-    console.log(' - title: ' + details._TitLe)
-    console.log(' - cid: ' + details._CID)
+    console.log('# data with cTokenId ' + cTokenId + ' details')
+    console.log(' - cid: ' + details._Cid)
     console.log(' - hash: ' + details._Hash)
     console.log(' - fee: ' + details._Fee)
+    console.log(' - supply: ' + details._Supply)
     console.log(' - status: ' + status)
+    console.log(' - balance: ' + details.balance)
   } catch (error) {
     console.log('# error occured: ' + error)
   }
@@ -285,6 +349,7 @@ async function contents_buy(index, password, cTokenId) {
 
   await DappTools.BuyToken(cTokenId)
 }
+
 
 async function token_list(index, password) {
   /* init Ethereum elements */
@@ -334,7 +399,7 @@ async function token_details(index, password, uTokenId) {
   }
   console.log('# user token with id ' + uTokenId + ' details')
   console.log(' - user: ' + details.user)
-  console.log(' - contents token: ' + details.cTokenId)
+  console.log(' - data token: ' + details.cTokenId)
   console.log(' - token state: ' + state)
 }
 
@@ -403,7 +468,7 @@ program
   .option('-U, --unit <unit>', 'ethereum currency unit. choose wei or ether')
   .option('-A, --amount <amount>', 'ethereum currency amount')
   .description('send ether between ethereum address and dapp account')
-  .action(function (options) {
+  .action(function(options) {
     console.log("# sendEtherToDapp() called")
     sendEtherToDapp(options.unit, options.amount);
   })
@@ -413,7 +478,7 @@ program
   .option('-U, --unit <unit>', 'ethereum currency unit. choose wei or ether')
   .option('-A, --amount <amount>', 'ethereum currency amount')
   .description('send ether between ethereum address and dapp account')
-  .action(function (options) {
+  .action(function(options) {
     console.log("# sendDappToGateway() called")
     sendDappToGateway(options.unit, options.amount);
   })
@@ -421,7 +486,7 @@ program
 program
   .command('withdraw')
   .description('get ether from gateway to ethereum address')
-  .action(function () {
+  .action(function() {
     console.log("# withdrawEther() called")
     withdrawEther()
   })
@@ -437,7 +502,7 @@ program
   .option('-I, --index <index>', 'account index')
   .option('-p, --password <password>', 'account password')
   .option('-P, --prvKey <prvKey>', 'private key')
-  .action(function (options) {
+  .action(function(options) {
     if (options.generate) {
       console.log("account_generate() called")
       account_generate(options.password)
@@ -473,7 +538,7 @@ program
   .option('-p, --password <password>', 'account password')
   .option('-u, --unit <unit>', 'ethereum currency unit wei|ether')
   .option('-a, --amount <amount>', 'ethere amount')
-  .action(function (options) {
+  .action(function(options) {
     if (options.ethereum) {
       console.log("send_ethereum() called")
       send_ethereum(options.index, options.password, options.unit, options.amount)
@@ -489,6 +554,30 @@ program
   })
 
 program
+  .command('data')
+  .option('-r, --register', 'register data')
+  .option('-l, --list', 'list up data')
+  .option('-d, --details', 'details of data')
+  .option('-I, --index <index>', 'account index')
+  .option('-p, --password <password>', 'account password')
+  .option('-t, --title <title>', 'data title')
+  .option('-c, --cid <cid>', 'data cid')
+  .action(function(options) {
+    if (options.register) {
+      console.log('data_register() called')
+      data_register(options.index, options.password, options.title)
+    }
+    if (options.list) {
+      console.log("data_list() called")
+      data_list(options.index, options.password)
+    }
+    if (options.details) {
+      console.log("data_details() called")
+      data_details(options.index, options.password, options.cid)
+    }
+  })
+
+program
   .command('contents')
   .option('-r, --register', 'register contents')
   .option('-l, --list', 'list up contents')
@@ -497,15 +586,14 @@ program
   .option('-I, --index <index>', 'account index')
   .option('-p, --password <password>', 'account password')
   .option('-C, --cTokenId <cTokenId>', 'contents token id')
-  .option('-t, --title <title>', 'contents title')
   .option('-c, --cid <cid>', 'contents cid')
   .option('-f, --fee <fee>', 'contents fee')
   .option('-h, --hash <hash>', 'contents hash')
   .option('-s, --supply <supply>', 'contents supply')
-  .action(function (options) {
+  .action(function(options) {
     if (options.register) {
       console.log('contents_register() called')
-      contents_register(options.index, options.password, options.title, options.cid, options.fee, options.hash, options.supply)
+      contents_register(options.index, options.password, options.cid, options.hash, options.fee, options.supply)
     }
     if (options.list) {
       console.log("contents_list() called")
@@ -528,7 +616,7 @@ program
   .option('-I, --index <index>', 'account index')
   .option('-p, --password <password>', 'account password')
   .option('-c, --uTokenId <uTokenId>', 'token id')
-  .action(function (options) {
+  .action(function(options) {
     if (options.list) {
       console.log("token_list() called")
       token_list(options.index, options.password)
@@ -546,20 +634,20 @@ program
   .option('-d, --details', 'channel details')
   .option('-I, --index <index>', 'account index')
   .option('-p, --password <password>', 'account password')
-  .option('-c, --cid <cid>', 'contents cid')
+  .option('-c, --cid <cid>', 'data cid')
   .option('-h, --hash <hash>', 'contents hash')
   .option('-n, --numOfChunks <numOfChunks>', 'number of chunks')
   .option('-t, --oTokenId <oTokenId>', 'off-chain channel token id')
   .action(function(options) {
-    if(options.open) {
+    if (options.open) {
       console.log("channel_open() called")
       channel_open(options.index, options.password, options.cid, options.hash, options.numOfChunks)
     }
-    if(options.off) {
+    if (options.off) {
       console.log("channel_off() called")
       channel_off(options.index, options.password, options.oTokenId)
     }
-    if(options.details) {
+    if (options.details) {
       console.log("channel_details() called")
       channel_details(options.index, options.password, options.oTokenId)
     }
@@ -568,11 +656,9 @@ program
 program
   .command('send_aggregated_receipt')
   .description('settle')
-  .action(function () {
+  .action(function() {
     console.log("# settle() called")
     sendAggregatedReceipt()
   })
 
 program.parse(process.argv)
-
-

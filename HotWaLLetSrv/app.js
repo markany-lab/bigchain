@@ -102,7 +102,6 @@ App.post('/query_token', (req, res)=>{
   	}, App.get('secret'));
 
   res.json({
-    status: 'rs',
     string: RandomStr,
     token: Token
   })

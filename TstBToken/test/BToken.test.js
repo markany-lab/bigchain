@@ -59,33 +59,40 @@ contract('BToken', accounts => {
     })
   })
 
-  const TitLeTest = '***** test ******'
-  it(TitLeTest, async () => {
-    console.log(TitLeTest)
-    let Tx = await ZChannel.channelOpen(1000, "0x123123", 20, {
+  const TitLe10 = '***test'
+  it(TitLe10, async () => {
+    console.log(TitLe10)
+    let Tx = await Ct.registerData("test_title01", {
       from: bob,
-      value: web3Utils.toWei("0.000001", 'ether')
     })
+    let Evt = Tx.logs.find(log => log.event === 'NewData')
+    const CID = Evt.args['cid']
 
-    let Evt = Tx.logs.find(log => log.event === 'channelOpened')
+    const cids = await Ct.GetOwnedDatas.call({from: bob})
+    console.log("datas: " + cids)
+
+    for(var i = 0; i < cids.length; i++) {
+      const dataDetails = await Ct.GetDataDetails.call(cids[i], {from: bob})
+      console.log("dataDetails: " + JSON.stringify(dataDetails))
+    }
+
+    Tx = await Ct.registerHash(CID, '0xE29C9C180C6279B0B02ABD6A1801C7C04082CF486EC027AA13515E4F3884BB6B', 10000, 0, {from: bob})
+    Evt = Tx.logs.find(log => log.event === 'NewCToken')
+    const cTokenID = Evt.args['cTokenId']
+
+    const cTokenIds = await Ct.GetOwnedCTokens.call({from: bob})
+    for(i = 0; i < cTokenIds.length; i++) {
+      const cTokenIdDetails = await Ct._CTs.call([cTokenIds[i]], {from: bob})
+      console.log("cTokenIdDetails: " + JSON.stringify(cTokenIdDetails))
+    }
+
+    Tx = await Ct.buyToken(cTokenID, {
+      from: bob,
+      value: web3Utils.toWei("10000", 'wei')
+    })
+    Evt = Tx.logs.find(log => log.event === 'NewUToken')
     console.log("Evt: " + JSON.stringify(Evt))
-    const TokenID = Evt.args['oTokenId']
 
-    let channelInfo = await ZChannel.getOTokenDetails(TokenID)
-    console.log("channel info: " + JSON.stringify(channelInfo))
-    let channelState = channelInfo.state
-    console.log("channel state: " + channelState)
-
-    await ZChannel.channelOff(TokenID)
-
-    channelInfo = await ZChannel.getOTokenDetails(TokenID)
-    console.log("channel info: " + JSON.stringify(channelInfo))
-    channelState = channelInfo.state
-    console.log("channel state: " + channelState)
-
-    Tx = await ZChannel.settleChannel(TokenID, [alice, bob], [80, 20], {from: carlos})
-    Evt = Tx.logs.find(log => log.event === 'settleFinished')
-    console.log("Evt: " + JSON.stringify(Evt))
   })
 
   return
@@ -212,6 +219,35 @@ contract('BToken', accounts => {
       from: bob
     })
     console.log("uTokenDetails: " + JSON.stringify(uTokenDetails))
+  })
+
+  const TitLe12 = '***(12) channel open => channel off => settle'
+  it(TitLe12, async () => {
+    console.log(TitLe12)
+    let Tx = await ZChannel.channelOpen(1000, "0x123123", 20, {
+      from: bob,
+      value: web3Utils.toWei("0.000001", 'ether')
+    })
+
+    let Evt = Tx.logs.find(log => log.event === 'channelOpened')
+    console.log("Evt: " + JSON.stringify(Evt))
+    const TokenID = Evt.args['oTokenId']
+
+    let channelInfo = await ZChannel.getOTokenDetails(TokenID)
+    console.log("channel info: " + JSON.stringify(channelInfo))
+    let channelState = channelInfo.state
+    console.log("channel state: " + channelState)
+
+    await ZChannel.channelOff(TokenID)
+
+    channelInfo = await ZChannel.getOTokenDetails(TokenID)
+    console.log("channel info: " + JSON.stringify(channelInfo))
+    channelState = channelInfo.state
+    console.log("channel state: " + channelState)
+
+    Tx = await ZChannel.settleChannel(TokenID, [alice, bob], [80, 20], {from: carlos})
+    Evt = Tx.logs.find(log => log.event === 'settleFinished')
+    console.log("Evt: " + JSON.stringify(Evt))
   })
 
   // const TitLe15 = '***(15)사용자가 소유 한 정확한 coin 수를 얻어야합니다'

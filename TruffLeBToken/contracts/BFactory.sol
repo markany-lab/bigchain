@@ -6,10 +6,11 @@ import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 contract BFactory is Ownable {
 
   using SafeMath for uint256;
-  event NewCToken(address content_provider, uint cid, string titLe);
+  event NewData(address provider, uint cid, string titLe);
+  event NewCToken(uint cTokenId, uint cid, bytes32 hash, uint fee, uint supply);
   event NewUToken(address owner, uint uTokenId, uint cTokenId, uint8 state);
-  event ModifyCToken(address content_provider, uint cid, string title, bool disabLed);
-  event checkPayment(address from, uint from_balance, address to, uint to_balance);
+  event ModifyData(address provider, uint cid, string title);
+  event ModifyCToken(uint cTokenId, uint cid, bytes32 hash, uint fee);
 
   enum UTokenState_ {
     sold,
@@ -17,9 +18,15 @@ contract BFactory is Ownable {
     settled
   }
 
-  // contents token
-  struct CToken_ {
+  struct Data_ {
     string _TitLe;
+  }
+
+  struct CToken_ {
+    uint _Cid;
+    bytes32 _Hash;
+    uint _Fee;
+    uint _Supply;
     bool _DisabLed;
   }
 
@@ -30,18 +37,25 @@ contract BFactory is Ownable {
     UTokenState_ _State;
   }
 
-  CToken_[] public _CTs;    // contents tokens array
+  Data_[] public _CIDs;
+  CToken_[] public _CTs;
   UToken_[] internal _UTs;  // user tokens array
 
-  mapping (uint => address) public CID2ContentProvider;     // cTokenId => owner
-  mapping (uint => address) internal UToken2User;              // uTokenId => owner
-  mapping (address => uint[]) public ContentProvider2CID;  // owner => cTokenIds
-  mapping (address => uint[]) internal User2UTokens;           // owner => uTokenIds
+  mapping (uint => address) public CID2Provider;     // cid => owner
+  mapping (address => uint[]) public Provider2CID;   // owner => cid[]
+  mapping (uint => uint[]) public CID2CTokenID;      // cid => cTokenId[]
+  mapping (uint => address) internal UToken2User;    // uTokenId => owner
+  mapping (address => uint[]) internal User2UTokens; // owner => uTokenId[]
 
   uint _EnabLeFee = 0.001 ether;
 
-  modifier onlyContentProviderOf(uint cTokenId) {
-    require(msg.sender == CID2ContentProvider[cTokenId]);
+  modifier onlyProviderOfCID(uint cid) {
+    require(msg.sender == CID2Provider[cid], "you are not owner of cid");
+    _;
+  }
+
+  modifier onlyProviderOfCTokenID(uint cTokenId) {
+    require(msg.sender == CID2Provider[_CTs[cTokenId]._Cid], "you are not owner of cTokenId");
     _;
   }
 
@@ -54,15 +68,34 @@ contract BFactory is Ownable {
     _EnabLeFee = fee;
   }
 
-  function existsU(uint256 uTokenId) view public returns (bool) {
-    return uTokenId + 1 <= _UTs.length;
+  function _ModifyData(uint cid, string titLe) public onlyProviderOfCID(cid) {
+    _CIDs[cid]._TitLe = titLe;
+    emit ModifyData(msg.sender, cid, _CIDs[cid]._TitLe);
   }
 
-  function _CreateCToken(string titLe) internal returns (uint cid) {
-    cid = _CTs.push(CToken_(titLe, true)) - 1;
-    CID2ContentProvider[cid] = msg.sender;
-    ContentProvider2CID[msg.sender].push(cid);
-    emit NewCToken(msg.sender, cid, titLe);
+  function _CreateCToken(uint cid, bytes32 hash, uint fee, uint supply) internal onlyProviderOfCID(cid) returns (uint cTokenId){
+    cTokenId = _CTs.push(CToken_(cid, hash, fee, supply, true)) - 1;
+    CID2CTokenID[cid].push(cTokenId);
+    emit NewCToken(cTokenId, cid, hash, fee, supply);
+  }
+
+  function _ModifyCToken(uint cTokenId, uint cid, bytes32 hash, uint fee) public onlyProviderOfCTokenID(cTokenId) {
+    _CTs[cTokenId]._Cid = cid;
+    _CTs[cTokenId]._Hash = hash;
+    _CTs[cTokenId]._Fee = fee;
+    emit ModifyCToken(cTokenId, cid, hash, fee);
+  }
+
+  function EnabLeCToken(uint cTokenId) external payable onlyProviderOfCTokenID(cTokenId) {
+    require(msg.value == _EnabLeFee);
+    require(_CTs[cTokenId]._DisabLed == true);
+    _CTs[cTokenId]._DisabLed = false;
+    owner.transfer(msg.value);
+  }
+
+  function DisabLeCToken(uint cTokenId) external onlyProviderOfCTokenID(cTokenId) {
+    require(_CTs[cTokenId]._DisabLed == false);
+    _CTs[cTokenId]._DisabLed = true;
   }
 
   function _CreateUToken(address user, uint cTokenId, UTokenState_ state) internal returns (uint) {
@@ -73,26 +106,38 @@ contract BFactory is Ownable {
     return uTokenId;
   }
 
-  function _ModifyCTokenValue(uint cTokenId, string titLe) public onlyContentProviderOf(cTokenId) {
-    _CTs[cTokenId]._TitLe = titLe;
-    emit ModifyCToken(msg.sender, cTokenId, _CTs[cTokenId]._TitLe, _CTs[cTokenId]._DisabLed);
+  function existsD(uint256 cid) view public returns (bool) {
+    return cid + 1 <= _CIDs.length;
   }
 
-  function EnabLeContents(uint cTokenId) external payable onlyContentProviderOf(cTokenId) {
-    require(msg.value == _EnabLeFee);
-    require(_CTs[cTokenId]._DisabLed == true);
-    _CTs[cTokenId]._DisabLed = false;
-    owner.transfer(msg.value);
-    emit checkPayment(msg.sender, msg.sender.balance, owner, owner.balance);
+  function existsU(uint256 uTokenId) view public returns (bool) {
+    return uTokenId + 1 <= _UTs.length;
   }
 
-  function DisabLeContents(uint cTokenId) external onlyContentProviderOf(cTokenId) {
-    require(_CTs[cTokenId]._DisabLed == false);
-    _CTs[cTokenId]._DisabLed = true;
+  function GetOwnedDatas() public view returns (uint[]){
+    return Provider2CID[msg.sender];
   }
 
-  function GetOwnedCTokens() public view returns (uint[]){
-    return ContentProvider2CID[msg.sender];
+  function GetDataDetails(uint cid) public view returns (string title) {
+    return _CIDs[cid]._TitLe;
+  }
+
+  function GetOwnedCTokens() public view returns (uint[]) {
+    uint length = 0;
+    uint[] memory cids = GetOwnedDatas();
+    for(uint i = 0; i < cids.length; i++) {
+      length += CID2CTokenID[cids[i]].length;
+    }
+    uint[] memory cTokens = new uint[](length);
+    uint count = 0;
+    for(i = 0; i < cids.length; i++) {
+      for(uint j = 0; j < CID2CTokenID[cids[i]].length; j++) {
+        cTokens[count] = CID2CTokenID[cids[i]][j];
+        count++;
+      }
+
+    }
+    return cTokens;
   }
 
   function GetOwnedUTokens() public view returns (uint[]){
