@@ -40,13 +40,13 @@ export default class Login_ {
     .catch(err => console.log('error: ' + JSON.stringify(err)))
 
     const ConfirmData = {
-      ethAddress: EthAccount,
+      addr: EthAccount,
       sign: Sign
     }
 
     console.log('token: ' + Token)
     await Agent.post('/query_private_key_plain', {
-      confirmData: ConfirmData
+      confirm_data: ConfirmData
     }, {
       headers: { Authorization: "Bearer " + Token }
     })

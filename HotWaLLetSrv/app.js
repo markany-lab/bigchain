@@ -113,8 +113,8 @@ App.post('/query_private_key_plain', async function(req, res){
   //
   logger.debug('body: ' + JSON.stringify(req.body))
   try {
-    var TgtAccount = req.body.confirmData.ethAddress
-    var TgtSign = req.body.confirmData.sign
+    var ConfirmAddr = req.body.confirm_data.addr
+    var ConfirmSign = req.body.confirm_data.sign
     var RandomStr = req.random_str
 
     var Msg = Buffer.from(RandomStr, 'utf8')
@@ -126,20 +126,20 @@ App.post('/query_private_key_plain', async function(req, res){
       v,
       r,
       s
-    } = ethUtiL.fromRpcSig(TgtSign)
+    } = ethUtiL.fromRpcSig(ConfirmSign)
 
     const EthPubLicKey = ethUtiL.ecrecover(PrefixedMsgHash, v, r, s)
     const EthAddrBuf = ethUtiL.pubToAddress(EthPubLicKey)
     const EthAddr = ethUtiL.bufferToHex(EthAddrBuf)
 
-    if(TgtAccount.toLowerCase() == EthAddr){
+    if(ConfirmAddr.toLowerCase() == EthAddr){
       //PrivateLock.writeLock(function(release){
       await CLusterLock.acquireWrite('PrivateLock', async function(){
-        const FoundKey = await privateSchema.findOne({addr: TgtAccount.toLowerCase()})
+        const FoundKey = await privateSchema.findOne({addr: ConfirmAddr.toLowerCase()})
         if(!FoundKey){
           var PrivateKey = loom.CryptoUtils.generatePrivateKey()
           var PrivateKeyB64 = loom.CryptoUtils.Uint8ArrayToB64(PrivateKey)
-          await insert_private_key(TgtAccount.toLowerCase(), PrivateKeyB64, false)
+          await insert_private_key(ConfirmAddr.toLowerCase(), PrivateKeyB64, false)
           logger.debug("saved private key: " + PrivateKeyB64)
           res.json({
             status: 'create',

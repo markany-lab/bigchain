@@ -46,13 +46,13 @@ async function GetDappPrivateKeyAsync(www3, waLLet) {
   .catch(err=>console.error('>>> error: ' + JSON.stringify(err)))
 
   const ConfirmData = {
-    ethAddress: waLLet.getAddressString(),
+    addr: waLLet.getAddressString(),
     sign: Sign
   }
 
   console.log('token: ' + Token)
   await Agent.post('/query_private_key_plain', {
-    confirmData: ConfirmData
+    confirm_data: ConfirmData
   }, {
     headers: { Authorization: "Bearer " + Token }
   })

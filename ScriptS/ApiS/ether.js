@@ -68,12 +68,12 @@ async function getDappPrivateKey(web3, wallet, method) {
   .catch(err=>console.log('error: ' + JSON.stringify(err)))
 
   const ConfirmData = {
-    ethAddress: wallet.getAddressString(),
+    addr: wallet.getAddressString(),
     sign: Sign
   }
 
   await Agent.post('/query_private_key_plain', {
-    confirmData: ConfirmData
+    confirm_data: ConfirmData
   }, {
     headers: { Authorization: "Bearer " + Token }
   })
