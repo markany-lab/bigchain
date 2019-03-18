@@ -30,9 +30,9 @@ contract BToken is BFactory {
   }
 
   // register contents
-  function mintX(string titLe, uint cid, uint fee, string hash, uint256 suppLy) external {
-    uint cTokenID = _CreateCToken(titLe, cid, fee, hash);
-    ERC721ZInterface._mint(cTokenID, msg.sender, suppLy);
+  function registerData(string titLe, uint256 suppLy) external {
+    uint cid = _CreateCToken(titLe);
+    ERC721ZInterface._mint(cid, msg.sender, suppLy);
   }
 
   // increate the number of contents token
@@ -43,10 +43,10 @@ contract BToken is BFactory {
   // buy contents token
   function buyToken(uint cTokenId) payable public returns (uint uTokenId){
     require(ERC721ZInterface.exists(cTokenId), "Token ID has not been minted");
-    require(_CTs[cTokenId]._Fee == msg.value, "msg.value is not equal to token Fee");
+    // require(_CTs[cTokenId]._Fee == msg.value, "msg.value is not equal to token Fee");
 
-    CToken2ContentProvider[cTokenId].transfer(_CTs[cTokenId]._Fee);
-    ERC721ZInterface.burn(CToken2ContentProvider[cTokenId], cTokenId, 1);
+    // CID2ContentProvider[cTokenId].transfer(_CTs[cTokenId]._Fee);
+    ERC721ZInterface.burn(CID2ContentProvider[cTokenId], cTokenId, 1);
     uTokenId = _CreateUToken(msg.sender, cTokenId, UTokenState_.sold);
   }
 }
