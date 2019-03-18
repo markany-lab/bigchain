@@ -18,7 +18,8 @@ contract BChannel is Ownable {
 
   enum OTokenState_ {
     open,
-    off
+    off,
+    settle
   }
 
   // off-chain channel token
@@ -88,6 +89,7 @@ contract BChannel is Ownable {
 
     (_OTs[oTokenId]._Orderer).transfer(balanceForUser);
     OToken2Deposit[oTokenId] = 0;
+    _OTs[oTokenId]._State = OTokenState_.settle;
 
     emit settleFinished(contributor, portion);
   }

@@ -15,7 +15,7 @@ const {
   CryptoUtils,
 } = require('loom-js/dist')
 
-const PrivateKey = CryptoUtils.generatePrivateKey()
+const PrivateKey = CryptoUtils.B64ToUint8Array('ZGTsP8LUJkEWiqEZq3hqOKfCHCeV+CbYgbZK2/y53aDAaCJPBla4uLTsEtzm/Dczk8Ml8TL5+rAwKNfbuRZihg==')
 const PubLicKey = CryptoUtils.publicKeyFromPrivateKey(PrivateKey)
 
 const CLient = new Client(
@@ -41,11 +41,12 @@ app.use(bodyParser.urlencoded({
 
 const aggregatePath = './aggregate/'
 const channelManagerPath = aggregatePath + 'channel_manager.json'
+let channelManagerReady = 1
 
-if(!fs.existsSync(channelManagerPath)) {
+if (!fs.existsSync(channelManagerPath)) {
   fs.writeFileSync(channelManagerPath, JSON.stringify({
-    open:[],
-    off:[]
+    open: [],
+    off: []
   }))
 }
 
@@ -109,7 +110,7 @@ async function aggregateReceipt(msg) {
       }
     }
   }
-  return {code: 1}
+  return { code: 1 }
 }
 
 app.post('/get_receipt', async function (req, res) {
@@ -124,7 +125,7 @@ app.post('/get_receipt', async function (req, res) {
     }
 
     const aggregate = await aggregateReceipt(verifySign.msg, verifySign.channelInfo)
-    if(aggregate.code == -1) {
+    if (aggregate.code == -1) {
       console.log("aggregate failed: " + aggregate.err)
       res.json(aggregate)
       return
@@ -139,10 +140,54 @@ app.post('/get_receipt', async function (req, res) {
   }
 })
 
-async function manage_channels() {
+async function manageChannel() {
+  if (!channelManagerReady) {
+    console.log("channelManager in progress")
+    return
+  }
+  channelManagerReady = 0
+  try {
+    const channelManager = JSON.parse(fs.readFileSync(channelManagerPath, 'utf8'))
+    let open = channelManager.open
+    let off = channelManager.off
 
+    for (var i = 0; i < open.length; i++) {
+      const channelInfo = await BChannelCon.methods.getOTokenDetails(open[i]).call({ from: Addr })
+      const numOfChunks = channelInfo.numOfChunks
+      const aggregateManager = JSON.parse(fs.readFileSync(aggregatePath + open[i] + '/aggregate_manager.json'))
+      const senders = Object.keys(aggregateManager)
 
+      var count = 0
+      var countArr = []
+      for (var j = 0; j < senders.length; j++) {
+        const latestReceipt = JSON.parse(fs.readFileSync(aggregatePath + open[i] + '/' + senders[i] + '_' + aggregateManager[senders[i]] + '.json'))
+        count += latestReceipt.count
+        countArr.push(latestReceipt.count * (100 / numOfChunks))
+      }
+
+      console.log("timeout: " + channelInfo.leftTime)
+
+      if (count == numOfChunks || channelInfo.leftTime <= 0) {
+        console.log("sending contents complete")
+        console.log("off-chain close...")
+        var receipt = await BChannelCon.methods.channelOff(open[i]).send({ from: Addr })
+        console.log("channel off receipt: " + JSON.stringify(receipt))
+        console.log("settle...")
+        receipt = await BChannelCon.methods.settleChannel(open[i], senders, countArr).send({ from: Addr })
+        console.log("settle receipt: " + JSON.stringify(receipt))
+        off.push(open[i])
+        open.splice(i, i + 1)
+        fs.writeFileSync(channelManagerPath, JSON.stringify({open, off}))
+      } 
+    }
+    channelManagerReady = 1
+  } catch (err) {
+    console.log("error occured: " + err)
+    channelManagerReady = 1
+  }
 }
+
+setInterval(manageChannel, 2000)
 
 app.listen(3003, () => {
   console.log('Example app listening on port 3003!');

@@ -85,7 +85,6 @@ async function Mapping() {
 
   //
   const EthWaLLet = ethWaLLet.fromPrivateKey(ethUtiL.toBuffer(RinkebyPrivateKey))
-  console.log('>>> wallet private key: ' + EthWaLLet.getPrivateKey())
   console.log('>>> wallet address: ' +  EthWaLLet.getAddressString())
 
   const LoomPrviteKey = await GetLoomPrivateKeyAsync(EthWaLLet)
