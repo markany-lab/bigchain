@@ -27,11 +27,11 @@ var Agent = Axios.create({
   })
 })
 
-async function GetLoomPrivateKeyAsync(waLLet) {
+async function GetLoomPrivateKeyAsync(waLLet){
   var Token
   var Sign
-  await Agent.post('/query_token', {})
-  .then(await function(res) {
+  await Agent.post('/query_get_token', {})
+  .then(await function(res){
     var TgtStr = res.data.string
     var Msg = Buffer.from(TgtStr, 'utf8')
     const Prefix = new Buffer("\x19Ethereum Signed Message:\n")
@@ -48,20 +48,20 @@ async function GetLoomPrivateKeyAsync(waLLet) {
   }
 
   console.log('token: ' + Token)
-  await Agent.post('/query_private_key_plain', {
+  await Agent.post('/query_get_private_key', {
     confirm_data: ConfirmData
   }, {
     headers: { Authorization: "Bearer " + Token }
   })
-  .then(await function(res) {
+  .then(await function(res){
     var QueryStatus = res.data.status
-    if (QueryStatus == 'verify failed') {
+    if (QueryStatus == 'verify failed'){
       console.log(">>> login failed: verify signature failed")
     } else {
-      if (QueryStatus == 'create') {
+      if (QueryStatus == 'create'){
         console.log(">>> login succeed: new key pair is generated")
       }
-      if (QueryStatus == 'return') {
+      if (QueryStatus == 'return'){
         console.log(">>> login succeed: key pair is returned")
       }
       console.log(">>> private key: " + res.data.prv_key)
@@ -72,7 +72,7 @@ async function GetLoomPrivateKeyAsync(waLLet) {
   return PrivateKey
 }
 
-async function Mapping() {
+async function Mapping(){
 
   // geth: Alice
   const EthWaLLet = ethWaLLet.fromPrivateKey(ethUtiL.toBuffer('0xb4f095a8ed1391d5c7a0b416e8ccb07d80c81b0889d198353470f43b9eb5efd4'))

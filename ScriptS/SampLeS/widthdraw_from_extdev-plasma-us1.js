@@ -30,11 +30,11 @@ var Agent = Axios.create({
   })
 })
 
-async function GetDappPrivateKeyAsync(www3, waLLet) {
+async function GetDappPrivateKeyAsync(www3, waLLet){
   var Token
   var Sign
-  await Agent.post('/query_token', {})
-  .then(await function(res) {
+  await Agent.post('/query_get_token', {})
+  .then(await function(res){
     var TgtStr = res.data.string
     var Msg = Buffer.from(TgtStr, 'utf8')
     const Prefix = new Buffer("\x19Ethereum Signed Message:\n")
@@ -51,20 +51,20 @@ async function GetDappPrivateKeyAsync(www3, waLLet) {
   }
 
   console.log('token: ' + Token)
-  await Agent.post('/query_private_key_plain', {
+  await Agent.post('/query_get_private_key', {
     confirm_data: ConfirmData
   }, {
     headers: { Authorization: "Bearer " + Token }
   })
-  .then(await function(res) {
+  .then(await function(res){
     var QueryStatus = res.data.status
-    if (QueryStatus == 'verify failed') {
+    if (QueryStatus == 'verify failed'){
       console.log(">>> login failed: verify signature failed")
     } else {
-      if (QueryStatus == 'create') {
+      if (QueryStatus == 'create'){
         console.log(">>> login succeed: new key pair is generated")
       }
-      if (QueryStatus == 'return') {
+      if (QueryStatus == 'return'){
         console.log(">>> login succeed: key pair is returned")
       }
       console.log(">>> private key: " + res.data.prv_key)
@@ -75,7 +75,7 @@ async function GetDappPrivateKeyAsync(www3, waLLet) {
   return PrivateKey
 }
 
-async function Mapping() {
+async function Mapping(){
 
   var Rinkeby = require('./rinkeby.json')
   const RinkebyPrivateKey = Rinkeby.prv_key
@@ -152,8 +152,8 @@ async function Mapping() {
 
   var GwBaLance = 0
   const WithdrawaLReceipt = await TransferGateway.withdrawalReceiptAsync(DAppAddress)
-  if (WithdrawaLReceipt) {
-    switch (WithdrawaLReceipt.tokenKind) {
+  if (WithdrawaLReceipt){
+    switch (WithdrawaLReceipt.tokenKind){
       case 0:
         GwBaLance = +WithdrawaLReceipt.value.toString(10)
         break
@@ -173,12 +173,12 @@ async function Mapping() {
   }
   else
   {
-    /*const PendingTx = EthW3.eth.subscribe('pendingTransactions', function(err, res) {
-      if (!err) {
+    /*const PendingTx = EthW3.eth.subscribe('pendingTransactions', function(err, res){
+      if (!err){
         console.log('>>> pending: ' + res)
       }
     })
-    .on("data", function(tx) {
+    .on("data", function(tx){
       console.log('>>> tx: ' + tx)
     })*/
 
@@ -223,8 +223,8 @@ async function Mapping() {
       await DeLay(1000 * 5)
       BaLance = 0
       const WithdrawaLReceipt = await TransferGateway.withdrawalReceiptAsync(DAppAddress)
-      if (WithdrawaLReceipt) {
-        switch (WithdrawaLReceipt.tokenKind) {
+      if (WithdrawaLReceipt){
+        switch (WithdrawaLReceipt.tokenKind){
           case 0:
             BaLance = +WithdrawaLReceipt.value.toString(10)
             break
@@ -237,8 +237,8 @@ async function Mapping() {
     //console.log('>>> check tx: ' + JSON.stringify(CheckTx))
 
     //
-    /*PendingTx.unsubscribe(function(err, success) {
-      if(success) {
+    /*PendingTx.unsubscribe(function(err, success){
+      if(success){
           console.log('Successfully unsubscribed!')
       }
     })*/

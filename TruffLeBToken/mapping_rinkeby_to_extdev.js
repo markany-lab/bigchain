@@ -28,7 +28,7 @@ async function GetLoomPrivateKeyAsync(waLLet){
 
   var Token
   var Sign
-  await Agent.post('/query_token', {})
+  await Agent.post('/query_get_token', {})
   .then(await function(res){
     var TgtStr = res.data.string
     var Msg = Buffer.from(TgtStr, 'utf8')
@@ -46,7 +46,7 @@ async function GetLoomPrivateKeyAsync(waLLet){
   }
 
   console.log('token: ' + Token)
-  await Agent.post('/query_private_key_plain', {
+  await Agent.post('/query_get_private_key', {
     confirm_data: ConfirmData
   }, {
     headers: { Authorization: "Bearer " + Token }

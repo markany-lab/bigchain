@@ -53,7 +53,7 @@ App.use(bearerToken())
 
 App.use(function(req, res, next){
 	logger.debug('--->>> new request for %s',req.originalUrl)
-	if(req.originalUrl.indexOf('/query_token') >= 0){
+	if(req.originalUrl.indexOf('/query_get_token') >= 0){
 		return next()
 	}
 
@@ -64,7 +64,7 @@ App.use(function(req, res, next){
 			res.send({
 				success: false,
 				message: 'Failed to authenticate token. Make sure to include the ' +
-					'token returned from /query_token call in the authorization header ' +
+					'token returned from /query_get_token call in the authorization header ' +
 					' as a Bearer token'
 			})
 			return
@@ -91,8 +91,8 @@ async function insert_private_key(address, key, enc){
   })
 }
 
-App.post('/query_token', (req, res)=>{
-  logger.debug('>>> /query_token')
+App.post('/query_get_token', (req, res)=>{
+  logger.debug('>>> /query_get_token')
 
   //
   var RandomStr = randomString.generate({length: 256, charset: 'alphabetic'});
@@ -107,8 +107,8 @@ App.post('/query_token', (req, res)=>{
   })
 })
 
-App.post('/query_private_key_plain', async function(req, res){
-  logger.debug('>>> /query_private_key_plain')
+App.post('/query_get_private_key', async function(req, res){
+  logger.debug('>>> /query_get_private_key')
 
   //
   logger.debug('body: ' + JSON.stringify(req.body))
@@ -170,7 +170,7 @@ App.post('/query_private_key_plain', async function(req, res){
       })
     }
   } catch(err){
-    logger.error('/query_private_key_plain, error: ' + err)
+    logger.error('/query_get_private_key, error: ' + err)
     res.json({
       status: 'error occured'
     })
@@ -231,7 +231,7 @@ else{
       App.use(expressJWT({
       	secret: Secret
       }).unless({
-      	path: ['/query_token']
+      	path: ['/query_get_token']
       }))
     }
 	})
