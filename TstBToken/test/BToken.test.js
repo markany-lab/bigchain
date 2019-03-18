@@ -62,7 +62,7 @@ contract('BToken', accounts => {
   const TitLeTest = '***** test ******'
   it(TitLeTest, async () => {
     console.log(TitLeTest)
-    let Tx = await ZChannel.channelOpen(1000, "0x123123", {
+    let Tx = await ZChannel.channelOpen(1000, "0x123123", 20, {
       from: bob,
       value: web3Utils.toWei("0.000001", 'ether')
     })
@@ -83,6 +83,9 @@ contract('BToken', accounts => {
     channelState = channelInfo.state
     console.log("channel state: " + channelState)
 
+    Tx = await ZChannel.settleChannel(TokenID, [alice, bob], [80, 20], {from: carlos})
+    Evt = Tx.logs.find(log => log.event === 'settleFinished')
+    console.log("Evt: " + JSON.stringify(Evt))
   })
 
   return

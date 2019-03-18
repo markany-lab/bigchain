@@ -59,7 +59,7 @@ async function SendSignedTx(query, address, private_key) {
     console.log('confirmation: ' + confirmationNumber)
   })
   .on('transactionHash', hash => {
-    console.log('hash: ' + hash);
+    console.log('hash: ' + hash)
   })
   .on('receipt', receipt => {
     console.log('reciept: ' + JSON.stringify(receipt))

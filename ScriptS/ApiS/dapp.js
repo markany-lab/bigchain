@@ -358,9 +358,9 @@ module.exports = class DappInit_ {
 
   async sendAggregatedReceipt() {
     let msg = {
-      channel_id: "0",
+      channel_id: "6",
       sender: '0xb73C9506cb7f4139A4D6Ac81DF1e5b6756Fab7A2',
-      count: 10,
+      count: 20,
       chunk_list:[0,1,2,3,4,5,6,7,8,9]
     }
     const Msg = Buffer.from(JSON.stringify(msg))

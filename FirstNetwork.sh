@@ -116,6 +116,7 @@ function deploy_truffle_btoken_loom {
 function deploy_truffle_btoken_extdev {
   echo "deploy truffle btoken to extdev_plasma_us1"
   cd ./TruffLeBToken
+  node ./mapping_rinkeby_to_extdev.js
   yarn deploy:extdev:reset
   cd ..
 }

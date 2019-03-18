@@ -20,7 +20,7 @@
       "channel:open": "node app.js channel --open",
       "channel:off": "node app.js channel --off",
       "channel:details": "node app.js channel --details",
-      
+
       "account:generate:default": "node app.js account --generate --password p@ssw0rd",
       "account:import:default": "node app.js account --import --password p@ssw0rd --prvKey 0x4E97E81D425966C00422A8FC5602382DA74862A239E941B2777AB0CB968D115B",
       "account:export:default": "node app.js account --export --index 0 --password p@ssw0rd",

@@ -57,22 +57,22 @@ async function GetLoomPrivateKeyAsync(waLLet) {
     headers: { Authorization: "Bearer " + Token }
   })
   .then(await function(res) {
-    var QueryStatus = res.data.status;
+    var QueryStatus = res.data.status
     if (QueryStatus == 'verify failed') {
-      console.log(">>> login failed: verify signature failed");
+      console.log(">>> login failed: verify signature failed")
     } else {
       if (QueryStatus == 'create') {
-        console.log(">>> login succeed: new key pair is generated");
+        console.log(">>> login succeed: new key pair is generated")
       }
       if (QueryStatus == 'return') {
-        console.log(">>> login succeed: key pair is returned");
+        console.log(">>> login succeed: key pair is returned")
       }
-      console.log(">>> private key: " + res.data.prv_key);
-      PrivateKey = res.data.prv_key;
+      console.log(">>> private key: " + res.data.prv_key)
+      PrivateKey = res.data.prv_key
     }
   })
   .catch(err => console.error('>>> ' + JSON.stringify(err)))
-  return PrivateKey;
+  return PrivateKey
 }
 
 async function Mapping() {
@@ -110,7 +110,7 @@ async function Mapping() {
   )
 
   //
-  const LoomPrivateKeyB64 = CryptoUtils.B64ToUint8Array(LoomPrviteKey);
+  const LoomPrivateKeyB64 = CryptoUtils.B64ToUint8Array(LoomPrviteKey)
   const LoomPubLicKey = CryptoUtils.publicKeyFromPrivateKey(LoomPrivateKeyB64)
   const LoomCLient = new Client(
     'extdev-plasma-us1',

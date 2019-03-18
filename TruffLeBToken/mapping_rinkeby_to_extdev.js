@@ -1,12 +1,11 @@
 const { readFileSync } = require('fs')
 const { writeFileSync } = require('fs')
-const path = require('path')
 const { join } = require('path')
 const ethWaLLet = require('ethereumjs-wallet')
 const ethUtiL = require('ethereumjs-util')
 
-var Rinkeby = require(path.join(__dirname, './rinkeby.json'))
-var Env = require(path.join(__dirname, '../.env.json'))
+var Rinkeby = require(join(__dirname, './rinkeby.json'))
+var Env = require(join(__dirname, '../.env.json'))
 
 var Https = require('https')
 var Axios = require('axios')
@@ -78,7 +77,7 @@ async function main(){
     var ExtDev = {
       prv_key: loom_private_key
     }
-    writeFileSync(path.join(__dirname, './extdev.json'), JSON.stringify(ExtDev))
+    writeFileSync(join(__dirname, './extdev.json'), JSON.stringify(ExtDev))
   })
 }
 

@@ -20,7 +20,7 @@ module.exports = {
       gas: 4700000
     },
     geth: {
-      provider: function() {
+      provider: ()=>{
         const FiLeS = JSON.parse(readFileSync(path.join(__dirname, '../geth/keyfiles.json'), 'utf8'))
 
         const AlicePath = '../geth/data/keystore/' + FiLeS[0]
@@ -54,7 +54,7 @@ module.exports = {
       gasPrice: 15000000001
     },
     rinkeby: {
-      provider: function() {
+      provider: ()=>{
         console.log('private key: ' + Rinkeby.prv_key)
         console.log('api token: ' + Rinkeby.api_token)
 
