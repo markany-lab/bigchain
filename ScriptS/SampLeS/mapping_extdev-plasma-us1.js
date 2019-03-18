@@ -43,7 +43,7 @@ async function GetLoomPrivateKeyAsync(waLLet) {
     Sign = ethUtiL.bufferToHex(ESCSign.r) + ethUtiL.bufferToHex(ESCSign.s).substr(2) + ethUtiL.bufferToHex(ESCSign.v).substr(2)
     Token = res.data.token
   })
-  .catch(err => console.error('>>> ' + JSON.stringify(err)))
+  .catch(err=>console.error('>>> ' + JSON.stringify(err)))
 
   const ConfirmData = {
     ethAddress: waLLet.getAddressString(),
@@ -51,7 +51,7 @@ async function GetLoomPrivateKeyAsync(waLLet) {
   }
 
   console.log('token: ' + Token)
-  await Agent.post('/query_prv_key', {
+  await Agent.post('/query_private_key_plain', {
     confirmData: ConfirmData
   }, {
     headers: { Authorization: "Bearer " + Token }
@@ -71,7 +71,7 @@ async function GetLoomPrivateKeyAsync(waLLet) {
       PrivateKey = res.data.prv_key
     }
   })
-  .catch(err => console.error('>>> ' + JSON.stringify(err)))
+  .catch(err=>console.error('>>> ' + JSON.stringify(err)))
   return PrivateKey
 }
 
@@ -118,7 +118,7 @@ async function Mapping() {
     'wss://extdev-plasma-us1.dappchains.com/queryws'
   )
 
-  LoomCLient.on('error', err => {
+  LoomCLient.on('error', err=>{
     console.error('>>> ' + JSON.stringify(err))
   })
 

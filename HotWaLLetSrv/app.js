@@ -107,8 +107,8 @@ App.post('/query_token', (req, res)=>{
   })
 })
 
-App.post('/query_prv_key', async function(req, res){
-  logger.debug('>>> /query_prv_key')
+App.post('/query_private_key_plain', async function(req, res){
+  logger.debug('>>> /query_private_key_plain')
 
   //
   logger.debug('body: ' + JSON.stringify(req.body))
@@ -170,7 +170,7 @@ App.post('/query_prv_key', async function(req, res){
       })
     }
   } catch(err){
-    logger.error('/query_prv_key, error: ' + err)
+    logger.error('/query_private_key_plain, error: ' + err)
     res.json({
       status: 'error occured'
     })

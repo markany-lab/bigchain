@@ -50,12 +50,12 @@ async function getDappPrivateKey(web3, wallet, method) {
   var Sign
   await Agent.post('/query_token', {})
   .then(await function (res) {
-    var TgtStr = res.data.string;
+    var TgtStr = res.data.string
     if (method == 'web3') {
       web3.eth.accounts.wallet.add(wallet.getPrivateKeyString())
       return web3.eth.sign(TgtStr, wallet.getAddressString(), async function (error, result) {
-        Sign = result;
-      });
+        Sign = result
+      })
     } else if (method == 'ether-util') {
       var msg = Buffer.from(TgtStr, 'utf8')
       const prefix = new Buffer("\x19Ethereum Signed Message:\n")
@@ -65,31 +65,31 @@ async function getDappPrivateKey(web3, wallet, method) {
       Token = res.data.token
     }
   })
-  .catch(err => console.log(err))
+  .catch(err=>console.log(err))
 
   const ConfirmData = {
     ethAddress: wallet.getAddressString(),
     sign: Sign
   }
 
-  await Agent.post('/query_prv_key', {
+  await Agent.post('/query_private_key_plain', {
     confirmData: ConfirmData
   }, {
     headers: { Authorization: "Bearer " + Token }
   })
   .then(await function (res) {
-    var QueryStatus = res.data.status;
+    var QueryStatus = res.data.status
     if (QueryStatus == 'verify failed') {
     } else {
       if (QueryStatus == 'create') {
       }
       if (QueryStatus == 'return') {
       }
-      PrivateKey = res.data.prv_key;
+      PrivateKey = res.data.prv_key
     }
   })
-  .catch(err => console.log(err))
-  return PrivateKey;
+  .catch(err=>console.log(err))
+  return PrivateKey
 }
 
 function getEthContract(web3) {
@@ -227,7 +227,7 @@ module.exports = class EtherInit_ {
         Sign
       }
     })
-    .then((res) => {
+    .then((res)=>{
       console.log(JSON.stringify(res.data))
 
       // console.log(JSON.stringify(res))

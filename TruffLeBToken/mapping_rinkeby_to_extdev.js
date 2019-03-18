@@ -38,7 +38,7 @@ async function GetLoomPrivateKeyAsync(waLLet){
     Sign = ethUtiL.bufferToHex(ESCSign.r) + ethUtiL.bufferToHex(ESCSign.s).substr(2) + ethUtiL.bufferToHex(ESCSign.v).substr(2)
     Token = res.data.token
   })
-  .catch(err => console.error('/query_token, error: ' + JSON.stringify(err)))
+  .catch(err=>console.error('error: ' + JSON.stringify(err)))
 
   const ConfirmData = {
     ethAddress: waLLet.getAddressString(),
@@ -46,29 +46,29 @@ async function GetLoomPrivateKeyAsync(waLLet){
   }
 
   console.log('token: ' + Token)
-  await Agent.post('/query_prv_key', {
+  await Agent.post('/query_private_key_plain', {
     confirmData: ConfirmData
   }, {
     headers: { Authorization: "Bearer " + Token }
   })
   .then(await function(res){
-    var QueryStatus = res.data.status;
+    var QueryStatus = res.data.status
     if (QueryStatus == 'verify failed'){
-      console.error("/query_prv_key, login failed: verify signature failed");
+      console.log("login failed: verify signature failed")
     }
     else{
       if (QueryStatus == 'create'){
-        console.log("/query_prv_key, login succeed: new key pair is generated");
+        console.log("login succeed: new key pair is generated")
       }
       if (QueryStatus == 'return'){
-        console.log("/query_prv_key, login succeed: key pair is returned");
+        console.log("login succeed: key pair is returned")
       }
-      console.log("/query_prv_key, private key: " + res.data.prv_key);
-      PrivateKey = res.data.prv_key;
+      console.log("private key: " + res.data.prv_key)
+      PrivateKey = res.data.prv_key
     }
   })
-  .catch(err => console.error('query_prv_key, error: ' + JSON.stringify(err)))
-  return PrivateKey;
+  .catch(err=>console.log('error: ' + JSON.stringify(err)))
+  return PrivateKey
 }
 
 async function main(){

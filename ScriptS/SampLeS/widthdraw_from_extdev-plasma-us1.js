@@ -35,7 +35,7 @@ async function GetDappPrivateKeyAsync(www3, waLLet) {
   var Sign
   await Agent.post('/query_token', {})
   .then(await function(res) {
-    var TgtStr = res.data.string;
+    var TgtStr = res.data.string
     var Msg = Buffer.from(TgtStr, 'utf8')
     const Prefix = new Buffer("\x19Ethereum Signed Message:\n")
     const PrefixedMsg = Buffer.concat([Prefix, new Buffer(String(Msg.length)), Msg])
@@ -43,7 +43,7 @@ async function GetDappPrivateKeyAsync(www3, waLLet) {
     Sign = ethUtiL.bufferToHex(ESCSign.r) + ethUtiL.bufferToHex(ESCSign.s).substr(2) + ethUtiL.bufferToHex(ESCSign.v).substr(2)
     Token = res.data.token
   })
-  .catch(err => console.error('>>> ' + JSON.stringify(err)))
+  .catch(err=>console.error('>>> ' + JSON.stringify(err)))
 
   const ConfirmData = {
     ethAddress: waLLet.getAddressString(),
@@ -51,28 +51,28 @@ async function GetDappPrivateKeyAsync(www3, waLLet) {
   }
 
   console.log('token: ' + Token)
-  await Agent.post('/query_prv_key', {
+  await Agent.post('/query_private_key_plain', {
     confirmData: ConfirmData
   }, {
     headers: { Authorization: "Bearer " + Token }
   })
   .then(await function(res) {
-    var QueryStatus = res.data.status;
+    var QueryStatus = res.data.status
     if (QueryStatus == 'verify failed') {
-      console.log(">>> login failed: verify signature failed");
+      console.log(">>> login failed: verify signature failed")
     } else {
       if (QueryStatus == 'create') {
-        console.log(">>> login succeed: new key pair is generated");
+        console.log(">>> login succeed: new key pair is generated")
       }
       if (QueryStatus == 'return') {
-        console.log(">>> login succeed: key pair is returned");
+        console.log(">>> login succeed: key pair is returned")
       }
-      console.log(">>> private key: " + res.data.prv_key);
-      PrivateKey = res.data.prv_key;
+      console.log(">>> private key: " + res.data.prv_key)
+      PrivateKey = res.data.prv_key
     }
   })
-  .catch(err => console.error('>>> ' + JSON.stringify(err)))
-  return PrivateKey;
+  .catch(err=>console.error('>>> error: ' + JSON.stringify(err)))
+  return PrivateKey
 }
 
 async function Mapping() {
@@ -110,7 +110,7 @@ async function Mapping() {
   )
 
   //
-  const DAppPrivateKeyB64 = CryptoUtils.B64ToUint8Array(DAppPrviteKey);
+  const DAppPrivateKeyB64 = CryptoUtils.B64ToUint8Array(DAppPrviteKey)
   const DAppPubLicKey = CryptoUtils.publicKeyFromPrivateKey(DAppPrivateKeyB64)
   const DAppCLient = new Client(
     'extdev-plasma-us1',
@@ -118,7 +118,7 @@ async function Mapping() {
     'wss://extdev-plasma-us1.dappchains.com/queryws'
   )
 
-  DAppCLient.on('error', err => {
+  DAppCLient.on('error', err=>{
     console.error('>>> ' + JSON.stringify(err))
   })
 
@@ -179,7 +179,7 @@ async function Mapping() {
       }
     })
     .on("data", function(tx) {
-      console.log('>>> tx: ' + tx);
+      console.log('>>> tx: ' + tx)
     })*/
 
     const Signature = CryptoUtils.bytesToHexAddr(WithdrawaLReceipt.oracleSignature)
@@ -215,12 +215,12 @@ async function Mapping() {
     Tx.sign(EthWaLLet.getPrivateKey())
     var SeriaLizedTx = Tx.serialize()
     const SignedTx = await EthW3.eth.sendSignedTransaction("0x" + SeriaLizedTx.toString('hex'))
-    //.on('receipt', (result) => console.log('>>> receipt: ' + JSON.stringify(result)));
+    //.on('receipt', (result)=>console.log('>>> receipt: ' + JSON.stringify(result)))
     console.log('>>> signed tx: ' + JSON.stringify(SignedTx))
 
     var BaLance = 0
     do {
-      await DeLay(1000 * 5);
+      await DeLay(1000 * 5)
       BaLance = 0
       const WithdrawaLReceipt = await TransferGateway.withdrawalReceiptAsync(DAppAddress)
       if (WithdrawaLReceipt) {
