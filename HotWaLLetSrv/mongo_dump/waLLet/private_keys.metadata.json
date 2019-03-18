@@ -1,1 +1,1 @@
-{"options":{"autoIndexId":false},"indexes":[{"v":2,"unique":true,"key":{"addr":1.0},"name":"addr_1","ns":"waLLet.private_keys"}],"uuid":"63f618235acc44c98f6306faa47b7ab6"}
+{"options":{"autoIndexId":false},"indexes":[{"v":2,"unique":true,"key":{"addr":1.0},"name":"addr_1","ns":"waLLet.private_keys"}],"uuid":"2d935871635e47b89e6c00e289ef653a"}
