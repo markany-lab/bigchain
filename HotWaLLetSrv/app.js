@@ -110,12 +110,34 @@ App.post('/query_get_token', (req, res)=>{
 App.post('/query_get_private_key', async function(req, res){
   logger.debug('>>> /query_get_private_key')
 
-  //
-  logger.debug('body: ' + JSON.stringify(req.body))
+  //logger.debug('body: ' + JSON.stringify(req.body))
   try {
     var ConfirmAddr = req.body.confirm_data.addr
     var ConfirmSign = req.body.confirm_data.sign
+    var KeyB64 = req.body.key_b64
+    logger.debug('base64(key): ' + JSON.stringify(KeyB64) + ', type: ' + typeof KeyB64)
     var RandomStr = req.random_str
+
+    // 시뮬레이션...
+    var _LoomKeyB64
+    var _Enc
+    try{
+      var Key = loom.CryptoUtils.B64ToUint8Array(KeyB64)
+      if (Key.length != 64){
+        throw('invalid key: ' + KeyB64)
+      }
+      _LoomKeyB64 = KeyB64
+      _Enc = true
+    }
+    catch(err){
+      logger.error('/query_get_private_key, error: ' + err)
+      var GeneratedKey = loom.CryptoUtils.generatePrivateKey()
+      _LoomKeyB64 = loom.CryptoUtils.Uint8ArrayToB64(GeneratedKey)
+      _Enc = false
+    }
+
+    logger.debug('!!!!!!!! _LoomKeyB64: ' + _LoomKeyB64)
+    logger.debug('!!!!!!!! _Enc: ' + _Enc)
 
     var Msg = Buffer.from(RandomStr, 'utf8')
     const Prefix = new Buffer("\x19Ethereum Signed Message:\n")
@@ -137,14 +159,29 @@ App.post('/query_get_private_key', async function(req, res){
       await CLusterLock.acquireWrite('PrivateLock', async function(){
         const FoundKey = await privateSchema.findOne({addr: ConfirmAddr.toLowerCase()})
         if(!FoundKey){
-          var PrivateKey = loom.CryptoUtils.generatePrivateKey()
-          var PrivateKeyB64 = loom.CryptoUtils.Uint8ArrayToB64(PrivateKey)
-          await insert_private_key(ConfirmAddr.toLowerCase(), PrivateKeyB64, false)
-          logger.debug("saved private key: " + PrivateKeyB64)
+          var LoomKeyB64
+          var Enc
+          try{
+            var Key = loom.CryptoUtils.B64ToUint8Array(KeyB64)
+            if (Key.length != 64){
+              throw('invalid key: ' + KeyB64)
+            }
+            LoomKeyB64 = KeyB64
+            Enc = true
+          }
+          catch(err){
+            logger.error('/query_get_private_key, error: ' + err)
+            var GeneratedKey = loom.CryptoUtils.generatePrivateKey()
+            LoomKeyB64 = loom.CryptoUtils.Uint8ArrayToB64(GeneratedKey)
+            Enc = false
+          }
+
+          await insert_private_key(ConfirmAddr.toLowerCase(), LoomKeyB64, false)
+          logger.debug("saved private key: " + LoomKeyB64)
           res.json({
             status: 'create',
-            prv_key: PrivateKeyB64,
-            enc: false
+            prv_key: LoomKeyB64,
+            enc: Enc
           })
         }
         else{
