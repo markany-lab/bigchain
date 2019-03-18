@@ -1,3 +1,4 @@
+var Crypto = require('crypto')
 var fiLeSystem = require('fs')
 //var lockFile = require('lockfile')
 var log4js = require('log4js')
@@ -48,12 +49,7 @@ App.use(bodyParser.urlencoded({
   extended: true
 }))
 
-App.set('secret', 'thisismysecret')
-App.use(expressJWT({
-	secret: 'thisismysecret'
-}).unless({
-	path: ['/query_token']
-}));
+
 App.use(bearerToken())
 
 App.use(function(req, res, next){
@@ -113,7 +109,7 @@ App.post('/query_token', (req, res)=>{
   })
 })
 
-App.post('/query_prv_key', async function(req, res) {
+App.post('/query_prv_key', async function(req, res){
   logger.debug('>>> /query_prv_key')
 
   //
@@ -213,14 +209,34 @@ async function start_server(){
 numCPU = (numCPU < 4) ? numCPU * 2 : numCPU
 logger.info("num of cpus: " + numCPU)
 if(cLuster.isMaster){
+  var Secret = {
+    secret: Crypto.randomBytes(256).toString('hex')
+  }
+  logger.debug('master secret: ' + JSON.stringify(Secret))
+
 	for(let i = 0; i < numCPU; i++){
 		var Worker = cLuster.fork()
+    Worker.send(Secret)
 	}
+
 	cLuster.on('exit', function(worker, code, signal){
 		logger.info('worker ' + worker.process.pid + ' died')
 	})
 }
 else{
+  process.on( 'message', function(msg){
+    if (msg.secret){
+      var Secret = msg.secret
+      logger.debug( 'secret: ' + Secret)
+      App.set('secret', msg.secret)
+      App.use(expressJWT({
+      	secret: Secret
+      }).unless({
+      	path: ['/query_token']
+      }))
+    }
+	})
+
 	logger.info( 'worker pid: %d', process.pid )
   start_server()
 }
