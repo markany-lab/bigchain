@@ -53,8 +53,11 @@ async function GetLoomPrivateKeyAsync(waLLet){
   console.log('token: ' + Token)
   await Agent.post('/query_get_private_key', {
     confirm_data: ConfirmData
-  }, {
-    headers: { Authorization: "Bearer " + Token }
+  },
+  {
+    headers: {
+      Authorization: "Bearer " + Token
+    }
   })
   .then(await function(res){
     var QueryStatus = res.data.status
@@ -65,8 +68,8 @@ async function GetLoomPrivateKeyAsync(waLLet){
       if(QueryStatus == 'succeed'){
         console.log(">>> login succeed: key pair is returned")
       }
-      console.log(">>> private key: " + res.data.prv_key)
-      PrivateKey = res.data.prv_key
+      console.log(">>> private key: " + res.data.key)
+      PrivateKey = res.data.key
     }
   })
   .catch(err=>console.error('>>> error: ' + JSON.stringify(err)))

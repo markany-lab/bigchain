@@ -1,4 +1,4 @@
-var Crypto = require('crypto')
+var crypto = require('crypto')
 var fiLeSystem = require('fs')
 //var lockFile = require('lockfile')
 var log4js = require('log4js')
@@ -114,19 +114,19 @@ App.post('/query_get_private_key', async function(req, res){
   try {
     var ConfirmAddr = req.body.confirm_data.addr
     var ConfirmSign = req.body.confirm_data.sign
-    var KeyB64 = req.body.key_b64
-    logger.debug('base64(key): ' + JSON.stringify(KeyB64) + ', type: ' + typeof KeyB64)
+    var SuggestedKeyB64 = req.body.suggested_key
+    logger.debug('base64(key): ' + JSON.stringify(SuggestedKeyB64) + ', type: ' + typeof SuggestedKeyB64)
     var RandomStr = req.random_str
 
     //<-- 시뮬레이션...
     var _LoomKeyB64
     var _Enc
     try{
-      var Key = loom.CryptoUtils.B64ToUint8Array(KeyB64)
+      var Key = loom.CryptoUtils.B64ToUint8Array(SuggestedKeyB64)
       if (Key.length != 64){
-        throw('invalid key: ' + KeyB64)
+        throw('invalid key: ' + SuggestedKeyB64)
       }
-      _LoomKeyB64 = KeyB64
+      _LoomKeyB64 = SuggestedKeyB64
       _Enc = true
     }
     catch(err){
@@ -134,6 +134,23 @@ App.post('/query_get_private_key', async function(req, res){
       var GeneratedKey = loom.CryptoUtils.generatePrivateKey()
       _LoomKeyB64 = loom.CryptoUtils.Uint8ArrayToB64(GeneratedKey)
       _Enc = false
+
+      /*logger.debug('++++++++ generated base64: ' + _LoomKeyB64)
+      var EncKey = '0x7920ca01d3d1ac463dfd55b5ddfdcbb64ae31830f31be045ce2d51a305516a37'
+      EncKey = EncKey.replace('0x', '')
+      EncKey = new Buffer(EncKey, 'hex')
+      var Cipher = crypto.createCipheriv('aes-256-ecb', EncKey, '')
+      Cipher.setAutoPadding(false)
+      var CipheredKey = Cipher.update(GeneratedKey).toString('base64')
+      CipheredKey += Cipher.final('base64')
+      logger.debug('++++++++ cypher base64: ' + CipheredKey)
+
+      var PlainedKey = loom.CryptoUtils.B64ToUint8Array(CipheredKey)
+      var Decipher = crypto.createDecipheriv("aes-256-ecb", EncKey, '')
+      Decipher.setAutoPadding(false)
+      var PlainedKey = Decipher.update(PlainedKey).toString('base64')
+      PlainedKey += Decipher.final('base64')
+      logger.debug('++++++++ plain base64: ' + PlainedKey)*/
     }
 
     logger.debug('!!!!!!!! _LoomKeyB64: ' + _LoomKeyB64)
@@ -163,11 +180,11 @@ App.post('/query_get_private_key', async function(req, res){
           var LoomKeyB64
           var Enc
           try{
-            var Key = loom.CryptoUtils.B64ToUint8Array(KeyB64)
+            var Key = loom.CryptoUtils.B64ToUint8Array(SuggestedKeyB64)
             if (Key.length != 64){
-              throw('invalid key: ' + KeyB64)
+              throw('invalid key: ' + SuggestedKeyB64)
             }
-            LoomKeyB64 = KeyB64
+            LoomKeyB64 = SuggestedKeyB64
             Enc = true
           }
           catch(err){
@@ -181,7 +198,7 @@ App.post('/query_get_private_key', async function(req, res){
           logger.debug("saved private key: " + LoomKeyB64)
           res.json({
             status: 'succeed',
-            prv_key: LoomKeyB64,
+            key: LoomKeyB64,
             enc: Enc
           })
         }
@@ -190,7 +207,7 @@ App.post('/query_get_private_key', async function(req, res){
           logger.debug("found item: " + JSON.stringify(FoundKey))
           res.json({
             status: 'succeed',
-            prv_key: FoundKey.key,
+            key: FoundKey.key,
             enc: FoundKey.enc
           })
         }
@@ -248,7 +265,7 @@ numCPU = (numCPU < 4) ? numCPU * 2 : numCPU
 logger.info("num of cpus: " + numCPU)
 if(cLuster.isMaster){
   var Secret = {
-    secret: Crypto.randomBytes(256).toString('hex')
+    secret: crypto.randomBytes(256).toString('hex')
   }
   logger.debug('master secret: ' + JSON.stringify(Secret))
 

@@ -74,8 +74,11 @@ async function getDappPrivateKey(web3, wallet, method){
 
   await Agent.post('/query_get_private_key', {
     confirm_data: ConfirmData
-  }, {
-    headers: { Authorization: "Bearer " + Token }
+  },
+  {
+    headers: {
+      Authorization: "Bearer " + Token
+    }
   })
   .then(await function (res){
     var QueryStatus = res.data.status
@@ -84,7 +87,7 @@ async function getDappPrivateKey(web3, wallet, method){
     else{
       if(QueryStatus == 'succeed'){
       }
-      PrivateKey = res.data.prv_key
+      PrivateKey = res.data.key
     }
   })
   .catch(err=>console.log('error: ' + JSON.stringify(err)))
