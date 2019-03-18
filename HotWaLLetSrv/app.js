@@ -84,27 +84,14 @@ App.use(function(req, res, next){
 	})
 })
 
-function find_private_key(address){
-  privateSchema.findOne({addr: address}, function(err, item){
-      if(err){
-        logger.error('find_private_key, error: ' + err)
-      }
-      else {
-        logger.debug('key: ' + item.key)
-        return item.key;
-      }
-  })
-  return -1
-}
-
-function insert_private_key(address, key){
-  var New_item = new privateSchema({addr: address, key: key, enc:false })
-  New_item.save(function(err, data){
+async function insert_private_key(address, key){
+  var New_item = new privateSchema({addr: address, key: key, enc: false })
+  await New_item.save(function(err, item){
       if(err){
           logger.error('insert_private_key, error: ' + err)
       }
       else{
-          console.log('----------Saved! ' + data)
+          logger.debug('insert_private_key, item: ' + item)
       }
   })
 }
@@ -152,15 +139,13 @@ App.post('/query_prv_key', async function(req, res) {
     const EthAddr = ethUtiL.bufferToHex(EthAddrBuf)
 
     if(TgtAccount.toLowerCase() == EthAddr){
-      //
-      var PrivateKeyB64
       //PrivateLock.writeLock(function(release){
-      await CLusterLock.acquireWrite('PrivateLock', ()=>{
-        PrivateKeyB64 = find_private_key(TgtAccount.toLowerCase())
-        if(PrivateKeyB64 == -1){
+      await CLusterLock.acquireWrite('PrivateLock', async function(){
+        const FoundKey = await privateSchema.findOne({addr: TgtAccount.toLowerCase()})
+        if(!FoundKey){
           var PrivateKey = loom.CryptoUtils.generatePrivateKey()
-          PrivateKeyB64 = loom.CryptoUtils.Uint8ArrayToB64(PrivateKey)
-          insert_private_key(TgtAccount.toLowerCase(), PrivateKeyB64)
+          var PrivateKeyB64 = loom.CryptoUtils.Uint8ArrayToB64(PrivateKey)
+          await insert_private_key(TgtAccount.toLowerCase(), PrivateKeyB64)
 
           logger.debug("saved private key: " + PrivateKeyB64)
           res.json({
@@ -169,10 +154,10 @@ App.post('/query_prv_key', async function(req, res) {
           })
         }
         else{
-          logger.debug("found private key: " + PrivateKeyB64)
+          logger.debug("found private key: " + FoundKey.key)
           res.json({
             status: 'return',
-            prv_key: PrivateKeyB64
+            prv_key: FoundKey.key
           })
         }
         //release()
