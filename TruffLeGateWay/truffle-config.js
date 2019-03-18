@@ -4,6 +4,8 @@ const { join } = require('path')
 const EthJsWallet = require('ethereumjs-wallet')
 const HDWalletProvider = require('truffle-hdwallet-provider')
 
+var Rinkeby = require(path.join(__dirname, './rinkeby.json')
+
 module.exports = {
   compilers: {
     solc: {
@@ -53,19 +55,16 @@ module.exports = {
     },
     rinkeby: {
       provider: function() {
-        const PrivateKey = readFileSync(path.join(__dirname, 'rinkeby_private.key'), 'utf8')
-        console.log('private key: ' + PrivateKey)
-
-        const ApiToken = readFileSync(path.join(__dirname, 'rinkeby_api.token'), 'utf8')
-        console.log('api token: ' + ApiToken)
+        console.log('private key: ' + Rinkeby.prv_key)
+        console.log('api token: ' + Rinkeby.api_token)
 
         const PrivateKeyS = [
-          PrivateKey,
-          PrivateKey,
-          PrivateKey
+          Rinkeby.prv_key,
+          Rinkeby.prv_key,
+          Rinkeby.prv_key
         ]
         //console.log('length: ' + PrivateKeyS.length)
-        var Provider = new HDWalletProvider(PrivateKeyS, 'https://rinkeby.infura.io/' + ApiToken, 0, PrivateKeyS.length)
+        var Provider = new HDWalletProvider(PrivateKeyS, 'https://rinkeby.infura.io/' + Rinkeby.api_token, 0, PrivateKeyS.length)
         return Provider
       },
       network_id: 4,

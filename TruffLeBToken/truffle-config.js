@@ -5,6 +5,9 @@ const EthJsWallet = require('ethereumjs-wallet')
 const HDWalletProvider = require('truffle-hdwallet-provider')
 const LoomTruffleProvider = require('loom-truffle-provider')
 
+var Env = require(path.join(__dirname, '../.env.json'))
+var Rinkeby = require(path.join(__dirname, './rinkeby.json')
+
 module.exports = {
   compilers: {
     solc: {
@@ -14,11 +17,11 @@ module.exports = {
   networks: {
     loom_dapp_chain: {
       provider: function() {
-        const PrivateKey = readFileSync(path.join(__dirname, '../LoomNetwork/private_key'), 'utf-8')
+        const LoomPrivateKey = readFileSync(path.join(__dirname, '../LoomNetwork/private_key'), 'utf-8')
         const ChainID = 'default'
         const WriteURL = 'http://127.0.0.1:46658/rpc'
         const ReadURL = 'http://127.0.0.1:46658/query'
-        const Provider = new LoomTruffleProvider(ChainID, WriteURL, ReadURL, PrivateKey)
+        const Provider = new LoomTruffleProvider(ChainID, WriteURL, ReadURL, LoomPrivateKey)
         Provider.createExtraAccountsFromMnemonic("gravity top burden flip student usage spell purchase hundred improve check genre", 10)
         return Provider
       },
@@ -26,21 +29,25 @@ module.exports = {
     },
     extdev_plasma_us1: {
       provider: function() {
-        const PrivateKey = readFileSync(path.join(__dirname, '../LoomNetwork/private_key'), 'utf-8')
+        console.log('ethereum private key: ' + Rinkeby.prv_key)
+        const HotWaLLetAddr = Env.key_server_ip + ':' + Env.key_server_port
+        console.log('hot wallet address ' + HotWaLLetAddr)
+
+        const LoomPrivateKey = readFileSync(path.join(__dirname, '../LoomNetwork/private_key'), 'utf-8')
         const ChainID = 'extdev-plasma-us1'
         const WriteURL = 'http://extdev-plasma-us1.dappchains.com:80/rpc'
         const ReadURL = 'http://extdev-plasma-us1.dappchains.com:80/query'
-        return new LoomTruffleProvider(ChainID, WriteURL, ReadURL, PrivateKey)
+        return new LoomTruffleProvider(ChainID, WriteURL, ReadURL, LoomPrivateKey)
       },
       network_id: 'extdev-plasma-us1'
     },
     loomv2b: {
       provider: function() {
-        const PrivateKey = readFileSync(path.join(__dirname, 'loomv2b_pk'), 'utf-8')
+        const LoomPrivateKey = readFileSync(path.join(__dirname, 'loomv2b_pk'), 'utf-8')
         const ChainID = 'loomv2b'
         const WriteURL = 'http://loomv2b.dappchains.com:46658/rpc'
         const ReadURL = 'http://loomv2b.dappchains.com:46658/query'
-        return new LoomTruffleProvider(ChainID, WriteURL, ReadURL, PrivateKey)
+        return new LoomTruffleProvider(ChainID, WriteURL, ReadURL, LoomPrivateKey)
       },
       network_id: '12106039541279'
     },
@@ -79,17 +86,14 @@ module.exports = {
     },
     rinkeby: {
       provider: function() {
-        const PrivateKey = readFileSync(path.join(__dirname, 'rinkeby_private.key'), 'utf8')
-        console.log('private key: ' + PrivateKey)
-
-        const ApiToken = readFileSync(path.join(__dirname, 'rinkeby_api.token'), 'utf8')
-        console.log('api token: ' + ApiToken)
+        console.log('ethereum private key: ' + Rinkeby.prv_key)
+        console.log('ethereum api token: ' + Rinkeby.api_token)
 
         const PrivateKeyS = [
-          PrivateKey
+          Rinkeby.prv_key
         ]
         //console.log('length: ' + PrivateKeyS.length)
-        var Provider = new HDWalletProvider(PrivateKeyS, 'https://rinkeby.infura.io/' + ApiToken, 0, PrivateKeyS.length)
+        var Provider = new HDWalletProvider(PrivateKeyS, 'https://rinkeby.infura.io/' + Rinkeby.api_token, 0, PrivateKeyS.length)
         return Provider
       },
       network_id: 4,
