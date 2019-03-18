@@ -27,7 +27,7 @@ var Agent = Axios.create({
   })
 })
 
-async function GetDappPrivateKeyAsync(www3, waLLet) {
+async function GetLoomPrivateKeyAsync(waLLet) {
   var Token
   var Sign
   await Agent.post('/query_token', {})
@@ -81,11 +81,12 @@ async function Mapping() {
   //const EthWaLLet = ethWaLLet.fromPrivateKey(ethUtiL.toBuffer('0x7d52c3f6477e1507d54a826833169ad169a56e02ffc49a1801218a7d87ca50bd'))
   //const EthWaLLet = ethWaLLet.fromPrivateKey(ethUtiL.toBuffer('0x6aecd44fcb79d4b68f1ee2b2c706f8e9a0cd06b0de4729fe98cfed8886315256'))
 
+  const LoomPrviteKey = await GetLoomPrivateKeyAsync(EthWaLLet)
+  console.log('>>> loom private key: ' + LoomPrviteKey)
+
   var EthProvider = new Web3.providers.HttpProvider('http://localhost:8545')
   //var EthProvider = new Web3.providers.WebsocketProvider('ws://localhost:8546')
   var EthW3 = new Web3(EthProvider)
-  const LoomPrviteKey = await GetDappPrivateKeyAsync(EthW3, EthWaLLet)
-  console.log('>>> loom private key: ' + LoomPrviteKey)
 
   // balance 체크
   EthW3.eth.getBalance(EthWaLLet.getAddressString()).then( balance =>{

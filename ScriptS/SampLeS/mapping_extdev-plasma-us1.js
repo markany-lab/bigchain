@@ -30,7 +30,7 @@ var Agent = Axios.create({
   withCredentials: true
 })
 
-async function GetDappPrivateKeyAsync(www3, waLLet) {
+async function GetLoomPrivateKeyAsync(waLLet) {
   var Token
   var Sign
   await Agent.post('/query_token', {})
@@ -90,11 +90,12 @@ async function Mapping() {
   console.log('>>> wallet private key: ' + EthWaLLet.getPrivateKey())
   console.log('>>> wallet address: ' +  EthWaLLet.getAddressString())
 
+  const LoomPrviteKey = await GetLoomPrivateKeyAsync(EthWaLLet)
+  console.log('>>> loom private key: ' + LoomPrviteKey)
+
   //var EthProvider = new Web3.providers.HttpProvider('https://rinkeby.infura.io/' + RinkebyApiToken)
   var EthProvider = new Web3.providers.WebsocketProvider('wss://rinkeby.infura.io/ws')
   var EthW3 = new Web3(EthProvider)
-  const LoomPrviteKey = await GetDappPrivateKeyAsync(EthW3, EthWaLLet)
-  console.log('>>> loom private key: ' + LoomPrviteKey)
 
   // balance 체크
   EthW3.eth.getBalance(EthWaLLet.getAddressString()).then( balance =>{
