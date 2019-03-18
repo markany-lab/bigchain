@@ -14,6 +14,11 @@
     "deploy:extdev:reset": "rm -rf build; truffle deploy --reset --network extdev_plasma_us1"
   },
   "dependencies": {
+    "@babel/core": "^7.0.0-beta.46",
+    "@babel/plugin-transform-runtime": "^7.0.0-beta.46",
+    "@babel/preset-env": "^7.0.0-beta.46",
+    "@babel/preset-react": "^7.0.0-beta.55",
+    "@babel/runtime": "^7.0.0-beta.46",
     "axios": "^0.18.0",
     "bignumber.js": "^7.2.1",
     "bn-chai": "^1.0.1",
@@ -21,8 +26,9 @@
     "chai": "^4.1.2",
     "chai-as-promised": "^7.1.1",
     "chai-bignumber": "^2.0.2",
+    "delay": "^4.1.0",
     "eth-gas-reporter": "^0.1.10",
-    "ethereumjs-util": "^5.2.0",
+    "ethereumjs-util": "6.0.0",
     "ethereumjs-wallet": "0.6.0",
     "https": "^1.0.0",
     "loom-truffle-provider": "^0.8.0",
