@@ -79,8 +79,8 @@ App.use(function(req, res, next){
 	})
 })
 
-async function insert_private_key(address, key){
-  var New_item = new privateSchema({addr: address, key: key, enc: false, timestamp: new Date() })
+async function insert_private_key(address, key, enc){
+  var New_item = new privateSchema({addr: address, key: key, enc: enc, timestamp: new Date() })
   await New_item.save(function(err, item){
       if(err){
           logger.error('insert_private_key, error: ' + err)
@@ -140,19 +140,20 @@ App.post('/query_prv_key', async function(req, res){
         if(!FoundKey){
           var PrivateKey = loom.CryptoUtils.generatePrivateKey()
           var PrivateKeyB64 = loom.CryptoUtils.Uint8ArrayToB64(PrivateKey)
-          await insert_private_key(TgtAccount.toLowerCase(), PrivateKeyB64)
-
+          await insert_private_key(TgtAccount.toLowerCase(), PrivateKeyB64, false)
           logger.debug("saved private key: " + PrivateKeyB64)
           res.json({
             status: 'create',
-            prv_key: PrivateKeyB64
+            prv_key: PrivateKeyB64,
+            enc: false
           })
         }
         else{
           logger.debug("found item: " + JSON.stringify(FoundKey))
           res.json({
             status: 'return',
-            prv_key: FoundKey.key
+            prv_key: FoundKey.key,
+            enc: FoundKey.enc
           })
         }
         //release()
