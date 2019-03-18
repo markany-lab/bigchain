@@ -118,7 +118,7 @@ App.post('/query_get_private_key', async function(req, res){
     logger.debug('base64(key): ' + JSON.stringify(KeyB64) + ', type: ' + typeof KeyB64)
     var RandomStr = req.random_str
 
-    // 시뮬레이션...
+    //<-- 시뮬레이션...
     var _LoomKeyB64
     var _Enc
     try{
@@ -138,6 +138,7 @@ App.post('/query_get_private_key', async function(req, res){
 
     logger.debug('!!!!!!!! _LoomKeyB64: ' + _LoomKeyB64)
     logger.debug('!!!!!!!! _Enc: ' + _Enc)
+    //-->
 
     var Msg = Buffer.from(RandomStr, 'utf8')
     const Prefix = new Buffer("\x19Ethereum Signed Message:\n")
@@ -176,7 +177,7 @@ App.post('/query_get_private_key', async function(req, res){
             Enc = false
           }
 
-          await insert_private_key(ConfirmAddr.toLowerCase(), LoomKeyB64, false)
+          await insert_private_key(ConfirmAddr.toLowerCase(), LoomKeyB64, Enc)
           logger.debug("saved private key: " + LoomKeyB64)
           res.json({
             status: 'create',
