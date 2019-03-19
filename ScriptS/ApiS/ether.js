@@ -64,7 +64,7 @@ async function loadKeyStore(index, path, password){
     }))
 
     if(FiLeS.length == 0){
-      throw('error: can\'t not found any account')
+      throw('error: can\'t not found any account in keystore: ' + path)
     }
 
     FiLeS.sort()
