@@ -25,19 +25,19 @@ async function account_generate(password) {
   try {
     const index = await Ether.generateAccount(password)
 
-      /* init Ethereum elements */
-      console.log('# init ethereum tools...')
-      var EtherTools = await Ether.createAsync(index, password)
-      console.log('# init complete')
+    /* init Ethereum elements */
+    console.log('# init ethereum tools...')
+    var EtherTools = await Ether.createAsync(index, password)
+    console.log('# init complete')
 
-      /* init Dappchain elements */
-      console.log('# init dapp tools...')
-      var DappTools = await Dapp.createAsync(EtherTools.getDappPrivateKey())
-      console.log('# init complete')
+    /* init Dappchain elements */
+    console.log('# init dapp tools...')
+    var DappTools = await Dapp.createAsync(EtherTools.getDappPrivateKey())
+    console.log('# init complete')
 
-      console.log('# mapping ethereum account to dapp account...')
-      await DappTools.SignAsync(EtherTools.getWallet())
-      console.log('# mapping complete')
+    console.log('# mapping ethereum account to dapp account...')
+    await DappTools.SignAsync(EtherTools.getWallet())
+    console.log('# mapping complete')
   } catch (error) {
     console.log('# error occured: ' + error)
   }
@@ -501,31 +501,32 @@ program
   .option('-I, --index <index>', 'account index')
   .option('-p, --password <password>', 'account password')
   .option('-P, --prvKey <prvKey>', 'private key')
-  .action(function(options) {
+  .action(async function(options) {
     if (options.generate) {
       console.log("account_generate() called")
-      account_generate(options.password)
+      await account_generate(options.password)
     }
     if (options.import) {
       console.log("account_import() called")
-      account_import(options.prvKey, options.password)
+      await account_import(options.prvKey, options.password)
     }
     if (options.export) {
       console.log("account_export() called")
-      account_export(options.index, options.password)
+      await account_export(options.index, options.password)
     }
     if (options.list) {
       console.log("account_list() called")
-      account_list()
+      await account_list()
     }
     if (options.remove) {
       console.log("account_remove() called")
-      account_remove(options.index)
+      await account_remove(options.index)
     }
     if (options.balance) {
       console.log("account_blance() called")
-      account_blance(options.index, options.password)
+      await account_blance(options.index, options.password)
     }
+    process.exit(0)
   })
 
 program
@@ -537,19 +538,20 @@ program
   .option('-p, --password <password>', 'account password')
   .option('-u, --unit <unit>', 'ethereum currency unit wei|ether')
   .option('-a, --amount <amount>', 'ethere amount')
-  .action(function(options) {
+  .action(async function(options) {
     if (options.ethereum) {
       console.log("send_ethereum() called")
-      send_ethereum(options.index, options.password, options.unit, options.amount)
+      await send_ethereum(options.index, options.password, options.unit, options.amount)
     }
     if (options.dappchain) {
       console.log("send_dappchain() called")
-      send_dappchain(options.index, options.password, options.unit, options.amount)
+      await send_dappchain(options.index, options.password, options.unit, options.amount)
     }
     if (options.withdraw) {
       console.log("withdraw() called")
-      withdraw(otions.index, options.password)
+      await withdraw(otions.index, options.password)
     }
+    process.exit(0)
   })
 
 program
@@ -561,19 +563,20 @@ program
   .option('-p, --password <password>', 'account password')
   .option('-t, --title <title>', 'data title')
   .option('-c, --cid <cid>', 'data cid')
-  .action(function(options) {
+  .action(async function(options) {
     if (options.register) {
       console.log('data_register() called')
-      data_register(options.index, options.password, options.title)
+      await data_register(options.index, options.password, options.title)
     }
     if (options.list) {
       console.log("data_list() called")
-      data_list(options.index, options.password)
+      await data_list(options.index, options.password)
     }
     if (options.details) {
       console.log("data_details() called")
-      data_details(options.index, options.password, options.cid)
+      await data_details(options.index, options.password, options.cid)
     }
+    process.exit(0)
   })
 
 program
@@ -589,23 +592,24 @@ program
   .option('-f, --fee <fee>', 'contents fee')
   .option('-h, --hash <hash>', 'contents hash')
   .option('-s, --supply <supply>', 'contents supply')
-  .action(function(options) {
+  .action(async function(options) {
     if (options.register) {
       console.log('contents_register() called')
-      contents_register(options.index, options.password, options.cid, options.hash, options.fee, options.supply)
+      await contents_register(options.index, options.password, options.cid, options.hash, options.fee, options.supply)
     }
     if (options.list) {
       console.log("contents_list() called")
-      contents_list(options.index, options.password)
+      await contents_list(options.index, options.password)
     }
     if (options.details) {
       console.log("contents_details() called")
-      contents_details(options.index, options.password, options.cTokenId)
+      await contents_details(options.index, options.password, options.cTokenId)
     }
     if (options.buy) {
       console.log("contents_buy() called")
-      contents_buy(options.index, options.password, options.cTokenId)
+      await contents_buy(options.index, options.password, options.cTokenId)
     }
+    process.exit(0)
   })
 
 program
@@ -615,15 +619,16 @@ program
   .option('-I, --index <index>', 'account index')
   .option('-p, --password <password>', 'account password')
   .option('-c, --uTokenId <uTokenId>', 'token id')
-  .action(function(options) {
+  .action(async function(options) {
     if (options.list) {
       console.log("token_list() called")
-      token_list(options.index, options.password)
+      await token_list(options.index, options.password)
     }
     if (options.details) {
       console.log("token_details() called")
-      token_details(options.index, options.password, options.uTokenId)
+      await token_details(options.index, options.password, options.uTokenId)
     }
+    process.exit(0)
   })
 
 program
@@ -637,19 +642,20 @@ program
   .option('-h, --hash <hash>', 'contents hash')
   .option('-n, --numOfChunks <numOfChunks>', 'number of chunks')
   .option('-t, --oTokenId <oTokenId>', 'off-chain channel token id')
-  .action(function(options) {
+  .action(async function(options) {
     if (options.open) {
       console.log("channel_open() called")
-      channel_open(options.index, options.password, options.cid, options.hash, options.numOfChunks)
+      await channel_open(options.index, options.password, options.cid, options.hash, options.numOfChunks)
     }
     if (options.off) {
       console.log("channel_off() called")
-      channel_off(options.index, options.password, options.oTokenId)
+      await channel_off(options.index, options.password, options.oTokenId)
     }
     if (options.details) {
       console.log("channel_details() called")
-      channel_details(options.index, options.password, options.oTokenId)
+      await channel_details(options.index, options.password, options.oTokenId)
     }
+    process.exit(0)
   })
 
 program
