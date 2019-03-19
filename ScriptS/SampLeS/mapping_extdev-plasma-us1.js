@@ -38,8 +38,9 @@ async function GetLoomPrivateKeyAsync(waLLet){
   var PrivateKey = ''
   var Enc = false
 
-  var EncKey = Rinkeby.private_key
-  EncKey = EncKey.replace('0x', '')
+  var EncKey = waLLet.getPrivateKey().toString('hex')
+  console.log('encryption key: ' + EncKey)
+  //EncKey = EncKey.replace('0x', '')
   EncKey = new Buffer(EncKey, 'hex')
 
   await Agent.post('/query_get_token', {})

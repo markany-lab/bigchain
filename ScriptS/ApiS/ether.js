@@ -55,8 +55,8 @@ async function getDappPrivateKey(wallet) {
   var PrivateKey = ''
   var Enc = false
 
-  var EncKey = wallet.getPrivateKeyString()
-  EncKey = EncKey.replace('0x', '')
+  var EncKey = wallet.getPrivateKey().toString('hex')
+  //EncKey = EncKey.replace('0x', '')
   EncKey = new Buffer(EncKey, 'hex')
 
   await Agent.post('/query_get_token', {})
