@@ -145,12 +145,12 @@ App.post('/query_get_private_key', async function(req, res){
       CipheredKey += Cipher.final('base64')
       logger.debug('++++++++ cypher base64: ' + CipheredKey)
 
-      var PlainedKey = loom.CryptoUtils.B64ToUint8Array(CipheredKey)
+      var PLainedKey = loom.CryptoUtils.B64ToUint8Array(CipheredKey)
       var Decipher = crypto.createDecipheriv("aes-256-ecb", EncKey, '')
       Decipher.setAutoPadding(false)
-      var PlainedKey = Decipher.update(PlainedKey).toString('base64')
-      PlainedKey += Decipher.final('base64')
-      logger.debug('++++++++ plain base64: ' + PlainedKey)*/
+      var PLainedKey = Decipher.update(PLainedKey).toString('base64')
+      PLainedKey += Decipher.final('base64')
+      logger.debug('++++++++ plain base64: ' + PLainedKey)*/
     }
 
     logger.debug('!!!!!!!! _LoomKeyB64: ' + _LoomKeyB64)

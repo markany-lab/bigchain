@@ -1,3 +1,4 @@
+var crypto = require('crypto')
 var Web3 = require('web3')
 var Web3UtiL = require('web3-utils')
 var ethWaLLet = require('ethereumjs-wallet')
@@ -30,14 +31,16 @@ var Agent = Axios.create({
 async function GetLoomPrivateKeyAsync(waLLet){
   var Token
   var Sign
+  var PrivateKey = ''
+  var Enc = false
   await Agent.post('/query_get_token', {})
   .then(await function(res){
-    var TgtStr = res.data.string
-    var Msg = Buffer.from(TgtStr, 'utf8')
+    var MsgStr = res.data.string
+    var Msg = Buffer.from(MsgStr, 'utf8')
     const Prefix = new Buffer("\x19Ethereum Signed Message:\n")
     const PrefixedMsg = Buffer.concat([Prefix, new Buffer(String(Msg.length)), Msg])
-    const ESCSign = ethUtiL.ecsign(ethUtiL.keccak256(PrefixedMsg), waLLet.getPrivateKey())
-    Sign = ethUtiL.bufferToHex(ESCSign.r) + ethUtiL.bufferToHex(ESCSign.s).substr(2) + ethUtiL.bufferToHex(ESCSign.v).substr(2)
+    const PreSign = ethUtiL.ecsign(ethUtiL.keccak256(PrefixedMsg), waLLet.getPrivateKey())
+    Sign = ethUtiL.bufferToHex(PreSign.r) + ethUtiL.bufferToHex(PreSign.s).substr(2) + ethUtiL.bufferToHex(PreSign.v).substr(2)
     Token = res.data.token
   })
   .catch(err=>console.error('>>> error: ' + JSON.stringify(err)))
@@ -58,18 +61,24 @@ async function GetLoomPrivateKeyAsync(waLLet){
   })
   .then(await function(res){
     var QueryStatus = res.data.status
-    if(QueryStatus == 'failed'){
-      console.log(">>> login failed: verify signature failed")
+    if(QueryStatus == 'succeed'){
+      console.log("private key: " + res.data.key)
+      PrivateKey = res.data.key
+      Enc = res.data.enc
     }
     else{
-      if(QueryStatus == 'return'){
-        console.log(">>> login succeed: key pair is returned")
-      }
-      console.log(">>> private key: " + res.data.key)
-      PrivateKey = res.data.key
+      console.log("error: verify signature failed")
     }
   })
   .catch(err=>console.error('>>> error: ' + JSON.stringify(err)))
+  try{
+    if(Enc){
+      throw('can\'t use ethereum private key')
+    }
+  }
+  catch(err){
+    console.error('error: ' + err)
+  }
   return PrivateKey
 }
 

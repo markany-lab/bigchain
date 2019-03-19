@@ -1,4 +1,5 @@
 const jsonGateway = require('./Gateway.json')
+var crypto = require('crypto')
 var Web3 = require('web3')
 var Web3UtiL = require('web3-utils')
 var EthUtiL = require('ethereumjs-util')
@@ -48,20 +49,22 @@ function loadKeyStore(index, path, password){
 async function getDappPrivateKey(web3, wallet, method){
   var Token
   var Sign
+  var PrivateKey = ''
+  var Enc = false
   await Agent.post('/query_get_token', {})
   .then(await function (res){
-    var TgtStr = res.data.string
+    var MsgStr = res.data.string
     if(method == 'web3'){
       web3.eth.accounts.wallet.add(wallet.getPrivateKeyString())
-      return web3.eth.sign(TgtStr, wallet.getAddressString(), async function (error, result){
+      return web3.eth.sign(MsgStr, wallet.getAddressString(), async function (error, result){
         Sign = result
       })
     } else if(method == 'ether-util'){
-      var msg = Buffer.from(TgtStr, 'utf8')
+      var msg = Buffer.from(MsgStr, 'utf8')
       const prefix = new Buffer("\x19Ethereum Signed Message:\n")
       const prefixedMsg = Buffer.concat([prefix, new Buffer(String(msg.length)), msg])
-      const sign = EthUtiL.ecsign(EthUtiL.keccak256(prefixedMsg), wallet.getPrivateKey())
-      Sign = EthUtiL.bufferToHex(sign.r) + EthUtiL.bufferToHex(sign.s).substr(2) + EthUtiL.bufferToHex(sign.v).substr(2)
+      const PreSign = EthUtiL.ecsign(EthUtiL.keccak256(prefixedMsg), wallet.getPrivateKey())
+      Sign = EthUtiL.bufferToHex(PreSign.r) + EthUtiL.bufferToHex(PreSign.s).substr(2) + EthUtiL.bufferToHex(PreSign.v).substr(2)
       Token = res.data.token
     }
   })
@@ -80,17 +83,28 @@ async function getDappPrivateKey(web3, wallet, method){
       Authorization: "Bearer " + Token
     }
   })
-  .then(await function (res){
+  .then(await function(res){
     var QueryStatus = res.data.status
-    if(QueryStatus == 'failed'){
+    if(QueryStatus == 'succeed'){
+      PrivateKey = res.data.key
+      Enc = res.data.enc
     }
     else{
-      if(QueryStatus == 'succeed'){
-      }
-      PrivateKey = res.data.key
     }
   })
   .catch(err=>console.log('error: ' + JSON.stringify(err)))
+  if(Enc){
+    var EncKey = Rinkeby.prv_key
+    EncKey = EncKey.replace('0x', '')
+    EncKey = new Buffer(EncKey, 'hex')
+
+    var DecipheredKey = loom.CryptoUtils.B64ToUint8Array(PrivateKey)
+    var Decipher = crypto.createDecipheriv("aes-256-ecb", EncKey, '')
+    Decipher.setAutoPadding(false)
+    var DecipheredKey = Decipher.update(DecipheredKey).toString('base64')
+    DecipheredKey += Decipher.final('base64')
+    PrivateKey = DecipheredKey
+  }
   return PrivateKey
 }
 
