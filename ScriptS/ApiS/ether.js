@@ -2,12 +2,20 @@ const jsonGateway = require('./Gateway.json')
 var crypto = require('crypto')
 var Web3 = require('web3')
 var Web3UtiL = require('web3-utils')
-var EthUtiL = require('ethereumjs-util')
-var EthWaLLet = require('ethereumjs-wallet')
-var EthTx = require('ethereumjs-tx')
-var FiLeSystem = require('fs')
+var ethUtiL = require('ethereumjs-util')
+var ethWaLLet = require('ethereumjs-wallet')
+var ethTx = require('ethereumjs-tx')
 var Https = require('https')
 var Axios = require('axios')
+
+var FiLeSystem = require('fs')
+const {
+  unlink,
+  readdir,
+  existsSync,
+  readFileSync,
+  writeFileSync } = require('fs')
+//const { join } = require('path')
 
 var {
   CryptoUtils
@@ -22,34 +30,61 @@ var Agent = Axios.create({
   })
 })
 
-function saveKeyStore(path, wallet, password) {
-  const filename = wallet.getV3Filename(Date.now())
-  const v3 = wallet.toV3(password)
-  FiLeSystem.writeFileSync(path + filename, JSON.stringify(v3), 'utf8')
-  var address = wallet.getAddressString()
-  var obj = {
-    address,
-    filename
+function saveKeyStore(path, wallet, password){
+  var FiLeCnt = 0
+  await new Promise(resolve=>readdir(path, (err, files)=>{
+    if(typeof files != 'undefined'){
+      files.forEach(file=>{
+        if(file.indexOf("UTC") == 0){
+          FiLeCnt++
+        }
+      })
+    }
+    resolve()
+  }))
+
+  const Path = path + wallet.getV3Filename(Date.now())
+  const V3 = wallet.toV3(password)
+  writeFileSync(Path, JSON.stringify(V3), 'utf8')
+  return FiLeCnt
+}
+
+async function loadKeyStore(index, path, password){
+  try{
+    var FiLeS = new Array()
+    await new Promise(resolve=>readdir(path, (err, files)=>{
+      if(typeof files != 'undefined'){
+        files.forEach(file=>{
+          if(file.indexOf("UTC") == 0){
+            FiLeS.push(file)
+          }
+        })
+      }
+      resolve()
+    }))
+
+    if(FiLeS.length == 0){
+      throw('error: can\'t not found any account')
+    }
+
+    FiLeS.sort()
+
+    const RL = readLine.createInterface({
+      input: process.stdin,
+      output: process.stdout
+    })
+
+    var FiLePath = path + FiLeS[index]
+    var V3 = JSON.parse(readFileSync(FiLePath, 'utf8'))
+    return ethWaLLet.fromV3(V3, password)
   }
-  if (FiLeSystem.existsSync(path + "key_manager.json")) {
-    var key_manager = JSON.parse(FiLeSystem.readFileSync(path + "key_manager.json"))
-    key_manager.push(obj)
-    FiLeSystem.writeFileSync(path + 'key_manager.json', JSON.stringify(key_manager), 'utf8')
-    return key_manager.length - 1
-  } else {
-    FiLeSystem.writeFileSync(path + 'key_manager.json', '[' + JSON.stringify(obj) + ']', 'utf8')
-    return 0
+  catch(err){
+    console.log(err)
+    return
   }
 }
 
-function loadKeyStore(index, path, password) {
-  const key_manager = JSON.parse(FiLeSystem.readFileSync(path + 'key_manager.json', 'utf8'))
-  const filename = key_manager[index].filename
-  const v3 = JSON.parse(FiLeSystem.readFileSync(path + filename, 'utf8'))
-  return EthWaLLet.fromV3(v3, password)
-}
-
-async function getDappPrivateKey(wallet) {
+async function getDappPrivateKey(wallet){
   var Token
   var Sign
   var PrivateKey = ''
@@ -61,13 +96,13 @@ async function getDappPrivateKey(wallet) {
 
   await Agent.post('/query_get_token', {})
     .then(await
-      function(res) {
+      function(res){
         var MsgStr = res.data.string
         var msg = Buffer.from(MsgStr, 'utf8')
         const prefix = new Buffer("\x19Ethereum Signed Message:\n")
         const prefixedMsg = Buffer.concat([prefix, new Buffer(String(msg.length)), msg])
-        const PreSign = EthUtiL.ecsign(EthUtiL.keccak256(prefixedMsg), wallet.getPrivateKey())
-        Sign = EthUtiL.bufferToHex(PreSign.r) + EthUtiL.bufferToHex(PreSign.s).substr(2) + EthUtiL.bufferToHex(PreSign.v).substr(2)
+        const PreSign = ethUtiL.ecsign(ethUtiL.keccak256(prefixedMsg), wallet.getPrivateKey())
+        Sign = ethUtiL.bufferToHex(PreSign.r) + ethUtiL.bufferToHex(PreSign.s).substr(2) + ethUtiL.bufferToHex(PreSign.v).substr(2)
         Token = res.data.token
       })
     .catch(err=>console.log(err))
@@ -93,15 +128,15 @@ async function getDappPrivateKey(wallet) {
       }
     })
     .then(await
-      function(res) {
+      function(res){
         var QueryStatus = res.data.status
-        if (QueryStatus == 'succeed') {
+        if (QueryStatus == 'succeed'){
           PrivateKey = res.data.key
           Enc = res.data.enc
         } else {}
       })
     .catch(err=>console.log('>>> ' + err))
-  if (Enc) {
+  if (Enc){
     var DecipheredKey = CryptoUtils.B64ToUint8Array(PrivateKey)
     var Decipher = crypto.createDecipheriv("aes-256-ecb", EncKey, '')
     Decipher.setAutoPadding(false)
@@ -113,7 +148,7 @@ async function getDappPrivateKey(wallet) {
     var Cipher = crypto.createCipheriv('aes-256-ecb', EncKey, '')
     Cipher.setAutoPadding(false)
     CipheredKey = CryptoUtils.B64ToUint8Array(PrivateKey)
-    if (CipheredKey.length == 64) {
+    if (CipheredKey.length == 64){
       CipheredKey = Cipher.update(CipheredKey).toString('base64')
       CipheredKey += Cipher.final('base64')
 
@@ -126,7 +161,7 @@ async function getDappPrivateKey(wallet) {
           }
         })
         .then(await
-          function(res) {
+          function(res){
             console.log("status: " + res.data.status)
           })
     }
@@ -134,7 +169,7 @@ async function getDappPrivateKey(wallet) {
   return PrivateKey
 }
 
-function getEthContract(web3) {
+function getEthContract(web3){
   return new web3.eth.Contract(
     jsonGateway.abi,
     jsonGateway.networks[Object.keys(jsonGateway.networks)[0]].address
@@ -142,50 +177,50 @@ function getEthContract(web3) {
 }
 
 module.exports = class EtherInit_ {
-  static async generateAccount(password) {
-    const wallet = EthWaLLet.generate()
+  static async generateAccount(password){
+    const wallet = ethWaLLet.generate()
     var index = saveKeyStore('./keystore/', wallet, password)
     console.log("index: " + index)
     console.log("new account: " + wallet.getAddressString())
     return index
   }
 
-  static async importAccount(privateKey, password) {
-    const wallet = EthWaLLet.fromPrivateKey(EthUtiL.toBuffer(privateKey))
+  static async importAccount(privateKey, password){
+    const wallet = ethWaLLet.fromPrivateKey(ethUtiL.toBuffer(privateKey))
     return saveKeyStore('./keystore/', wallet, password)
   }
 
-  static async exportAccount(index, password) {
+  static async exportAccount(index, password){
     const wallet = loadKeyStore(index, './keystore/', password)
     return wallet.getPrivateKeyString()
   }
 
-  static async removeAccount(index) {
-    if (!FiLeSystem.existsSync('./keystore/key_manager.json')) {
+  static async removeAccount(index){
+    if (!existsSync('./keystore/key_manager.json')){
       console.error("no account exists")
       return
     }
-    const keyManager = JSON.parse(FiLeSystem.readFileSync('./keystore/key_manager.json'))
+    const keyManager = JSON.parse(readFileSync('./keystore/key_manager.json'))
     const filename = keyManager[index].filename
     keyManager.splice(index, index + 1)
-    FiLeSystem.writeFileSync('./keystore/key_manager.json', JSON.stringify(keyManager), 'utf8')
-    await FiLeSystem.unlink('./keystore/' + filename, function(error) {
-      if (error) {
+    writeFileSync('./keystore/key_manager.json', JSON.stringify(keyManager), 'utf8')
+    await unlink('./keystore/' + filename, function(error){
+      if (error){
         console.log("error occured: " + error)
       }
     })
   }
 
-  static async listAccount() {
-    if (!FiLeSystem.existsSync('./keystore/key_manager.json')) {
+  static async listAccount(){
+    if (!existsSync('./keystore/key_manager.json')){
       console.error("no account exists")
       return
     }
-    return JSON.parse(FiLeSystem.readFileSync('./keystore/key_manager.json'))
+    return JSON.parse(readFileSync('./keystore/key_manager.json'))
 
   }
 
-  static async createAsync(index, password) {
+  static async createAsync(index, password){
     var Provider = new Web3.providers.WebsocketProvider('wss://rinkeby.infura.io/ws')
     var web3 = new Web3(Provider)
     console.log("# web3 version: " + web3.version)
@@ -197,30 +232,30 @@ module.exports = class EtherInit_ {
     return new EtherInit_(web3, wallet, dappPrvKey, con)
   }
 
-  constructor(web3, wallet, dapp_private_key, gateway_contract) {
+  constructor(web3, wallet, dapp_private_key, gateway_contract){
     this._Web3 = web3
     this._Wallet = wallet
     this._DappPrivateKey = dapp_private_key
     this._GatewayCon = gateway_contract
   }
 
-  getWeb3() {
+  getWeb3(){
     return this._Web3
   }
 
-  getWallet() {
+  getWallet(){
     return this._Wallet
   }
 
-  getDappPrivateKey() {
+  getDappPrivateKey(){
     return this._DappPrivateKey
   }
 
-  getGatewayCon() {
+  getGatewayCon(){
     return this._GatewayCon
   }
 
-  async WithdrawEthAsync(from, amount, sig) {
+  async WithdrawEthAsync(from, amount, sig){
     const inputAmount = Web3UtiL.toHex(amount)
     const query = await this._GatewayCon.methods.withdrawETH(inputAmount, sig)
     const data = query.encodeABI()
@@ -242,7 +277,7 @@ module.exports = class EtherInit_ {
     console.log("# EstimateGas: " + EstimateGas)
 
     rawTx.gas = EstimateGas
-    var tx = new EthTx(rawTx)
+    var tx = new ethTx(rawTx)
     tx.sign(this._Wallet.getPrivateKey())
     var serializedTx = tx.serialize()
     EstimateGas = await this._Web3.eth.estimateGas(rawTx)
@@ -251,7 +286,7 @@ module.exports = class EtherInit_ {
     console.log("transaction: " + JSON.stringify(transaction))
   }
 
-  async Deposit2GatewayAsync(from, unit, amount) {
+  async Deposit2GatewayAsync(from, unit, amount){
     var rawTx = {
       nonce: '0x' + (await this._Web3.eth.getTransactionCount(from)).toString(16),
       from: from,
@@ -273,7 +308,7 @@ module.exports = class EtherInit_ {
     }
 
     EstimateGas = await this._Web3.eth.estimateGas(rawTx)
-    var tx = new EthTx(rawTx)
+    var tx = new ethTx(rawTx)
     tx.sign(this._Wallet.getPrivateKey())
     var serializedTx = tx.serialize()
 
@@ -281,11 +316,11 @@ module.exports = class EtherInit_ {
     console.log("transaction: " + JSON.stringify(transaction))
   }
 
-  async GetBaLanceAsync(address) {
+  async GetBaLanceAsync(address){
     return await this._Web3.eth.getBalance(address)
   }
 
-  async sendAggregatedReceipt() {
+  async sendAggregatedReceipt(){
     let msg = {
       channel_id: "0",
       receiver: this._Wallet.getAddressString(),
@@ -294,8 +329,8 @@ module.exports = class EtherInit_ {
       chunk_list: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
     }
     const Msg = Buffer.from(JSON.stringify(msg))
-    const ECSign = EthUtiL.ecsign(EthUtiL.keccak256(Msg), this._Wallet.getPrivateKey())
-    const Sign = EthUtiL.bufferToHex(ECSign.r) + EthUtiL.bufferToHex(ECSign.s).substr(2) + EthUtiL.bufferToHex(ECSign.v).substr(2)
+    const ECSign = ethUtiL.ecsign(ethUtiL.keccak256(Msg), this._Wallet.getPrivateKey())
+    const Sign = ethUtiL.bufferToHex(ECSign.r) + ethUtiL.bufferToHex(ECSign.s).substr(2) + ethUtiL.bufferToHex(ECSign.v).substr(2)
 
     await Axios({
         method: 'post',

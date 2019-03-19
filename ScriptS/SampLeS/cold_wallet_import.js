@@ -39,9 +39,9 @@ async function main(){
   var WaLLet = ethWaLLet.fromPrivateKey(PrivateKey)
   var V3 = WaLLet.toV3String(Password)
   if(bSave){
-    var Path = join(__dirname, WaLLet.getV3Filename(Date.now()))
+    var Path = join(__dirname, './keystore/' + WaLLet.getV3Filename(Date.now()))
     console.log(Path)
-    writeFileSync(Path, JSON.stringify(V3))
+    writeFileSync(Path, JSON.stringify(V3), 'utf8')
   }
   console.log(V3)
 }
