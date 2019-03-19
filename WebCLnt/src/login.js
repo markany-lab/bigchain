@@ -27,7 +27,7 @@ export default class Login_ {
       console.log("login.js, ethereum account: " + EthAccount)
     }
 
-    const HotWaLLetAddr = Env.key_server_ip + ':' + Env.key_server_port
+    const HotWaLLetAddr = Env.hot_wallet_url + ':' + Env.hot_wallet_port
     var Agent = Axios.create({
       baseURL: HotWaLLetAddr,
       httpsAgent: new Https.Agent({

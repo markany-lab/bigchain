@@ -15,7 +15,7 @@ var Env = require(join(__dirname, '../.env.json'))
 var Https = require('https')
 var Axios = require('axios')
 
-const HotWaLLetAddr = Env.key_server_ip + ':' + Env.key_server_port
+const HotWaLLetAddr = Env.hot_wallet_url + ':' + Env.hot_wallet_port
 console.log('hot wallet address: ' + HotWaLLetAddr)
 
 const EthWaLLet = ethWaLLet.fromPrivateKey(ethUtiL.toBuffer(Rinkeby.prv_key))

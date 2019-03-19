@@ -20,7 +20,7 @@ var {
 } = require('loom-js')
 
 var Env = require('../../.env.json')
-const HotWaLLetAddr = Env.key_server_ip + ':' + Env.key_server_port
+const HotWaLLetAddr = Env.hot_wallet_url + ':' + Env.hot_wallet_port
 var Agent = Axios.create({
   baseURL: HotWaLLetAddr,
   httpsAgent: new Https.Agent({
