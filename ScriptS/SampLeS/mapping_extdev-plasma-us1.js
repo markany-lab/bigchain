@@ -206,14 +206,20 @@ async function Mapping(){
   }
   else
   {
-    console.log('>>>> map ethereum account to loom account...')
-    await AddressMapper.addIdentityMappingAsync(From, LoomAddress, WWW3Signer)
-    console.log('>>>> address mapping complete')
+    console.log('>>> map ethereum account to loom account...')
+    try{
+      await AddressMapper.addIdentityMappingAsync(From, LoomAddress, WWW3Signer)
+    }
+    catch(err){
+      console.log(err)
+    }
+    console.log('>>> address mapping complete')
   }
 
   const LoomCoin = await Contracts.EthCoin.createAsync(LoomCLient, LoomAddress)
   const LoomBaLance = await LoomCoin.getBalanceOfAsync(LoomAddress)
   console.log('>>> loom balance: ' + LoomBaLance)
+  process.exit(0)
 }
 
 Mapping()
