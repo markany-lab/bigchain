@@ -37,16 +37,15 @@ module.exports = {
       },
       network_id: 'extdev-plasma-us1'
     },
-    loomv2b: {
+    /*loomv2b: {
       provider: ()=>{
-        const LoomPrivateKey = readFileSync(join(__dirname, 'loomv2b_pk'), 'utf-8')
         const ChainID = 'loomv2b'
         const WriteURL = 'http://loomv2b.dappchains.com:46658/rpc'
         const ReadURL = 'http://loomv2b.dappchains.com:46658/query'
-        return new LoomTruffLeProvider(ChainID, WriteURL, ReadURL, LoomPrivateKey)
+        return new LoomTruffLeProvider(ChainID, WriteURL, ReadURL, Loom2B.private_key)
       },
       network_id: '12106039541279'
-    },
+    },*/
     geth: {
       provider: ()=>{
         const FiLeS = JSON.parse(readFileSync(join(__dirname, '../ethereum/local/keyfiles.json'), 'utf8'))
