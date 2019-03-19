@@ -20,8 +20,7 @@ async function main(){
     }))
 
     if(FiLeS.length == 0){
-      console.log('not found any account, please use the impoet cold wallet command first: node ./cold_wallet_import.js')
-      process.exit(-1)
+      throw('can\'t not found any account, please use the impoet cold wallet command first: node ./cold_wallet_import.js')
     }
 
     FiLeS.sort()
@@ -61,10 +60,13 @@ async function main(){
     var PrivateKey = WaLLet.getPrivateKeyString()
     console.log(PrivateKey)
   }
-  catch(err)
-  {
+  catch(err){
     console.log(err)
+    process.exit(-1)
   }
 }
 
 main()
+.then({
+  process.exit(0)
+})

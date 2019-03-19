@@ -5,23 +5,22 @@ const { join } = require('path')
 
 async function main(){
 
-  var Timestamp = new Date()
+  /*var Timestamp = new Date()
   Timestamp = Timestamp.toISOString()
   Timestamp = Timestamp.replace(':', '')
   console.log('timestamp: ' + Timestamp)
-  var Prefix = './keystore/UTC--' + Timestamp + '--'
-
+  var Prefix = './keystore/UTC--' + Timestamp + '--'*/
 
   const RL = readLine.createInterface({
     input: process.stdin,
     output: process.stdout
   })
 
-  var PrivateKey = await new Promise(resolve=>RL.question('input private key\n>', private_key=>{
+  var PrivateKey = await new Promise(resolve=>RL.question('input your private key(HEX)\nex)0xXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\n>', private_key=>{
     resolve(private_key)
   }))
 
-  var Password = await new Promise(resolve=>RL.question('input password\n>', password=>{
+  var Password = await new Promise(resolve=>RL.question('input password of private key\n>', password=>{
     resolve(password)
   }))
 
@@ -40,7 +39,7 @@ async function main(){
   var WaLLet = ethWaLLet.fromPrivateKey(PrivateKey)
   var V3 = WaLLet.toV3String(Password)
   if(bSave){
-    var Path = join(__dirname, Prefix + WaLLet.getAddress().toString('hex'))
+    var Path = join(__dirname, WaLLet.getV3Filename(Date.now()))
     console.log(Path)
     writeFileSync(Path, JSON.stringify(V3))
   }
