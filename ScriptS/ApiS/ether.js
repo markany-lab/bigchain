@@ -153,17 +153,18 @@ async function getDappPrivateKey(wallet){
       CipheredKey += Cipher.final('base64')
 
       await Agent.post('/query_update_private_key', {
-          confirm_data: ConfirmData,
-          suggested_key: CipheredKey
-        }, {
-          headers: {
-            Authorization: "Bearer " + Token
-          }
-        })
-        .then(await
-          function(res){
-            console.log("status: " + res.data.status)
-          })
+        confirm_data: ConfirmData,
+        suggested_key: CipheredKey
+      },
+      {
+        headers: {
+          Authorization: "Bearer " + Token
+        }
+      })
+      .then(await
+        function(res){
+          console.log("status: " + res.data.status)
+      })
     }
   }
   return PrivateKey

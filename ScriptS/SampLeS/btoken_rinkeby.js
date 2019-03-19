@@ -82,7 +82,7 @@ async function SampLeS() {
 SampLeS()
 
 // call 함수는 기존대로 보낸다
-BTokenCon.methods.name.call({from: Rinkeby})
+/*BTokenCon.methods.name.call({from: Rinkeby})
 .then(res => {
   console.log('name: ' + res)
 })
@@ -91,7 +91,7 @@ BTokenCon.methods.name.call({from: Rinkeby})
 BTokenCon.methods.symbol.call({from: Rinkeby})
 .then(res => {
   console.log('symbol: ' + res)
-})
+})*/
 
 // send함수는 서명 후 전송하는 방식으로 변환 할 필요가 있다
 // BTokenCon.methods.mintX('타이틀', 0, 200, '해쉬값', 5)

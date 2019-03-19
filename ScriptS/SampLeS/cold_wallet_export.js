@@ -20,7 +20,7 @@ async function main(){
     }))
 
     if(FiLeS.length == 0){
-      throw('can\'t not found any account, please use the impoet cold wallet command first: node ./cold_wallet_import.js')
+      throw('can\'t not found any account in keystore, please use the impoet cold wallet command first: node ./cold_wallet_import.js')
     }
 
     FiLeS.sort()
