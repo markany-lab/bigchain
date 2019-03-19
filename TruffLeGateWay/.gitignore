@@ -1,4 +1,6 @@
 _backup/
 node_modules/
 build/
+ganache.pid
+ganache.log
 rinkeby.json
