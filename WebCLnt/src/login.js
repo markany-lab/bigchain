@@ -1,11 +1,18 @@
 import DAppAccount_ from './dappchain/dapp_account.js'
 
 import crypto from 'crypto'
+import loom from 'loom-js'
 import Https from 'https'
 import Axios from 'axios'
+
+import {
+  CryptoUtils
+} from 'loom-js/dist'
+
 import {
   prv_key as rinkeby_prv_key
 } from '../rinkeby.json'
+
 import Env from '../../.env.json'
 
 export default class Login_ {
@@ -33,6 +40,10 @@ export default class Login_ {
     var PrivateKey = ''
     var Enc = false
 
+    var EncKey = rinkeby_prv_key
+    EncKey = EncKey.replace('0x', '')
+    EncKey = new Buffer(EncKey, 'hex')
+
     await Agent.post('/query_get_token', {})
     .then(await function(res){
       var MsgStr = res.data.string
@@ -49,9 +60,17 @@ export default class Login_ {
       sign: Sign
     }
 
+    var CipheredKey = CryptoUtils.generatePrivateKey()
+    var Cipher = crypto.createCipheriv('aes-256-ecb', EncKey, '')
+    Cipher.setAutoPadding(false)
+    var CipheredKey = Cipher.update(CipheredKey).toString('base64')
+    CipheredKey += Cipher.final('base64')
+    console.log('suggested key: ' + CipheredKey)
+
     console.log('token: ' + Token)
     await Agent.post('/query_get_private_key', {
-      confirm_data: ConfirmData
+      confirm_data: ConfirmData,
+      suggested_key: CipheredKey
     },
     {
       headers: {
@@ -71,11 +90,7 @@ export default class Login_ {
     })
     .catch(err => console.log('error: ' + JSON.stringify(err)))
     if(Enc){
-      var EncKey = prv_key
-      EncKey = EncKey.replace('0x', '')
-      EncKey = new Buffer(EncKey, 'hex')
-
-      var DecipheredKey = loom.CryptoUtils.B64ToUint8Array(PrivateKey)
+      var DecipheredKey = CryptoUtils.B64ToUint8Array(PrivateKey)
       var Decipher = crypto.createDecipheriv("aes-256-ecb", EncKey, '')
       Decipher.setAutoPadding(false)
       var DecipheredKey = Decipher.update(DecipheredKey).toString('base64')

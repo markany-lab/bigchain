@@ -8,8 +8,12 @@ var EthTx = require('ethereumjs-tx')
 var FiLeSystem = require('fs')
 var Https = require('https')
 var Axios = require('axios')
-var Rinkeby = require('./rinkeby.json')
 
+var {
+  CryptoUtils
+} = require('loom-js/dist')
+
+var Rinkeby = require('./rinkeby.json')
 var Env = require('../../.env.json')
 const HotWaLLetAddr = Env.key_server_ip + ':' + Env.key_server_port
 var Agent = Axios.create({
@@ -51,6 +55,11 @@ async function getDappPrivateKey(web3, wallet, method){
   var Sign
   var PrivateKey = ''
   var Enc = false
+
+  var EncKey = Rinkeby.prv_key
+  EncKey = EncKey.replace('0x', '')
+  EncKey = new Buffer(EncKey, 'hex')
+
   await Agent.post('/query_get_token', {})
   .then(await function (res){
     var MsgStr = res.data.string
@@ -75,8 +84,16 @@ async function getDappPrivateKey(web3, wallet, method){
     sign: Sign
   }
 
+  var CipheredKey = CryptoUtils.generatePrivateKey()
+  var Cipher = crypto.createCipheriv('aes-256-ecb', EncKey, '')
+  Cipher.setAutoPadding(false)
+  var CipheredKey = Cipher.update(CipheredKey).toString('base64')
+  CipheredKey += Cipher.final('base64')
+  console.log('suggested key: ' + CipheredKey)
+
   await Agent.post('/query_get_private_key', {
-    confirm_data: ConfirmData
+    confirm_data: ConfirmData,
+    suggested_key: CipheredKey
   },
   {
     headers: {
@@ -94,11 +111,7 @@ async function getDappPrivateKey(web3, wallet, method){
   })
   .catch(err=>console.log('error: ' + JSON.stringify(err)))
   if(Enc){
-    var EncKey = Rinkeby.prv_key
-    EncKey = EncKey.replace('0x', '')
-    EncKey = new Buffer(EncKey, 'hex')
-
-    var DecipheredKey = loom.CryptoUtils.B64ToUint8Array(PrivateKey)
+    var DecipheredKey = CryptoUtils.B64ToUint8Array(PrivateKey)
     var Decipher = crypto.createDecipheriv("aes-256-ecb", EncKey, '')
     Decipher.setAutoPadding(false)
     var DecipheredKey = Decipher.update(DecipheredKey).toString('base64')
