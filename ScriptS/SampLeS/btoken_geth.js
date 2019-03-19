@@ -93,7 +93,7 @@ async function SendSignedTx(query, address, private_key) {
   .on('receipt', receipt => {
     console.log('reciept: ' + JSON.stringify(receipt))
   })
-  .on('error', console.error)
+  .on('error', console.log)
 }
 
 // 이벤트 생성 샘플

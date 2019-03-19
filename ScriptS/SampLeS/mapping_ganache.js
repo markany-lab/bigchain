@@ -43,7 +43,7 @@ async function GetLoomPrivateKeyAsync(waLLet){
     Sign = ethUtiL.bufferToHex(PreSign.r) + ethUtiL.bufferToHex(PreSign.s).substr(2) + ethUtiL.bufferToHex(PreSign.v).substr(2)
     Token = res.data.token
   })
-  .catch(err=>console.error('>>> error: ' + JSON.stringify(err)))
+  .catch(err=>console.log('>>> error: ' + JSON.stringify(err)))
 
   const ConfirmData = {
     addr: waLLet.getAddressString(),
@@ -70,14 +70,14 @@ async function GetLoomPrivateKeyAsync(waLLet){
       console.log("error: verify signature failed")
     }
   })
-  .catch(err=>console.error('>>> error: ' + JSON.stringify(err)))
+  .catch(err=>console.log('>>> error: ' + JSON.stringify(err)))
   try{
     if(Enc){
       throw('can\'t use ethereum private key')
     }
   }
   catch(err){
-    console.error('error: ' + err)
+    console.log('error: ' + err)
   }
   return PrivateKey
 }
@@ -120,7 +120,7 @@ async function Mapping(){
   )
 
   LoomCLient.on('error', err=>{
-    console.error('>>> ' + JSON.stringify(err))
+    console.log('>>> ' + JSON.stringify(err))
   })
 
   LoomCLient.txMiddleware = [

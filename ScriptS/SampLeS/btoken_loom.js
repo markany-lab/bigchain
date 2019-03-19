@@ -26,7 +26,7 @@ const CLient = new Client(
 )
 
 CLient.on('error', err => {
-  console.error('>>> error: ' + err)
+  console.log('>>> error: ' + err)
 })
 
 const WWW3 = new Web3(new LoomProvider(CLient, PrivateKey))

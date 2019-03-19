@@ -52,7 +52,7 @@ async function GetLoomPrivateKeyAsync(waLLet){
     Sign = ethUtiL.bufferToHex(PreSign.r) + ethUtiL.bufferToHex(PreSign.s).substr(2) + ethUtiL.bufferToHex(PreSign.v).substr(2)
     Token = res.data.token
   })
-  .catch(err=>console.error('>>> error: ' + JSON.stringify(err)))
+  .catch(err=>console.log('>>> error: ' + JSON.stringify(err)))
 
   const ConfirmData = {
     addr: waLLet.getAddressString(),
@@ -87,7 +87,7 @@ async function GetLoomPrivateKeyAsync(waLLet){
       console.log("error: verify signature failed")
     }
   })
-  .catch(err=>console.error('>>> error: ' + JSON.stringify(err)))
+  .catch(err=>console.log('>>> error: ' + JSON.stringify(err)))
   if(Enc){
     var DecipheredKey = CryptoUtils.B64ToUint8Array(PrivateKey)
     var Decipher = crypto.createDecipheriv("aes-256-ecb", EncKey, '')
@@ -160,7 +160,7 @@ async function Mapping(){
   )
 
   LoomCLient.on('error', err=>{
-    console.error('>>> ' + JSON.stringify(err))
+    console.log('>>> ' + JSON.stringify(err))
   })
 
   LoomCLient.txMiddleware = [
@@ -219,7 +219,9 @@ async function Mapping(){
   const LoomCoin = await Contracts.EthCoin.createAsync(LoomCLient, LoomAddress)
   const LoomBaLance = await LoomCoin.getBalanceOfAsync(LoomAddress)
   console.log('>>> loom balance: ' + LoomBaLance)
-  process.exit(0)
 }
 
 Mapping()
+.then(()=>{
+    process.exit(0)
+})
