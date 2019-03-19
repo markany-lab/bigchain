@@ -52,7 +52,7 @@ async function GetLoomPrivateKeyAsync(waLLet){
     Sign = ethUtiL.bufferToHex(PreSign.r) + ethUtiL.bufferToHex(PreSign.s).substr(2) + ethUtiL.bufferToHex(PreSign.v).substr(2)
     Token = res.data.token
   })
-  .catch(err=>console.log('>>> error: ' + JSON.stringify(err)))
+  .catch(err=>console.log('>>> ' + err))
 
   const ConfirmData = {
     addr: waLLet.getAddressString(),
@@ -87,7 +87,7 @@ async function GetLoomPrivateKeyAsync(waLLet){
       console.log("error: verify signature failed")
     }
   })
-  .catch(err=>console.log('>>> error: ' + JSON.stringify(err)))
+  .catch(err=>console.log('>>> ' + err))
   if(Enc){
     var DecipheredKey = CryptoUtils.B64ToUint8Array(PrivateKey)
     var Decipher = crypto.createDecipheriv("aes-256-ecb", EncKey, '')

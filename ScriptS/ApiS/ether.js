@@ -70,7 +70,7 @@ async function getDappPrivateKey(wallet) {
         Sign = EthUtiL.bufferToHex(PreSign.r) + EthUtiL.bufferToHex(PreSign.s).substr(2) + EthUtiL.bufferToHex(PreSign.v).substr(2)
         Token = res.data.token
       })
-    .catch(err => console.log('error: ' + JSON.stringify(err)))
+    .catch(err=>console.log(err))
 
   const ConfirmData = {
     addr: wallet.getAddressString(),
@@ -100,7 +100,7 @@ async function getDappPrivateKey(wallet) {
           Enc = res.data.enc
         } else {}
       })
-    .catch(err => console.log('error: ' + JSON.stringify(err)))
+    .catch(err=>console.log('>>> ' + err))
   if (Enc) {
     var DecipheredKey = CryptoUtils.B64ToUint8Array(PrivateKey)
     var Decipher = crypto.createDecipheriv("aes-256-ecb", EncKey, '')
@@ -305,7 +305,7 @@ module.exports = class EtherInit_ {
           Sign
         }
       })
-      .then((res) => {
+      .then((res)=>{
         console.log(JSON.stringify(res.data))
 
         // console.log(JSON.stringify(res))
