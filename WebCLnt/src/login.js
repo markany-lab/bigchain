@@ -10,7 +10,7 @@ import {
 } from 'loom-js/dist'
 
 import {
-  prv_key as rinkeby_prv_key
+  private_key as rinkeby_prv_key
 } from '../rinkeby.json'
 
 import Env from '../../.env.json'

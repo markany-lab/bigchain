@@ -36,7 +36,7 @@ async function GetLoomPrivateKeyAsync(waLLet){
   var PrivateKey = ''
   var Enc = false
 
-  var EncKey = Rinkeby.prv_key
+  var EncKey = Rinkeby.private_key
   EncKey = EncKey.replace('0x', '')
   EncKey = new Buffer(EncKey, 'hex')
 
@@ -123,7 +123,7 @@ async function GetLoomPrivateKeyAsync(waLLet){
 }
 
 async function Mapping(){
-  const RinkebyPrivateKey = Rinkeby.prv_key
+  const RinkebyPrivateKey = Rinkeby.private_key
   console.log('>>> rinkeby private key: ' + RinkebyPrivateKey)
   console.log('>>> rinkeby private key\'s type: ' + typeof RinkebyPrivateKey)
 

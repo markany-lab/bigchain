@@ -33,7 +33,7 @@ module.exports = {
         const ChainID = 'extdev-plasma-us1'
         const WriteURL = 'http://extdev-plasma-us1.dappchains.com:80/rpc'
         const ReadURL = 'http://extdev-plasma-us1.dappchains.com:80/query'
-        return new LoomTruffLeProvider(ChainID, WriteURL, ReadURL, ExtDev.prv_key)
+        return new LoomTruffLeProvider(ChainID, WriteURL, ReadURL, ExtDev.private_key)
       },
       network_id: 'extdev-plasma-us1'
     },
@@ -82,11 +82,11 @@ module.exports = {
     },
     rinkeby: {
       provider: ()=>{
-        console.log('private key: ' + Rinkeby.prv_key)
+        console.log('private key: ' + Rinkeby.private_key)
         console.log('api token: ' + Rinkeby.api_token)
 
         const PrivateKeyS = [
-          Rinkeby.prv_key
+          Rinkeby.private_key
         ]
 
         //console.log('length: ' + PrivateKeyS.length)

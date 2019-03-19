@@ -55,13 +55,13 @@ module.exports = {
     },
     rinkeby: {
       provider: ()=>{
-        console.log('private key: ' + Rinkeby.prv_key)
+        console.log('private key: ' + Rinkeby.private_key)
         console.log('api token: ' + Rinkeby.api_token)
 
         const PrivateKeyS = [
-          Rinkeby.prv_key,
-          Rinkeby.prv_key,
-          Rinkeby.prv_key
+          Rinkeby.private_key,
+          Rinkeby.private_key,
+          Rinkeby.private_key
         ]
         //console.log('length: ' + PrivateKeyS.length)
         var Provider = new HDWalletProvider(PrivateKeyS, 'https://rinkeby.infura.io/' + Rinkeby.api_token, 0, PrivateKeyS.length)

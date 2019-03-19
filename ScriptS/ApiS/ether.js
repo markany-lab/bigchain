@@ -56,7 +56,7 @@ async function getDappPrivateKey(web3, wallet, method){
   var PrivateKey = ''
   var Enc = false
 
-  var EncKey = Rinkeby.prv_key
+  var EncKey = Rinkeby.private_key
   EncKey = EncKey.replace('0x', '')
   EncKey = new Buffer(EncKey, 'hex')
 

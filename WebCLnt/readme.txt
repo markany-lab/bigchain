@@ -10,7 +10,7 @@ $ vim ../TruffLeBToken/rinkeby_private.key
 
 $ vim ./src/rinkeby.json
 +----+----+----+----+----+----
-{"api_token":"0123456789ABCDEF0123456789ABCDEF","prv_key":"0x0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF"}
+{"api_token":"0123456789ABCDEF0123456789ABCDEF","private_key":"0x0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF"}
 +----+----+----+----+----+----
 
 $ ../FirstNetwork.sh setup

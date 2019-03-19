@@ -18,7 +18,7 @@ var Axios = require('axios')
 const HotWaLLetAddr = Env.hot_wallet_url + ':' + Env.hot_wallet_port
 console.log('hot wallet address: ' + HotWaLLetAddr)
 
-const EthWaLLet = ethWaLLet.fromPrivateKey(ethUtiL.toBuffer(Rinkeby.prv_key))
+const EthWaLLet = ethWaLLet.fromPrivateKey(ethUtiL.toBuffer(Rinkeby.private_key))
 console.log('wallet address: ' +  EthWaLLet.getAddressString())
 
 async function GetLoomPrivateKeyAsync(waLLet){
@@ -36,7 +36,7 @@ async function GetLoomPrivateKeyAsync(waLLet){
   var PrivateKey = ''
   var Enc = false
 
-  var EncKey = Rinkeby.prv_key
+  var EncKey = Rinkeby.private_key
   EncKey = EncKey.replace('0x', '')
   EncKey = new Buffer(EncKey, 'hex')
 
@@ -125,7 +125,7 @@ async function main(){
   GetLoomPrivateKeyAsync(EthWaLLet)
   .then((loom_private_key)=>{
     var ExtDev = {
-      prv_key: loom_private_key
+      private_key: loom_private_key
     }
     writeFileSync(join(__dirname, './extdev.json'), JSON.stringify(ExtDev))
   })

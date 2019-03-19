@@ -3,10 +3,10 @@ import Tx from 'ethereumjs-tx'
 import Utils from 'ethereumjs-util'
 import jsonGateway from '../Gateway.json'
 import {
-  prv_key as rinkeby_prv_key
+  private_key as rinkeby_prv_key
 } from '../rinkeby.json'
 
-const prv_key = Utils.toBuffer(rinkeby_prv_key)
+const PrivateKey = Utils.toBuffer(rinkeby_prv_key)
 
 export default class EthGateway_ {
   static async CreateAsync() {
@@ -48,7 +48,7 @@ export default class EthGateway_ {
 
     rawTx.gas = EstimateGas
     var tx = new Tx(rawTx)
-    tx.sign(prv_key)
+    tx.sign(PrivateKey)
     var serializedTx = tx.serialize()
     EstimateGas = await this._WWW3.eth.estimateGas(rawTx)
 
@@ -69,7 +69,7 @@ export default class EthGateway_ {
     console.log("# EstimateGas: " + EstimateGas)
     rawTx.gas = EstimateGas
     var tx = new Tx(rawTx)
-    tx.sign(prv_key)
+    tx.sign(PrivateKey)
     var serializedTx = tx.serialize()
     EstimateGas = await this._WWW3.eth.estimateGas(rawTx)
 
