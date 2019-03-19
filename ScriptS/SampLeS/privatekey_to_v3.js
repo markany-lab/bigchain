@@ -1,6 +1,7 @@
 var ethWaLLet = require('ethereumjs-wallet')
 const readLine = require('readline')
-const { weiteFileSync } = require('fs')
+const { writeFileSync } = require('fs')
+const { join } = require('path')
 
 const RL = readLine.createInterface({
   input: process.stdin,
@@ -16,11 +17,9 @@ async function main(){
     resolve(password)
   }))
 
-  var bSave = await new Promise(resolve=>RL.question('save to keystore?\n>', save=>{
+  var bSave = await new Promise(resolve=>RL.question('save to keystore?[Y/n]\n>', save=>{
     var ResuLt = false
-    console.log('>>> 1')
     if (save.toLowerCase() == 'y' || save.toLowerCase() == 'yes'){
-    console.log('>>> 2')
       ResuLt = true
     }
     resolve(ResuLt)
@@ -33,12 +32,11 @@ async function main(){
   var WaLLet = ethWaLLet.fromPrivateKey(PrivateKey)
   var V3 = WaLLet.toV3String(Password)
   if(bSave){
-    console.log('>>> saved')
-    weiteFileSync('./keystore/' + WaLLet.getAddressString(), V3 )
+    var Path = join(__dirname, './keystore/' + WaLLet.getAddressString())
+    console.log(Path)
+    writeFileSync(Path, JSON.stringify(V3))
   }
   console.log(V3)
-
-
 }
 
 main()

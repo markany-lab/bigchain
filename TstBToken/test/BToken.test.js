@@ -59,7 +59,34 @@ contract('BToken', accounts => {
     })
   })
 
-  const TitLe10 = '***test'
+  const TitLeTest = '***test'
+  it(TitLeTest, async () => {
+    console.log(TitLeTest)
+
+    let Tx = await Ct.registerData("test_title01", {
+      from: bob,
+    })
+    let Evt = Tx.logs.find(log => log.event === 'NewData')
+    const CID = Evt.args['cid']
+
+    Tx = await Ct.registerHash(CID, '0xE29C9C180C6279B0B02ABD6A1801C7C04082CF486EC027AA13515E4F3884BB6B', 10000, 0, {from: bob})
+    Evt = Tx.logs.find(log => log.event === 'NewCToken')
+    const cTokenID = Evt.args['cTokenId']
+
+    await Ct.enrollDistributor(alice, {from: carlos})
+
+    Tx = await Ct.distContract(cTokenID, alice, 1000, true, 10000, {from: bob})
+
+    const distCons = await Ct.getDistContracts(cTokenID, {from: alice})
+    for(var i = 0; i < distCons; i++) {
+      const distConDetails = await Ct.getDistConDetails(cTokenID, i, {from: alice})
+      console.log("distConDetails: " + JSON.stringify(distConDetails))
+    }
+
+  })
+  return
+
+  const TitLe01 = '***(01) register data => register hash => buy contents'
   it(TitLe10, async () => {
     console.log(TitLe10)
     let Tx = await Ct.registerData("test_title01", {
@@ -92,138 +119,11 @@ contract('BToken', accounts => {
     })
     Evt = Tx.logs.find(log => log.event === 'NewUToken')
     console.log("Evt: " + JSON.stringify(Evt))
-
   })
 
-  return
-  const TitLe01 = '***(01)NFTs와 FTs를 둘 다 minting 할 때 정확한 supply를 얻어야 합니다'
-  it(TitLe01, async () => {
-    console.log(TitLe01)
-    for (let i = 0; i < 5; i++) {
-      let Tx = await Ct.mintX('타이틀', 0 /*cid*/ , 200 /*fee*/ , '해쉬값', 5, {
-        from: bob
-      })
-      //printEventVar(Tx, 'NewCToken', 'owner')
-
-      let Evt = Tx.logs.find(log => log.event === 'NewCToken')
-      const TokenID = Evt.args['cTokenId']
-
-      // const BaLanceOf1 = await Ct.balanceOf.call(bob, TokenID, {from: bob})
-      const BaLanceOf1 = await Ct.balanceOf.call(bob, TokenID, {
-        from: bob
-      })
-      console.log("balance of[" + TokenID + "]: " + BaLanceOf1)
-    }
-    const SuppLy = (await Ct.GetOwnedCTokens.call({
-      from: bob
-    })).length
-    console.log("total supply: " + SuppLy)
-    assert.equal(SuppLy, 5)
-
-    var TokenIDs = await Ct.GetOwnedCTokens.call({
-      from: bob
-    })
-    for (let i = 0; i < TokenIDs.length; i++) {
-      console.log('TokenIDs[' + i + ']: ' + TokenIDs[i])
-    }
-  })
-
-  const TitLe04 = '***(04)fungible token을 mint 할 수 있어야 합니다'
-  it(TitLe04, async () => {
-    console.log(TitLe04)
-    const Amount = 5
-    const Tx = await Ct.mintX('타이틀', 0 /*cid*/ , 200 /*fee*/ , '해쉬값', Amount, {
-      from: bob
-    })
-    const Evt = Tx.logs.find(log => log.event === 'NewCToken')
-    const TokenID = Evt.args['cTokenId']
-
-    const BaLanceOf1 = await Ct.balanceOf.call(bob, TokenID, {
-      from: bob
-    })
-    console.log("balance: " + BaLanceOf1)
-    BaLanceOf1.should.be.eq.BN(new BN(5))
-
-    const BaLanceOf2 = (await Ct.GetOwnedCTokens.call({
-      from: bob
-    })).length
-    console.log("balance: " + BaLanceOf2)
-    BaLanceOf2.should.be.eq.BN(new BN(6))
-
-    await Ct.mintX_withTokenID(TokenID, Amount /*supply*/ , {
-      from: bob
-    })
-    const NewBaLanceOf1 = await Ct.balanceOf.call(bob, TokenID, {
-      from: bob
-    })
-    console.log("balance: " + NewBaLanceOf1)
-    NewBaLanceOf1.should.be.eq.BN(new BN(10))
-
-    const NewBaLanceOf2 = (await Ct.GetOwnedCTokens.call({
-      from: bob
-    })).length
-    console.log("balance: " + NewBaLanceOf2)
-    NewBaLanceOf2.should.be.eq.BN(BaLanceOf2)
-
-    await Ct.mintX_withTokenID(TokenID, 65525, {
-      from: bob
-    }) //65535
-    await expectThrow(Ct.mintX_withTokenID(TokenID, 1, {
-      from: bob
-    }))
-  })
-
-  const TitLe09 = '***(09)fungible token에 owner가 없어야합니다'
-  it(TitLe09, async () => {
-    console.log(TitLe09)
-    const Tx = await Ct.mintX('타이틀', 0 /*cid*/ , 200 /*fee*/ , '해쉬값', 200, {
-      from: bob
-    })
-    const Evt = Tx.logs.find(log => log.event === 'NewCToken')
-    const TokenID = Evt.args['cTokenId']
-
-    /*검표필요*/
-    await expectThrow(Ct.ownerOf.call(TokenID))
-  })
-
-  const TitLe11 = '***(11)컨텐츠 토큰 구입'
-  it(TitLe11, async () => {
-    console.log(TitLe11)
-    var Tx = await Ct.mintX('타이틀', 0 /*cid*/ , 200 /*fee*/ , '해쉬값', 200, {
-      from: alice
-    })
-    var Evt = Tx.logs.find(log => log.event === 'NewCToken')
-    var TokenID = Evt.args['cTokenId']
-    console.log("Evt: " + JSON.stringify(Evt))
-    console.log("TokenID: " + TokenID)
-
-    var tokenBalance1 = await Ct.balanceOf.call(bob, TokenID, {
-      from: bob
-    })
-    console.log("token balance: " + tokenBalance1)
-    Tx = await Ct.buyToken(TokenID, {
-      from: bob,
-      value: web3Utils.toWei("200", 'wei')
-    })
-
-    Evt = Tx.logs.find(log => log.event === 'NewUToken')
-    TokenID = Evt.args['uTokenId']
-
-    var tokenBalance2 = (await Ct.GetOwnedUTokens.call({
-      from: bob
-    })).length
-    console.log("token balance: " + tokenBalance2)
-    tokenBalance2.should.be.eq.BN(tokenBalance1.add(new BN(1)))
-
-    var uTokenDetails = await Ct.GetUTokenDetails.call(TokenID, {
-      from: bob
-    })
-    console.log("uTokenDetails: " + JSON.stringify(uTokenDetails))
-  })
-
-  const TitLe12 = '***(12) channel open => channel off => settle'
-  it(TitLe12, async () => {
-    console.log(TitLe12)
+  const TitLe03 = '***(12) channel open => channel off => settle'
+  it(TitLe03, async () => {
+    console.log(TitLe03)
     let Tx = await ZChannel.channelOpen(1000, "0x123123", 20, {
       from: bob,
       value: web3Utils.toWei("0.000001", 'ether')

@@ -25,19 +25,19 @@ async function account_generate(password) {
   try {
     const index = await Ether.generateAccount(password)
 
-    //   /* init Ethereum elements */
-    //   console.log('# init ethereum tools...')
-    //   var EtherTools = await Ether.createAsync(index, password)
-    //   console.log('# init complete')
+      /* init Ethereum elements */
+      console.log('# init ethereum tools...')
+      var EtherTools = await Ether.createAsync(index, password)
+      console.log('# init complete')
 
-    //   /* init Dappchain elements */
-    //   console.log('# init dapp tools...')
-    //   var DappTools = await Dapp.createAsync(EtherTools.getDappPrivateKey())
-    //   console.log('# init complete')
+      /* init Dappchain elements */
+      console.log('# init dapp tools...')
+      var DappTools = await Dapp.createAsync(EtherTools.getDappPrivateKey())
+      console.log('# init complete')
 
-    //   console.log('# mapping ethereum account to dapp account...')
-    //   await DappTools.SignAsync(EtherTools.getWallet())
-    //   console.log('# mapping complete')
+      console.log('# mapping ethereum account to dapp account...')
+      await DappTools.SignAsync(EtherTools.getWallet())
+      console.log('# mapping complete')
   } catch (error) {
     console.log('# error occured: ' + error)
   }
@@ -76,8 +76,7 @@ async function account_export(index, password) {
 
 async function account_remove(index) {
   try {
-    const removedAccount = await Ether.removeAccount(index)
-    console.log("# removed: " + removedAccount)
+    await Ether.removeAccount(index)
   } catch (error) {
     console.log("# error occured: " + error)
   }
@@ -86,7 +85,7 @@ async function account_remove(index) {
 async function account_list() {
   const accountList = await Ether.listAccount()
   for (var i = 0; i < accountList.length; i++) {
-    console.log(i + '\'s account: ' + accountList[i])
+    console.log(i + '\'s account: ' + accountList[i].address)
   }
 }
 

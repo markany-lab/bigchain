@@ -48,6 +48,34 @@ contract BToken is BFactory {
     ERC721ZInterface._mint(cTokenId, msg.sender, supply);
   }
 
+  function enrollDistributor(address distributor) external onlyOwner {
+    Distributors[keccak256(abi.encode(distributor))] = distributor;
+  }
+
+  function distContract(uint cTokenId, address distributor, uint cost, bool exclusivity, uint timeout) external onlyProviderOfCTokenID(cTokenId) onlyDistributorOf(distributor) {
+    if(exclusivity) {
+      for(uint i = 0; i < CTokenID2DistCon[cTokenId].length; i++) {
+        require(!CTokenID2DistCon[cTokenId][i]._Exclusivity, "exclusive distribution contract already exists");
+      }
+    }
+    CTokenID2DistCon[cTokenId].push(DistCon_(distributor, cost, exclusivity, timeout));
+    AuthorizedUsers[cTokenId][distributor] = true;
+    emit NewDistCon(msg.sender, distributor, cTokenId, cost, exclusivity, timeout);
+  }
+
+  function getDistContracts(uint cTokenId) view public onlyAuthorizedOf(cTokenId) returns (uint count){
+    count = CTokenID2DistCon[cTokenId].length;
+  }
+
+  function getDistConDetails(uint cTokenId, uint index) view external onlyAuthorizedOf(cTokenId) returns (address distributor, uint cost, bool exclusivity, uint timeout) {
+      return (
+        CTokenID2DistCon[cTokenId][index]._Distributor,
+        CTokenID2DistCon[cTokenId][index]._Cost,
+        CTokenID2DistCon[cTokenId][index]._Exclusivity,
+        CTokenID2DistCon[cTokenId][index]._Timeout
+      );
+  }
+
   // buy contents token
   function buyToken(uint cTokenId) payable public returns (uint uTokenId){
     require(ERC721ZInterface.exists(cTokenId), "unknown token");

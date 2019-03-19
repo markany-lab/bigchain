@@ -27,7 +27,7 @@
       "account:generate:default": "node app.js account --generate --password p@ssw0rd",
       "account:import:default": "node app.js account --import --password p@ssw0rd --prvKey 0x4E97E81D425966C00422A8FC5602382DA74862A239E941B2777AB0CB968D115B",
       "account:export:default": "node app.js account --export --index 0 --password p@ssw0rd",
-      "account:remove:default": "node app.js account --remove --index 0",
+      "account:remove:default": "node app.js account --remove --index 1",
       "account:balance:default": "node app.js account --balance --index 0 --password p@ssw0rd",
       "send:ethereum:default": "node app.js send --ethereum --index 0 --password p@ssw0rd --unit ether --amount 0.01",
       "send:dappchain:default": "node app.js send --dappchain --index 0 --password p@ssw0rd --unit ether --amount 0.01",

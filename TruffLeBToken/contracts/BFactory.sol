@@ -9,6 +9,7 @@ contract BFactory is Ownable {
   event NewData(address provider, uint cid, string titLe);
   event NewCToken(uint cTokenId, uint cid, bytes32 hash, uint fee, uint supply);
   event NewUToken(address owner, uint uTokenId, uint cTokenId, uint8 state);
+  event NewDistCon(address owner, address distributor, uint cTokenId, uint cost, bool exclusivity, uint timeout);
   event ModifyData(address provider, uint cid, string title);
   event ModifyCToken(uint cTokenId, uint cid, bytes32 hash, uint fee);
 
@@ -30,11 +31,17 @@ contract BFactory is Ownable {
     bool _DisabLed;
   }
 
-  // user token
   struct UToken_ {
     address _User;
     uint _CToken;
     UTokenState_ _State;
+  }
+
+  struct DistCon_ {
+    address _Distributor;
+    uint _Cost;
+    bool _Exclusivity;
+    uint _Timeout;
   }
 
   Data_[] public _CIDs;
@@ -46,6 +53,10 @@ contract BFactory is Ownable {
   mapping (uint => uint[]) public CID2CTokenID;      // cid => cTokenId[]
   mapping (uint => address) internal UToken2User;    // uTokenId => owner
   mapping (address => uint[]) internal User2UTokens; // owner => uTokenId[]
+  mapping (bytes32 => address) internal Distributors;
+  mapping (uint => DistCon_[]) internal CTokenID2DistCon;
+  mapping (uint => mapping(address => bool)) AuthorizedUsers;
+
 
   uint _EnabLeFee = 0.001 ether;
 
@@ -61,6 +72,18 @@ contract BFactory is Ownable {
 
   modifier onlyUTokenOwnerOf(uint uTokenId) {
     require(msg.sender == UToken2User[uTokenId]);
+    _;
+  }
+
+  modifier onlyDistributorOf(address distributor) {
+    require(distributor != address(0));
+    require(Distributors[keccak256(abi.encode(distributor))] == distributor, "you are not distributor");
+    _;
+  }
+
+  modifier onlyAuthorizedOf(uint cTokenId) {
+    require((msg.sender == CID2Provider[_CTs[cTokenId]._Cid]) ||
+            (AuthorizedUsers[cTokenId][msg.sender]), "you are not authorized user");
     _;
   }
 

@@ -120,7 +120,7 @@ App.post('/query_get_private_key', async function(req, res){
     var _Enc
     try{
       var Key = loom.CryptoUtils.B64ToUint8Array(SuggestedKeyB64)
-      if (Key.length != 64){
+      if(Key.length != 64){
         throw('invalid key: ' + SuggestedKeyB64)
       }
       _LoomKeyB64 = SuggestedKeyB64
@@ -177,7 +177,7 @@ App.post('/query_get_private_key', async function(req, res){
           var Enc
           try{
             var Key = loom.CryptoUtils.B64ToUint8Array(SuggestedKeyB64)
-            if (Key.length != 64){
+            if(Key.length != 64){
               throw('invalid key: ' + SuggestedKeyB64)
             }
             LoomKeyB64 = SuggestedKeyB64
@@ -262,7 +262,7 @@ App.post('/query_update_private_key', async function(req, res){
         if(Found_item){
           try{
             var Key = loom.CryptoUtils.B64ToUint8Array(SuggestedKeyB64)
-            if (Key.length != 64){
+            if(Key.length != 64){
               throw('invalid key: ' + SuggestedKeyB64)
             }
             logger.debug('suggested key: ' + SuggestedKeyB64)
@@ -356,7 +356,7 @@ if(cLuster.isMaster){
 }
 else{
   process.on( 'message', function(msg){
-    if (msg.secret){
+    if(msg.secret){
       var Secret = msg.secret
       logger.debug( 'secret: ' + Secret)
       App.set('secret', msg.secret)

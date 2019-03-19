@@ -7,6 +7,10 @@ var Web3 = require('web3');
 var jsonBChannel = require('../TruffLeBToken/build/contracts/BChannel.json')
 var Nacl = require('tweetnacl')
 var fs = require('fs')
+var rinkeby = require('./rinkeby.json')
+var axios = require('axios')
+var https = require('https')
+var EthWallet = require('ethereumjs-wallet')
 
 const {
   Client,
@@ -178,7 +182,7 @@ async function manageChannel() {
         off.push(open[i])
         open.splice(i, i + 1)
         fs.writeFileSync(channelManagerPath, JSON.stringify({open, off}))
-      } 
+      }
     }
     channelManagerReady = 1
   } catch (err) {

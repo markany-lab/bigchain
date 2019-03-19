@@ -10,7 +10,7 @@ $ vim ../TruffLeBToken/rinkeby_private.key
 
 $ vim ./src/rinkeby.json
 +----+----+----+----+----+----
-{"private_key":"0x0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF", enc:false}
+{"private_key":"0x0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF"}
 +----+----+----+----+----+----
 
 $ ../FirstNetwork.sh setup
