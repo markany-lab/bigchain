@@ -93,6 +93,28 @@ async function GetLoomPrivateKeyAsync(waLLet){
     var DecipheredKey = Decipher.update(DecipheredKey).toString('base64')
     DecipheredKey += Decipher.final('base64')
     PrivateKey = DecipheredKey
+    console.log('deciphered key: ' + PrivateKey)
+  }
+  else{
+    // 키가 암호화되어 있지 않다면 암오화 하여 업데이트
+    var Cipher = crypto.createCipheriv('aes-256-ecb', EncKey, '')
+    Cipher.setAutoPadding(false)
+    CipheredKey = CryptoUtils.B64ToUint8Array(PrivateKey)
+    CipheredKey = Cipher.update(CipheredKey).toString('base64')
+    CipheredKey += Cipher.final('base64')
+
+    await Agent.post('/query_update_private_key', {
+      confirm_data: ConfirmData,
+      suggested_key: CipheredKey
+    },
+    {
+      headers: {
+        Authorization: "Bearer " + Token
+      }
+    })
+    .then(await function(res){
+      console.log("status: " + res.data.status)
+    })
   }
   return PrivateKey
 }

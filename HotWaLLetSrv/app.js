@@ -266,6 +266,8 @@ App.post('/query_update_private_key', async function(req, res){
               throw('invalid key: ' + SuggestedKeyB64)
             }
             logger.debug('suggested key: ' + SuggestedKeyB64)
+
+            await privateSchema.updateOne({addr: Addr}, {$set:{key: SuggestedKeyB64, enc: true, timestamp: new Date()}})
             res.json({
               status: 'successed'
             })
