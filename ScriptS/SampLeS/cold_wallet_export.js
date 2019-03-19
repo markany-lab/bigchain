@@ -11,7 +11,7 @@ async function main(){
     await new Promise(resolve=>readdir(KeystorePath, (err, files)=>{
       if(typeof files != 'undefined'){
         files.forEach(file=>{
-          if(file.indexOf("0x") == 0){
+          if(file.indexOf("UTC") == 0){
             FiLeS.push(file)
           }
         })
@@ -23,6 +23,8 @@ async function main(){
       console.log('not found any account, please use the impoet cold wallet command first: node ./cold_wallet_import.js')
       process.exit(-1)
     }
+
+    FiLeS.sort()
 
     const RL = readLine.createInterface({
       input: process.stdin,

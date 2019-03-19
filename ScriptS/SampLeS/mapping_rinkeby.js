@@ -39,7 +39,6 @@ async function GetLoomPrivateKeyAsync(waLLet){
   var Enc = false
 
   var EncKey = waLLet.getPrivateKey().toString('hex')
-  //EncKey = EncKey.replace('0x', '')
   EncKey = new Buffer(EncKey, 'hex')
 
   await Agent.post('/query_get_token', {})
@@ -131,7 +130,7 @@ async function GetCoLdWaLLetAsync(){
     await new Promise(resolve=>readdir(KeystorePath, (err, files)=>{
       if(typeof files != 'undefined'){
         files.forEach(file=>{
-          if(file.indexOf("0x") == 0){
+          if(file.indexOf("UTC") == 0){
             FiLeS.push(file)
           }
         })
@@ -143,6 +142,8 @@ async function GetCoLdWaLLetAsync(){
       console.log('not found any account, please use the impoet cold wallet command first: node ./cold_wallet_import.js')
       process.exit(-1)
     }
+
+    FiLeS.sort()
 
     const RL = readLine.createInterface({
       input: process.stdin,

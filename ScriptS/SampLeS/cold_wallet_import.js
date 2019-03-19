@@ -4,6 +4,14 @@ const { writeFileSync } = require('fs')
 const { join } = require('path')
 
 async function main(){
+
+  var Timestamp = new Date()
+  Timestamp = Timestamp.toISOString()
+  Timestamp = Timestamp.replace(':', '')
+  console.log('timestamp: ' + Timestamp)
+  var Prefix = './keystore/UTC--' + Timestamp + '--'
+
+
   const RL = readLine.createInterface({
     input: process.stdin,
     output: process.stdout
@@ -32,7 +40,7 @@ async function main(){
   var WaLLet = ethWaLLet.fromPrivateKey(PrivateKey)
   var V3 = WaLLet.toV3String(Password)
   if(bSave){
-    var Path = join(__dirname, './keystore/' + WaLLet.getAddressString())
+    var Path = join(__dirname, Prefix + WaLLet.getAddress().toString('hex'))
     console.log(Path)
     writeFileSync(Path, JSON.stringify(V3))
   }
