@@ -33,6 +33,12 @@ async function GetLoomPrivateKeyAsync(waLLet){
   var Sign
   var PrivateKey = ''
   var Enc = false
+
+  var EncKey = waLLet.getPrivateKey().toString('hex')
+  console.log('encryption key: ' + EncKey)
+  //EncKey = EncKey.replace('0x', '')
+  EncKey = new Buffer(EncKey, 'hex')
+
   await Agent.post('/query_get_token', {})
   .then(await function(res){
     var MsgStr = res.data.string
@@ -50,9 +56,17 @@ async function GetLoomPrivateKeyAsync(waLLet){
     sign: Sign
   }
 
+  var CipheredKey = CryptoUtils.generatePrivateKey()
+  var Cipher = crypto.createCipheriv('aes-256-ecb', EncKey, '')
+  Cipher.setAutoPadding(false)
+  var CipheredKey = Cipher.update(CipheredKey).toString('base64')
+  CipheredKey += Cipher.final('base64')
+  console.log('suggested key: ' + CipheredKey)
+
   console.log('token: ' + Token)
   await Agent.post('/query_get_private_key', {
-    confirm_data: ConfirmData
+    confirm_data: ConfirmData,
+    suggested_key: CipheredKey
   },
   {
     headers: {
@@ -71,13 +85,36 @@ async function GetLoomPrivateKeyAsync(waLLet){
     }
   })
   .catch(err=>console.log('>>> ' + err))
-  try{
-    if(Enc){
-      throw('can\'t use ethereum private key')
-    }
+  if(Enc){
+    var DecipheredKey = CryptoUtils.B64ToUint8Array(PrivateKey)
+    var Decipher = crypto.createDecipheriv("aes-256-ecb", EncKey, '')
+    Decipher.setAutoPadding(false)
+    var DecipheredKey = Decipher.update(DecipheredKey).toString('base64')
+    DecipheredKey += Decipher.final('base64')
+    PrivateKey = DecipheredKey
   }
-  catch(err){
-    console.log('error: ' + err)
+  else{
+    // 키가 암호화되어 있지 않다면 암오화 하여 업데이트
+    var Cipher = crypto.createCipheriv('aes-256-ecb', EncKey, '')
+    Cipher.setAutoPadding(false)
+    CipheredKey = CryptoUtils.B64ToUint8Array(PrivateKey)
+    if (CipheredKey.length == 64){
+      CipheredKey = Cipher.update(CipheredKey).toString('base64')
+      CipheredKey += Cipher.final('base64')
+
+      await Agent.post('/query_update_private_key', {
+        confirm_data: ConfirmData,
+        suggested_key: CipheredKey
+      },
+      {
+        headers: {
+          Authorization: "Bearer " + Token
+        }
+      })
+      .then(await function(res){
+        console.log("status: " + res.data.status)
+      })
+    }
   }
   return PrivateKey
 }
@@ -163,9 +200,14 @@ async function Mapping(){
   }
   else
   {
-    console.log('>>>> map ethereum account to loom account...')
-    await AddressMapper.addIdentityMappingAsync(From, LoomAddress, WWW3Signer)
-    console.log('>>>> address mapping complete')
+    console.log('>>> map ethereum account to loom account...')
+    try{
+      await AddressMapper.addIdentityMappingAsync(From, LoomAddress, WWW3Signer)
+    }
+    catch(err){
+      console.log('>>> ' + err)
+    }
+    console.log('>>> address mapping complete')
   }
 
   const LoomCoin = await Contracts.EthCoin.createAsync(LoomCLient, LoomAddress)
@@ -174,3 +216,6 @@ async function Mapping(){
 }
 
 Mapping()
+.then(()=>{
+    process.exit(0)
+})

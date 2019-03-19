@@ -212,7 +212,7 @@ async function Mapping(){
       await AddressMapper.addIdentityMappingAsync(From, LoomAddress, WWW3Signer)
     }
     catch(err){
-      console.log(err)
+      console.log('>>> ' + err)
     }
     console.log('>>> address mapping complete')
   }
