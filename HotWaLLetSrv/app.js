@@ -24,7 +24,6 @@ var expressJWT = require('express-jwt')
 var jwt = require('jsonwebtoken')
 var cors = require('cors')
 var bearerToken = require('express-bearer-token')
-//var rwLock = require('rwlock')
 var cLuster = require('cluster')
 var cLusterLock = require("cluster-readwrite-lock");
 var numCPU = require( 'os' ).cpus().length
@@ -37,8 +36,6 @@ var privateSchema = require('./modeLS/private_keys.js')
 //워커 스케쥴을 Round Robin 방식으로 한다
 cLuster.schedulingPolicy = cLuster.SCHED_RR
 
-//var PrivateLock = new rwLock()
-//var PublicLock = new rwLock()
 var CLusterLock = new cLusterLock(cLuster)
 const App = express()
 App.options('*', cors())
@@ -109,8 +106,8 @@ App.post('/query_get_token', (req, res)=>{
 
 App.post('/query_get_private_key', async function(req, res){
   logger.debug('>>> /query_get_private_key')
-
   //logger.debug('body: ' + JSON.stringify(req.body))
+
   try {
     var ConfirmAddr = req.body.confirm_data.addr
     var ConfirmSign = req.body.confirm_data.sign
@@ -119,7 +116,7 @@ App.post('/query_get_private_key', async function(req, res){
     var RandomStr = req.random_str
 
     //<-- 시뮬레이션...
-    var _LoomKeyB64
+    /*var _LoomKeyB64
     var _Enc
     try{
       var Key = loom.CryptoUtils.B64ToUint8Array(SuggestedKeyB64)
@@ -130,12 +127,12 @@ App.post('/query_get_private_key', async function(req, res){
       _Enc = true
     }
     catch(err){
-      logger.error('/query_get_private_key, error: ' + err)
+      logger.error('error: ' + err)
       var GeneratedKey = loom.CryptoUtils.generatePrivateKey()
       _LoomKeyB64 = loom.CryptoUtils.Uint8ArrayToB64(GeneratedKey)
       _Enc = false
 
-      /*logger.debug('++++++++ generated base64: ' + _LoomKeyB64)
+      logger.debug('>>> generated base64: ' + _LoomKeyB64)
       var EncKey = '0x7920ca01d3d1ac463dfd55b5ddfdcbb64ae31830f31be045ce2d51a305516a37'
       EncKey = EncKey.replace('0x', '')
       EncKey = new Buffer(EncKey, 'hex')
@@ -143,18 +140,18 @@ App.post('/query_get_private_key', async function(req, res){
       Cipher.setAutoPadding(false)
       var CipheredKey = Cipher.update(GeneratedKey).toString('base64')
       CipheredKey += Cipher.final('base64')
-      logger.debug('++++++++ cyphered base64: ' + CipheredKey)
+      logger.debug('>>> cyphered base64: ' + CipheredKey)
 
       var DecipheredKey = loom.CryptoUtils.B64ToUint8Array(CipheredKey)
       var Decipher = crypto.createDecipheriv("aes-256-ecb", EncKey, '')
       Decipher.setAutoPadding(false)
       var DecipheredKey = Decipher.update(DecipheredKey).toString('base64')
       DecipheredKey += Decipher.final('base64')
-      logger.debug('++++++++ decyphered base64: ' + DecipheredKey)*/
+      logger.debug('>>> decyphered base64: ' + DecipheredKey)
     }
 
-    logger.debug('!!!!!!!! _LoomKeyB64: ' + _LoomKeyB64)
-    logger.debug('!!!!!!!! _Enc: ' + _Enc)
+    logger.debug('>>> _LoomKeyB64: ' + _LoomKeyB64)
+    logger.debug('>>> enc: ' + _Enc)*/
     //-->
 
     var Msg = Buffer.from(RandomStr, 'utf8')
@@ -173,10 +170,9 @@ App.post('/query_get_private_key', async function(req, res){
     const EthAddr = ethUtiL.bufferToHex(EthAddrBuf)
     const Addr = ConfirmAddr.toLowerCase()
     if(Addr == EthAddr){
-      //PrivateLock.writeLock(function(release){
       await CLusterLock.acquireWrite('PrivateLock', async function(){
-        const FoundKey = await privateSchema.findOne({addr: Addr})
-        if(!FoundKey){
+        const Found_item = await privateSchema.findOne({addr: Addr})
+        if(!Found_item){
           var LoomKeyB64
           var Enc
           try{
@@ -188,14 +184,14 @@ App.post('/query_get_private_key', async function(req, res){
             Enc = true
           }
           catch(err){
-            logger.error('/query_get_private_key, error: ' + err)
+            logger.error('error: ' + err)
             var GeneratedKey = loom.CryptoUtils.generatePrivateKey()
             LoomKeyB64 = loom.CryptoUtils.Uint8ArrayToB64(GeneratedKey)
             Enc = false
           }
 
           await insert_private_key(Addr, LoomKeyB64, Enc)
-          logger.debug("saved private key: " + LoomKeyB64)
+          logger.debug("saved loom key: " + LoomKeyB64)
           res.json({
             status: 'succeed',
             key: LoomKeyB64,
@@ -204,14 +200,13 @@ App.post('/query_get_private_key', async function(req, res){
         }
         else{
           await privateSchema.updateOne({addr: Addr}, {$set:{timestamp: new Date()}})
-          logger.debug("found item: " + JSON.stringify(FoundKey))
+          logger.debug("found item: " + JSON.stringify(Found_item))
           res.json({
             status: 'succeed',
-            key: FoundKey.key,
-            enc: FoundKey.enc
+            key: Found_item.key,
+            enc: Found_item.enc
           })
         }
-        //release()
       }).then((res)=>{
         if(typeof res !== 'undefined'){
           logger.debug('private write lock, result: ' + res)
@@ -221,17 +216,96 @@ App.post('/query_get_private_key', async function(req, res){
       })
     }
     else{
+      logger.error('error: invalid sign')
       res.json({
         status: 'failed'
       })
     }
-  } catch(err){
-    logger.error('/query_get_private_key, error: ' + err)
+  }
+  catch(err){
+    logger.error('error: ' + err)
     res.json({
-      status: 'error occured'
+      status: 'failed'
     })
   }
 })
+
+App.post('/query_update_private_key', async function(req, res){
+  logger.debug('>>> /query_update_private_key')
+  logger.debug('body: ' + JSON.stringify(req.body))
+
+  try {
+    var ConfirmAddr = req.body.confirm_data.addr
+    var ConfirmSign = req.body.confirm_data.sign
+    var SuggestedKeyB64 = req.body.suggested_key
+    logger.debug('base64(key): ' + JSON.stringify(SuggestedKeyB64) + ', type: ' + typeof SuggestedKeyB64)
+    var RandomStr = req.random_str
+
+    var Msg = Buffer.from(RandomStr, 'utf8')
+    const Prefix = new Buffer("\x19Ethereum Signed Message:\n")
+    const PrefixedMsg = Buffer.concat([Prefix, new Buffer(String(Msg.length)), Msg])
+    const PrefixedMsgHash = ethUtiL.keccak256(PrefixedMsg)
+
+    const {
+      v,
+      r,
+      s
+    } = ethUtiL.fromRpcSig(ConfirmSign)
+
+    const EthPubLicKey = ethUtiL.ecrecover(PrefixedMsgHash, v, r, s)
+    const EthAddrBuf = ethUtiL.pubToAddress(EthPubLicKey)
+    const EthAddr = ethUtiL.bufferToHex(EthAddrBuf)
+    const Addr = ConfirmAddr.toLowerCase()
+    if(Addr == EthAddr){
+      await CLusterLock.acquireWrite('PrivateLock', async function(){
+        const Found_item = await privateSchema.findOne({addr: Addr})
+        if(Found_item){
+          try{
+            var Key = loom.CryptoUtils.B64ToUint8Array(SuggestedKeyB64)
+            if (Key.length != 64){
+              throw('invalid key: ' + SuggestedKeyB64)
+            }
+            logger.debug('suggested key: ' + SuggestedKeyB64)
+            res.json({
+              status: 'successed'
+            })
+          }
+          catch(err){
+            logger.error('error: invalid suggested key')
+            res.json({
+              status: 'failed'
+            })
+          }
+        }
+        else{
+          logger.error('error: invalid address')
+          res.json({
+            status: 'failed'
+          })
+        }
+      }).then((res)=>{
+        if(typeof res !== 'undefined'){
+          logger.debug('private write lock, result: ' + res)
+        }
+      }).catch((err)=>{
+        logger.error('private write lock, error: ' + err)
+      })
+    }
+    else{
+      logger.error('error: invalid sign')
+      res.json({
+        status: 'failed'
+      })
+    }
+  }
+  catch(err){
+    logger.error('error: ' + err)
+    res.json({
+      status: 'failed'
+    })
+  }
+})
+
 
 async function start_server(){
   mongoose.connect('mongodb://127.0.0.1/waLLet', {useNewUrlParser: true})
