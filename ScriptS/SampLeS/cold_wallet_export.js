@@ -4,23 +4,30 @@ const { readdir } = require('fs')
 const { readFileSync } = require('fs')
 const { join } = require('path')
 
-const RL = readLine.createInterface({
-  input: process.stdin,
-  output: process.stdout
-})
-
 async function main(){
   try{
     var KeystorePath = join(__dirname, './keystore/')
     var FiLeS = new Array()
     await new Promise(resolve=>readdir(KeystorePath, (err, files)=>{
-      files.forEach(file=>{
-        if(file.indexOf("0x") == 0){
-          FiLeS.push(file)
-        }
-      })
+      if(typeof files != 'undefined'){
+        files.forEach(file=>{
+          if(file.indexOf("0x") == 0){
+            FiLeS.push(file)
+          }
+        })
+      }
       resolve()
     }))
+
+    if(FiLeS.length == 0){
+      console.log('not found any account, please use the impoet cold wallet command first: node ./cold_wallet_import.js')
+      process.exit(-1)
+    }
+
+    const RL = readLine.createInterface({
+      input: process.stdin,
+      output: process.stdout
+    })
 
     var index = 0
     do{

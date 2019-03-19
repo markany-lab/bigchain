@@ -32,13 +32,13 @@ var Agent = Axios.create({
   })
 })
 
-async function GetDappPrivateKeyAsync(www3, waLLet){
+async function GetDappPrivateKeyAsync(waLLet){
   var Token
   var Sign
   var PrivateKey = ''
   var Enc = false
 
-  var EncKey = getPrivateKey().toString('hex')
+  var EncKey = waLLet.getPrivateKey().toString('hex')
   //EncKey = EncKey.replace('0x', '')
   EncKey = new Buffer(EncKey, 'hex')
 
@@ -134,7 +134,7 @@ async function Mapping(){
 
   var EthProvider = new Web3.providers.WebsocketProvider('wss://rinkeby.infura.io/ws')
   var EthW3 = new Web3(EthProvider)
-  const DAppPrviteKey = await GetDappPrivateKeyAsync(EthW3, EthWaLLet)
+  const DAppPrviteKey = await GetDappPrivateKeyAsync(EthWaLLet)
   console.log('>>> dapp api token: ' + DAppPrviteKey)
 
   // balance 체크
@@ -177,7 +177,7 @@ async function Mapping(){
   const bMapped = await AddressMapper.hasMappingAsync(From)
   if(!bMapped)
   {
-    console.log('>>>> no mapping address')
+    console.log('>>> no mapping address')
     return
   }
 

@@ -3,12 +3,12 @@ const readLine = require('readline')
 const { writeFileSync } = require('fs')
 const { join } = require('path')
 
-const RL = readLine.createInterface({
-  input: process.stdin,
-  output: process.stdout
-})
-
 async function main(){
+  const RL = readLine.createInterface({
+    input: process.stdin,
+    output: process.stdout
+  })
+
   var PrivateKey = await new Promise(resolve=>RL.question('input private key\n>', private_key=>{
     resolve(private_key)
   }))

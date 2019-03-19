@@ -36,7 +36,7 @@ async function GetLoomPrivateKeyAsync(waLLet){
   var PrivateKey = ''
   var Enc = false
 
-  var EncKey = getPrivateKey().toString('hex')
+  var EncKey = waLLet.getPrivateKey().toString('hex')
   //EncKey = EncKey.replace('0x', '')
   EncKey = new Buffer(EncKey, 'hex')
 
@@ -202,9 +202,14 @@ async function Mapping(){
   }
   else
   {
-    console.log('>>>> map ethereum account to loom account...')
-    await AddressMapper.addIdentityMappingAsync(From, LoomAddress, WWW3Signer)
-    console.log('>>>> address mapping complete')
+    console.log('>>> map ethereum account to loom account...')
+    try{
+      await AddressMapper.addIdentityMappingAsync(From, LoomAddress, WWW3Signer)
+    }
+    catch(err){
+      console.log('>>> ' + err)
+    }
+    console.log('>>> address mapping complete')
   }
 
   const LoomCoin = await Contracts.EthCoin.createAsync(LoomCLient, LoomAddress)
