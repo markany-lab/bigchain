@@ -127,9 +127,6 @@ async function Mapping(){
   console.log('>>> rinkeby private key: ' + RinkebyPrivateKey)
   console.log('>>> rinkeby private key\'s type: ' + typeof RinkebyPrivateKey)
 
-  const RinkebyApiToken = Rinkeby.api_token
-  console.log('>>> rinkeby api token: ' + RinkebyApiToken)
-
   //
   const EthWaLLet = ethWaLLet.fromPrivateKey(ethUtiL.toBuffer(RinkebyPrivateKey))
   console.log('>>> wallet address: ' +  EthWaLLet.getAddressString())
@@ -137,7 +134,6 @@ async function Mapping(){
   const LoomPrviteKey = await GetLoomPrivateKeyAsync(EthWaLLet)
   console.log('>>> loom private key: ' + LoomPrviteKey)
 
-  //var EthProvider = new Web3.providers.HttpProvider('https://rinkeby.infura.io/' + RinkebyApiToken)
   var EthProvider = new Web3.providers.WebsocketProvider('wss://rinkeby.infura.io/ws')
   var EthW3 = new Web3(EthProvider)
 
