@@ -5,8 +5,7 @@ var EthJsWallet = require('ethereumjs-wallet')
 var EthJsTx = require('ethereumjs-tx')
 var Web3 = require('web3')
 
-var Rinkeby = require('./rinkeby.json')
-const RinkebyPrivateKey = Rinkeby.private_key
+const RinkebyPrivateKey = require('./rinkeby.json').private_key
 console.log('rinkeby\'s private key: ' + RinkebyPrivateKey)
 
 var Provider = new Web3.providers.WebsocketProvider('wss://rinkeby.infura.io/ws')

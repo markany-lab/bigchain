@@ -23,7 +23,6 @@ var {
   SignedTxMiddleware
 } = require('loom-js')
 
-var Rinkeby = require('./rinkeby.json')
 var Env = require('../../.env.json')
 const HotWaLLetAddr = Env.hot_wallet_url + ':' + Env.hot_wallet_port
 var Agent = Axios.create({
@@ -125,6 +124,7 @@ async function GetLoomPrivateKeyAsync(waLLet){
   }
   return PrivateKey
 }
+
 async function GetCoLdWaLLetAsync(){
   try{
     var KeystorePath = join(__dirname, './keystore/')
@@ -186,6 +186,7 @@ async function GetCoLdWaLLetAsync(){
 
 async function Mapping(){
   const EthWaLLet = await GetCoLdWaLLetAsync()
+  console.log('>>> wallet private key: ' + EthWaLLet.getPrivateKey().toString('hex'))
   console.log('>>> wallet address: ' +  EthWaLLet.getAddressString())
 
   const LoomPrviteKey = await GetLoomPrivateKeyAsync(EthWaLLet)

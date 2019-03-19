@@ -8,7 +8,10 @@ var Https = require('https')
 var Axios = require('axios')
 var BN = require('bn.js')
 const DeLay = require('delay')
+const { readdir } = require('fs')
 const { readFileSync } = require('fs')
+const { join } = require('path')
+const readLine = require('readline')
 var { web3Signer } = require('./web3Signer.js')
 
 var {
@@ -22,7 +25,6 @@ var {
   SignedTxMiddleware
 } = require('loom-js/dist')
 
-var Rinkeby = require('./rinkeby.json')
 var Env = require('../../.env.json')
 const HotWaLLetAddr = Env.hot_wallet_url + ':' + Env.hot_wallet_port
 var Agent = Axios.create({
@@ -122,14 +124,68 @@ async function GetDappPrivateKeyAsync(waLLet){
   return PrivateKey
 }
 
-async function Mapping(){
-  const RinkebyPrivateKey = Rinkeby.private_key
-  console.log('>>> rinkeby private key: ' + RinkebyPrivateKey)
-  console.log('>>> rinkeby private key\'s type: ' + typeof RinkebyPrivateKey)
+async function GetCoLdWaLLetAsync(){
+  try{
+    var KeystorePath = join(__dirname, './keystore/')
+    var FiLeS = new Array()
+    await new Promise(resolve=>readdir(KeystorePath, (err, files)=>{
+      if(typeof files != 'undefined'){
+        files.forEach(file=>{
+          if(file.indexOf("0x") == 0){
+            FiLeS.push(file)
+          }
+        })
+      }
+      resolve()
+    }))
 
-  //
-  const EthWaLLet = ethWaLLet.fromPrivateKey(ethUtiL.toBuffer(RinkebyPrivateKey))
-  console.log('>>> wallet private key: ' + EthWaLLet.getPrivateKey())
+    if(FiLeS.length == 0){
+      console.log('not found any account, please use the impoet cold wallet command first: node ./cold_wallet_import.js')
+      process.exit(-1)
+    }
+
+    const RL = readLine.createInterface({
+      input: process.stdin,
+      output: process.stdout
+    })
+
+    var index = 0
+    do{
+      console.log('select index')
+      for(let i = 0; i < FiLeS.length; i++){
+        console.log('[' + i + ']' + FiLeS[i])
+      }
+
+      var index = await new Promise(resolve=>RL.question('input index\n>', input=>{
+        resolve(input)
+      }))
+      index = parseInt(index, 10)
+      console.log('current index: ' + index)
+    } while( !(0 <= index && index < FiLeS.length))
+    console.log('selected index: ' + index)
+
+    var FiLePath = KeystorePath + FiLeS[index]
+    console.log('selected file path: ' + FiLePath)
+    var V3 = JSON.parse(readFileSync(FiLePath, 'utf8'))
+    console.log(V3)
+
+    var Password = await new Promise(resolve=>RL.question('input password\n>', password=>{
+      resolve(password)
+    }))
+
+    RL.close()
+
+    return ethWaLLet.fromV3(V3, Password)
+  }
+  catch(err)
+  {
+    console.log(err)
+  }
+}
+
+async function Mapping(){
+  const EthWaLLet = await GetCoLdWaLLetAsync()
+  console.log('>>> wallet private key: ' + EthWaLLet.getPrivateKey().toString('hex'))
   console.log('>>> wallet address: ' +  EthWaLLet.getAddressString())
 
   var EthProvider = new Web3.providers.WebsocketProvider('wss://rinkeby.infura.io/ws')
