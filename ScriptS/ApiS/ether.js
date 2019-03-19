@@ -161,7 +161,8 @@ module.exports = class EtherInit_ {
   }
 
   static async createAsync(index, password){
-    var web3 = new Web3(new Web3.providers.HttpProvider('https://rinkeby.infura.io/' + Rinkeby.api_token))
+    var Provider = new Web3.providers.WebsocketProvider('wss://rinkeby.infura.io/ws')
+    var web3 = new Web3(Provider)
     console.log("# web3 version: " + web3.version)
 
     const wallet = loadKeyStore(index, './keystore/', password)

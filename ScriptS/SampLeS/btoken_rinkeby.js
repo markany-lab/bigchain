@@ -5,26 +5,21 @@ var EthJsWallet = require('ethereumjs-wallet')
 var EthJsTx = require('ethereumjs-tx')
 var Web3 = require('web3')
 
-// Alice
-const AlicePath = '../../TruffLeBToken/rinkeby_private.key'
-const AlicePrivateKey = FS.readFileSync(AlicePath, 'utf8')
-console.log('alice\'s private key: ' + AlicePrivateKey)
+var Rinkeby = require('./rinkeby.json')
+const RinkebyPrivateKey = Rinkeby.private_key
+console.log('rinkeby\'s private key: ' + RinkebyPrivateKey)
 
-const ApiToken = FS.readFileSync('../../TruffLeBToken/rinkeby_api.token', 'utf8')
-console.log('api token: ' + ApiToken)
-
-//var Provider = new Web3.providers.HttpProvider('https://rinkeby.infura.io/' + ApiToken)
 var Provider = new Web3.providers.WebsocketProvider('wss://rinkeby.infura.io/ws')
 var WWW3 = new Web3(Provider)
-const AliceAccount = WWW3.eth.accounts.privateKeyToAccount(AlicePrivateKey)
-console.log("alice account: " + JSON.stringify(AliceAccount))
+const RinkebyAccount = WWW3.eth.accounts.privateKeyToAccount(RinkebyPrivateKey)
+console.log("rinkeby account: " + JSON.stringify(RinkebyAccount))
 
-const Alice = AliceAccount.address
-console.log("alice: " + JSON.stringify(Alice))
+const Rinkeby = RinkebyAccount.address
+console.log("rinkeby: " + JSON.stringify(Rinkeby))
 
 // balance 체크
-WWW3.eth.getBalance(Alice).then( balance =>{
-  console.log('alice\'s balance: ' + balance)
+WWW3.eth.getBalance(Rinkeby).then( balance =>{
+  console.log('rinkeby\'s balance: ' + balance)
 })
 
 // 컨트랙트 생성
@@ -78,30 +73,30 @@ BTokenCon.events.NewCToken({ filter: {fromBlock: 0, toBlock: 'latest'} })
 async function SampLeS() {
   // 트랜잭션에 서명 후 전속
   var mintQuery = await BTokenCon.methods.mintX('타이틀', 0, 200, '해쉬값', 5)
-  await SendSignedTx(mintQuery, Alice, AlicePrivateKey)
+  await SendSignedTx(mintQuery, Rinkeby, RinkebyPrivateKey)
 
   // 소유한 토큰ID로 전상 동작 체크
-  const idS = await BTokenCon.methods.GetOwnedCTokens().call({from: Alice})
+  const idS = await BTokenCon.methods.GetOwnedCTokens().call({from: Rinkeby})
   console.log("ids : " + idS)
 }
 
 SampLeS()
 
 // call 함수는 기존대로 보낸다
-BTokenCon.methods.name.call({from: Alice})
+BTokenCon.methods.name.call({from: Rinkeby})
 .then(res => {
   console.log('name: ' + res)
 })
 
 // call 함수는 기존대로 보낸다
-BTokenCon.methods.symbol.call({from: Alice})
+BTokenCon.methods.symbol.call({from: Rinkeby})
 .then(res => {
   console.log('symbol: ' + res)
 })
 
 // send함수는 서명 후 전송하는 방식으로 변환 할 필요가 있다
 // BTokenCon.methods.mintX('타이틀', 0, 200, '해쉬값', 5)
-// .send({from: Alice})
+// .send({from: Rinkeby})
 // .then(res => {
 //   const Tx = JSON.stringify(res)
 //   console.log('tx: ' + Tx)
