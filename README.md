@@ -34,9 +34,9 @@
 
 # golang 설치
 - $ vim ~/.bashrc
-  - > export GOPATH="$HOME/gopath"
-  - > export GOROOT="/opt/go"
-  - > PATH=$GOROOT/bin:$GOPATH/bin:$PATH
+> export GOPATH="$HOME/gopath"
+> export GOROOT="/opt/go"
+> PATH=$GOROOT/bin:$GOPATH/bin:$PATH
 - $ source ~/.bashrc
 - $ export GO_VER=1.11.1
 - $ export GO_URL=https://storage.googleapis.com/golang/go${GO_VER}.linux-amd64.tar.gz
@@ -49,7 +49,7 @@
 - $ cd go-ethereum
 - $ make geth
 - $ vim ~/.bashrc
-  - > PATH=$GOPATH/go-ethereum/build/bin/:$PATH
+> PATH=$GOPATH/go-ethereum/build/bin/:$PATH
 - $ source ~/.bashrc
 
 # ipfs 설치
