@@ -6,8 +6,12 @@ var ethUtiL = require('ethereumjs-util')
 var ethTx = require('ethereumjs-tx')
 var Https = require('https')
 var Axios = require('axios')
-const { readdir } = require('fs')
-const { readFileSync } = require('fs')
+
+const {
+  readdirSync,
+  readFileSync
+} = require('fs')
+
 const { join } = require('path')
 const readLine = require('readline')
 var { web3Signer } = require('./web3Signer.js')
@@ -127,18 +131,8 @@ async function GetLoomPrivateKeyAsync(waLLet){
 async function GetCoLdWaLLetAsync(){
   try{
     var KeystorePath = join(__dirname, './keystore/')
-    var FiLeS = new Array()
-    await new Promise(resolve=>readdir(KeystorePath, (err, files)=>{
-      if(typeof files != 'undefined'){
-        files.forEach(file=>{
-          if(file.indexOf("UTC") == 0){
-            FiLeS.push(file)
-          }
-        })
-      }
-      resolve()
-    }))
-
+    var FiLeS = readdirSync(KeystorePath)
+    FiLeS = FiLeS.filter(element => !(element.indexOf('UTC')))
     if(FiLeS.length == 0){
       console.log('not found any account, please use the impoet cold wallet command first: node ./cold_wallet_import.js')
       process.exit(-1)
