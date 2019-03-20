@@ -60,4 +60,10 @@
 - 게이트웨이데 잔고가 있으면, 전액 이더리움으로 전송
 - 이미 이더리움 테스트넷에 디플로이되어 있는 게이트웨이 컨트렉트 주소와 인터페이스(Gateway.json)만 사용한다
   ![](./images/widthdraw_from_extdev-plasma-us1-1.png)
+  ```
+  loom 네트워크 → 이더리움 게이트웨이
+  ```
   ![](./images/widthdraw_from_extdev-plasma-us1-2.png)
+  ```
+  이터리움 게이트웨이 → loom 어카운트에 매핑된 이더리움 어카운트
+  ```
