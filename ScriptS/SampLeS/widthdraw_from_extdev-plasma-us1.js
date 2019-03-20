@@ -178,7 +178,7 @@ async function GetCoLdWaLLetAsync(){
   }
 }
 
-async function Mapping(){
+async function main(){
   const EthWaLLet = await GetCoLdWaLLetAsync()
   console.log('>>> wallet private key: ' + EthWaLLet.getPrivateKey().toString('hex'))
   console.log('>>> wallet address: ' +  EthWaLLet.getAddressString())
@@ -312,7 +312,7 @@ async function Mapping(){
 
     var BaLance = 0
     do {
-      await DeLay(1000 * 5)
+      await DeLay(1000 * 30)
       BaLance = 0
       const WithdrawaLReceipt = await TransferGateway.withdrawalReceiptAsync(DAppAddress)
       if (WithdrawaLReceipt){
@@ -337,4 +337,7 @@ async function Mapping(){
   } // else
 } // function
 
-Mapping()
+main()
+.then(()=>{
+  process.exit(0)
+})

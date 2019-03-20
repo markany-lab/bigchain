@@ -228,9 +228,7 @@ async function main(){
 
   const From = new Address('eth', LocalAddress.fromHexString(EthWaLLet.getAddressString()))
 
-  // 매핑만 테스트...
-  //const bMapped = await AddressMapper.hasMappingAsync(From)
-  const bMapped = false
+  const bMapped = await AddressMapper.hasMappingAsync(From)
   if(bMapped)
   {
     const from = EthWaLLet.getAddressString()

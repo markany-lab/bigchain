@@ -52,3 +52,12 @@
 - 이더리움 테스트넷과 loom 테스트넷 어카운트 매핑 샘플
 - 이미 이더리움 테스트넷에 디플로이되어 있는 게이트웨이 컨트렉트 주소와 인터페이스(Gateway.json)만 사용한다
   ![](./images/mapping_extdev-plasma-us1.png)
+
+# widthdraw_from_extdev-plasma-us1.js
+- loom 네트워크의 이더를 게이트웨이를 통해 이더리움으로 전송(2단계)하는 샘플
+- 최종 게이트웨이에서 자신의 어카운트로 전송 될 때 수수료가 지급된다
+- 게이트웨이에 잔고가 없으면, loom 네트워크의 잔고 중 0.01이더를 게이트웨이로 전송
+- 게이트웨이데 잔고가 있으면, 전액 이더리움으로 전송
+- 이미 이더리움 테스트넷에 디플로이되어 있는 게이트웨이 컨트렉트 주소와 인터페이스(Gateway.json)만 사용한다
+  ![](./images/widthdraw_from_extdev-plasma-us1-1.png)
+  ![](./images/widthdraw_from_extdev-plasma-us1-2.png)
