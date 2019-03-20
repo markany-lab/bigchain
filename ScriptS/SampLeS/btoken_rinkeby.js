@@ -119,8 +119,8 @@ async function main(){
     console.log('cid: ' + CiD)
 
     BTokenCon.methods._Ds(CiD).call({from: RinkebyAddress})
-    .then((title)=>{
-      console.log('title: ' + title)
+    .then((element)=>{
+      console.log('element: ' + JSON.stringify(element))
     })
   }).on("error", (error)=>{
     console.log("err: " + error)
@@ -134,5 +134,5 @@ async function main(){
 main()
 .then(()=>{
   console.log('######## end of code')
-  //process.exit(0)
+  process.exit(0)
 })

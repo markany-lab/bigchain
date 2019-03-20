@@ -20,12 +20,12 @@
   ![](./images/mapping_ganache-2.png)
 
 # mapping_geth.js
-- 로컬 geth 노드와 로컬 loom 노드 매핑 샘플
-- ganache 기본 어카운트가 아닌 geth의 keystore를 사용 하는 것 외에는 mapping_ganache.js와 동일
+- 로컬 이더리움 노드와 로컬 loom 노드 매핑 샘플
+- ganache 기본 어카운트가 아닌 로컬 이더리움의 keystore를 사용 하는 것 외에는 mapping_ganache.js와 동일
   ```bash
-  $ ./FirstNetwork.sh start_geth #geth 노드 구동
+  $ ./FirstNetwork.sh start_geth #로컬 이더리움 노드 구동
   $ cd TruffLeGateWay/
-  $ yarn deploy:geth #geth 노드에 게이트웨이 컨트렉트를 디플로이
+  $ yarn deploy:geth #로컬 이더리움 노드에 게이트웨이 컨트렉트를 디플로이
   $ ./FirstNetwork.sh start_loomnetwork #loom노드 구동및 토큰 컨트렉트를 디플로이
   ```
   ![](./images/mapping_geth.png)
@@ -69,12 +69,11 @@
   전송 요청 후, 주기적으로 게이트웨이의 잔고를 체크 한 결과 약 2~3분 가량 소요
   ```
 
-# btoken_geth.js
+# btoken_rinkeby.js
 - 토큰 컨트렉트를 로컬 이더리움에 디플로이 한 후 테스트
 - ganache 도 어카운트 프라이빗 키만 변경해 주면 똑같이 테스트 가능
   ```bash
-  $ ./FirstNetwork.sh start_geth #geth 노드 구동
   $ cd TruffLeBToken/
-  $ yarn deploy:geth #geth 노드에 토큰 컨트렉트를 디플로이
+  $ yarn deploy:rinkeby #이더리움 테스트넷에 토큰 컨트렉트를 디플로이
   ```
-  ![](./images/btoken_geth.png)
+  ![](./images/btoken_rinkeby.png)
