@@ -71,3 +71,6 @@
 - $ cp ../priv_key extdev_private_key
 - $ yarn install
 - $ yarn deploy
+
+# 프로젝트 초기화
+ - $./FirstNetwork.sh setup
