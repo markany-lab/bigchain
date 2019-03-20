@@ -1,5 +1,6 @@
 # cold_wallet_import.js
 - 이더리움 월렛 저장 샘플
+- private_key 생성 정보는 https://metamask.io/
   ![](./images/cold_wallet_import.png)
 
 # cold_wallet_export.js
@@ -11,8 +12,8 @@
 - 이미 매핑이 되어 있는 상태라면 0.01이더(=10000000000000000웨이)를 룸 노드로 전송한다
 - ganache 노드와 로컬 loom 노드를 구동후 실해해야 한다
   ```bash
-  $ ./FirstNetwork.sh start_ganache #ganache 노드 구동및 게이트웨이 컨트렉트디플로이
-  $ ./FirstNetwork.sh start_loomnetwork #loom노드 구동및 토큰 컨트렉트디플로이
+  $ ./FirstNetwork.sh start_ganache #ganache 노드 구동및 게이트웨이 컨트렉트를 디플로이
+  $ ./FirstNetwork.sh start_loomnetwork #loom노드 구동및 토큰 컨트렉트를 디플로이
   $ #참고) 이더 전송에 수 초 이상의 시간이 소요된다
   ```
   ![](./images/mapping_ganache-1.png)
@@ -20,11 +21,29 @@
 
 # mapping_geth.js
 - 로컬 geth 노드와 로컬 loom 노드 매핑 샘플
-- ganache 기본계정이 아닌 geth의 keystore를 사용 하는 것 외에는 mapping_ganache.js와 동일
+- ganache 기본 어카운트가 아닌 geth의 keystore를 사용 하는 것 외에는 mapping_ganache.js와 동일
   ```bash
   $ ./FirstNetwork.sh start_geth #ganache 노드 구동
   $ cd TruffLeGateWay/
   $ yarn deploy:geth #게이트웨이 컨트렉트디플로이
-  $ ./FirstNetwork.sh start_loomnetwork #loom노드 구동및 토큰 컨트렉트디플로이
+  $ ./FirstNetwork.sh start_loomnetwork #loom노드 구동및 토큰 컨트렉트를 디플로이
   ```
   ![](./images/mapping_geth.png)
+
+# mapping_rinkeby.js
+- 이데리움 테스트넷과 로컬 loom 노드 매핑 샘플
+- 이더리움 테스트넷을 사용하므로 룸 노드만 구동한다
+  ```bash
+  $ cd TruffLeGateWay/
+  $ vi rinkeby.json
+  ```
+  ```
+  {"api_token":"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX","private_key":"0xXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"}
+  ```
+  ```
+  $ yarn deploy:rinkeby #이더리움 테스트넷에 게이트웨이 컨트렉트를 디플로이
+  $ cd ../
+  $ ./FirstNetwork.sh start_loomnetwork #loom노드 구동및 토큰 컨트렉트를 디플로이
+  ```
+- api_token 생성 정보는 https://infura.io/docs 참고
+  ![](./images/mapping_rinkeby.png)

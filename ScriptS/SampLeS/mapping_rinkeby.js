@@ -90,9 +90,7 @@ async function GetLoomPrivateKeyAsync(waLLet){
       console.log("error: verify signature failed")
     }
   })
-  .catch(err){
-    console.log('>>> ' + err)
-  }
+  .catch(err=>console.log('>>> ' + err))
   if(Enc){
     var DecipheredKey = CryptoUtils.B64ToUint8Array(PrivateKey)
     var Decipher = crypto.createDecipheriv("aes-256-ecb", EncKey, '')
