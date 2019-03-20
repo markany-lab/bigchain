@@ -109,7 +109,7 @@ function start_hotwalletserver {
 function deploy_truffle_btoken_loom {
   echo "deploy truffle btoken to loom_dapp_chain"
   cd ./TruffLeBToken
-  yarn deploy:loom:reset
+  yarn deploy:loom
   cd ..
 }
 
@@ -117,7 +117,7 @@ function deploy_truffle_btoken_extdev {
   echo "deploy truffle btoken to extdev_plasma_us1"
   cd ./TruffLeBToken
   node ./mapping_rinkeby_to_extdev.js
-  yarn deploy:extdev:reset
+  yarn deploy:extdev
   cd ..
 }
 

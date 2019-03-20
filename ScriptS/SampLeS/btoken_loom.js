@@ -60,8 +60,8 @@ async function main(){
     console.log('cid: ' + CiD)
 
     BTokenCon.methods._Ds(CiD).call({from: LoomAddress})
-    .then((title)=>{
-      console.log('title: ' + title)
+    .then((element)=>{
+      console.log('element: ' + JSON.stringify(element))
     })
   }).on("error", (error)=>{
     console.log("err: " + error)
