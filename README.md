@@ -21,22 +21,22 @@
 - $ npm config set python C:\python27
 
 # MetaMask 설치
- - https://metamask.io/
+- https://metamask.io/
 
 # 테스트용 이더 발급
 - http://rinkeby-faucet.com # 0.001 eth
-  - > ex) 0xD53000e41163A892B4d83b19A2fEC184677a1272
+  > ex) 0xD53000e41163A892B4d83b19A2fEC184677a1272
 - https://faucet.rinkeby.io/ # 최대 18.75 eth / 3days
-  - > ex) https://www.facebook.com/laewook/posts/2084353508299956
+  > ex) https://www.facebook.com/laewook/posts/2084353508299956
 
 # 프로젝트 코드 생성
 - https://infura.io
 
 # golang 설치
 - $ vim ~/.bashrc
-> export GOPATH="$HOME/gopath"
-> export GOROOT="/opt/go"
-> PATH=$GOROOT/bin:$GOPATH/bin:$PATH
+  > export GOPATH="$HOME/gopath"
+  > export GOROOT="/opt/go"
+  > PATH=$GOROOT/bin:$GOPATH/bin:$PATH
 - $ source ~/.bashrc
 - $ export GO_VER=1.11.1
 - $ export GO_URL=https://storage.googleapis.com/golang/go${GO_VER}.linux-amd64.tar.gz
@@ -49,7 +49,7 @@
 - $ cd go-ethereum
 - $ make geth
 - $ vim ~/.bashrc
-> PATH=$GOPATH/go-ethereum/build/bin/:$PATH
+  > PATH=$GOPATH/go-ethereum/build/bin/:$PATH
 - $ source ~/.bashrc
 
 # ipfs 설치
