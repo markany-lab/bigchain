@@ -18,7 +18,6 @@ require('chai')
   .should()
 
 const BToken = artifacts.require('./BToken.sol')
-const ERC721ZToken = artifacts.require('./Core/ERC721Z/ERC721ZToken.sol')
 const BChannel = artifacts.require('./BChannel.sol')
 
 Number.prototype.pad = function(size) {
@@ -39,9 +38,6 @@ contract('BToken', accounts => {
     Ct = await BToken.new({
       from: carlos
     })
-    ZToken = await ERC721ZToken.new({
-      from: carlos
-    })
     ZChannel = await BChannel.new({
       from: carlos
     })
@@ -51,75 +47,57 @@ contract('BToken', accounts => {
     })
     console.log('contract owner: ' + Owner)
     Owner.should.be.equal(carlos)
-    await Ct.setERC721ZInterface(ZToken.address, {
-      from: carlos
-    })
-    await ZToken.setOnlyContract(Ct.address, {
-      from: carlos
-    })
   })
 
-  const TitLeTest = '***test'
-  it(TitLeTest, async () => {
-    console.log(TitLeTest)
+  // const TitLeTest = '***test'
+  // it(TitLeTest, async () => {
+  //   console.log(TitLeTest)
+  //
+  //   let Tx = await Ct.registerData("test_title01", {
+  //     from: bob,
+  //   })
+  //   let Evt = Tx.logs.find(log => log.event === 'NewData')
+  //   const CID = Evt.args['cid']
+  //
+  //   Tx = await Ct.registerHash(CID, '0xE29C9C180C6279B0B02ABD6A1801C7C04082CF486EC027AA13515E4F3884BB6B', 10000, 0, {from: bob})
+  //   Evt = Tx.logs.find(log => log.event === 'NewCToken')
+  //   const cTokenID = Evt.args['cTokenId']
+  //
+  //   await Ct.enrollDistributor(alice, {from: carlos})
+  //
+  //   Tx = await Ct.distContract(cTokenID, alice, 1000, true, 10000, {from: bob})
+  //
+  //   const distCons = await Ct.getDistContracts(cTokenID, {from: alice})
+  //   for(var i = 0; i < distCons; i++) {
+  //     const distConDetails = await Ct.getDistConDetails(cTokenID, i, {from: alice})
+  //     console.log("distConDetails: " + JSON.stringify(distConDetails))
+  //   }
+  // })
 
+  const TitLe01 = '***(01) register data => register hash => buy contents'
+  it(TitLe01, async () => {
+    console.log(TitLe01)
     let Tx = await Ct.registerData("test_title01", {
       from: bob,
     })
     let Evt = Tx.logs.find(log => log.event === 'NewData')
     const CID = Evt.args['cid']
+    const cids = await Ct.getOwnedDatas.call({from: bob})
+    console.log("cids: " + cids)
 
-    Tx = await Ct.registerHash(CID, '0xE29C9C180C6279B0B02ABD6A1801C7C04082CF486EC027AA13515E4F3884BB6B', 10000, 0, {from: bob})
-    Evt = Tx.logs.find(log => log.event === 'NewCToken')
-    const cTokenID = Evt.args['cTokenId']
+    const dataDetails1 = await Ct._Ds.call(CID)
+    console.log("data details: " + JSON.stringify(dataDetails1))
+    await Ct._ModifyData(CID, "test_title02", {from: bob})
+    const dataDetails2 = await Ct._Ds.call(CID)
+    console.log("data details: " + JSON.stringify(dataDetails2))
 
-    await Ct.enrollDistributor(alice, {from: carlos})
 
-    Tx = await Ct.distContract(cTokenID, alice, 1000, true, 10000, {from: bob})
-
-    const distCons = await Ct.getDistContracts(cTokenID, {from: alice})
-    for(var i = 0; i < distCons; i++) {
-      const distConDetails = await Ct.getDistConDetails(cTokenID, i, {from: alice})
-      console.log("distConDetails: " + JSON.stringify(distConDetails))
-    }
+    await Ct.registerHash(CID, '0xE29C9C180C6279B0B02ABD6A1801C7C04082CF486EC027AA13515E4F3884BB6B', 10000, {from: bob})
+    const hashes = Ct.CID2Hashes.call(CID, {from: bob})
+    console.log(hashes)
 
   })
   return
-
-  const TitLe01 = '***(01) register data => register hash => buy contents'
-  it(TitLe10, async () => {
-    console.log(TitLe10)
-    let Tx = await Ct.registerData("test_title01", {
-      from: bob,
-    })
-    let Evt = Tx.logs.find(log => log.event === 'NewData')
-    const CID = Evt.args['cid']
-
-    const cids = await Ct.GetOwnedDatas.call({from: bob})
-    console.log("datas: " + cids)
-
-    for(var i = 0; i < cids.length; i++) {
-      const dataDetails = await Ct.GetDataDetails.call(cids[i], {from: bob})
-      console.log("dataDetails: " + JSON.stringify(dataDetails))
-    }
-
-    Tx = await Ct.registerHash(CID, '0xE29C9C180C6279B0B02ABD6A1801C7C04082CF486EC027AA13515E4F3884BB6B', 10000, 0, {from: bob})
-    Evt = Tx.logs.find(log => log.event === 'NewCToken')
-    const cTokenID = Evt.args['cTokenId']
-
-    const cTokenIds = await Ct.GetOwnedCTokens.call({from: bob})
-    for(i = 0; i < cTokenIds.length; i++) {
-      const cTokenIdDetails = await Ct._CTs.call([cTokenIds[i]], {from: bob})
-      console.log("cTokenIdDetails: " + JSON.stringify(cTokenIdDetails))
-    }
-
-    Tx = await Ct.buyToken(cTokenID, {
-      from: bob,
-      value: web3Utils.toWei("10000", 'wei')
-    })
-    Evt = Tx.logs.find(log => log.event === 'NewUToken')
-    console.log("Evt: " + JSON.stringify(Evt))
-  })
 
   const TitLe03 = '***(12) channel open => channel off => settle'
   it(TitLe03, async () => {

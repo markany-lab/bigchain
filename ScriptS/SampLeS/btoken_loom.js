@@ -2,7 +2,7 @@
 var FS = require('fs')
 const Web3 = require('web3')
 
-const {TruffLeBToken
+const {
   NonceTxMiddleware,
   SignedTxMiddleware,
   Client,
@@ -37,23 +37,6 @@ CLient.txMiddleware = [
 ]
 
 
-/*
-const AddressMapper = Contracts.AddressMapper.createAsync(
-  CLient,
-  new Address(CLient.chainId, LocalAddress.fromPublicKey(PubLicKey))
-)
-
-const EthCoin = await Contracts.EthCoin.createAsync(
-  CLient,
-  new Address(CLient.chainId, LocalAddress.fromPublicKey(PubLicKey))
-)
-
-const TransferGateway = await Contracts.TransferGateway.createAsync(
-  CLient,
-  new Address(CLient.chainId, LocalAddress.fromPublicKey(PubLicKey))
-)
-*/
-
 const NetworkID = CLient.chainId
 const Addr = LocalAddress.fromPublicKey(PubLicKey).toString()
 const jsonBToken = require('../../TruffLeBToken/build/contracts/BToken.json')
@@ -64,7 +47,7 @@ const BTokenCon = new WWW3.eth.Contract(
   }
 )
 
-async function SampLeS() {
+async function main() {
   await BTokenCon.methods.mintX('타이틀', 0, 200, '해쉬값', 5)
   .send({from: Addr})
   .then(res => {
@@ -77,18 +60,6 @@ async function SampLeS() {
   console.log("ids : " + idS)
 }
 
-SampLeS()
-
-// call 함수는 기존대로 보낸다
-BTokenCon.methods.name().call({from: Addr})
-.then(res => {
-  console.log('name: ' + res)
-})
-
-// call 함수는 기존대로 보낸다
-BTokenCon.methods.symbol().call({from: Addr})
-.then(res => {
-  console.log('symbol: ' + res)
-})
+main()
 
 console.log('######## end of code')

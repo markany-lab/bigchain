@@ -134,7 +134,7 @@ async function GetCoLdWaLLetAsync(){
     var FiLeS = readdirSync(KeystorePath)
     FiLeS = FiLeS.filter(element => !(element.indexOf('UTC')))
     if(FiLeS.length == 0){
-      console.log('not found any account, please use the impoet cold wallet command first: node ./cold_wallet_import.js')
+      console.log('can\'t found any account, please use the impoet cold wallet command first: node ./cold_wallet_import.js')
       process.exit(-1)
     }
 

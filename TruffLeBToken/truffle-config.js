@@ -48,21 +48,21 @@ module.exports = {
     },*/
     geth: {
       provider: ()=>{
-        const FiLeS = JSON.parse(readFileSync(join(__dirname, '../ethereum/local/keyfiles.json'), 'utf8'))
+        const FiLeS = JSON.parse(readFileSync(join(__dirname, '../geth/keyfiles.json'), 'utf8'))
 
-        const AlicePath = '../ethereum/local/data/keystore/' + FiLeS[0]
+        const AlicePath = '../geth/data/keystore/' + FiLeS[0]
         const AliceV3 = JSON.parse(readFileSync(join(__dirname, AlicePath), 'utf8'))
         const AliceWallet = ethWaLLet.fromV3(AliceV3, 'Alice')
         const AlicePrivateKey = AliceWallet.getPrivateKeyString()
         console.log('alice\'s private key: ' + AlicePrivateKey)
 
-        const BobPath = '../ethereum/local/data/keystore/' + FiLeS[1]
+        const BobPath = '../geth/data/keystore/' + FiLeS[1]
         const BobV3 = JSON.parse(readFileSync(join(__dirname, BobPath), 'utf8'))
         const BobWallet = ethWaLLet.fromV3(BobV3, 'Bob')
         const BobPrivateKey = BobWallet.getPrivateKeyString()
         console.log('bob\'s private key: ' + BobPrivateKey)
 
-        const CarlosPath = '../ethereum/local/data/keystore/' + FiLeS[2]
+        const CarlosPath = '../geth/data/keystore/' + FiLeS[2]
         const CarlosV3 = JSON.parse(readFileSync(join(__dirname, CarlosPath), 'utf8'))
         const CarlosWallet = ethWaLLet.fromV3(CarlosV3, 'Carlos')
         const CarlosPrivateKey = CarlosWallet.getPrivateKeyString()
