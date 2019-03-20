@@ -50,5 +50,5 @@
 
 # mapping_extdev-plasma-us1.js
 - 이더리움 테스트넷과 loom 테스트넷 어카운트 매핑 샘플
-- loom 테스트넷을 위한 게이트웨이 컨트렉트는 이미 디플로이되어 있으므로, 컨트렉트 주소와 인터페이스(Gateway.json)만 사용한다
+- 이미 이더리움 테스트넷에 디플로이되어 있는 게이트웨이 컨트렉트 주소와 인터페이스(Gateway.json)만 사용한다
   ![](./images/mapping_extdev-plasma-us1.png)
