@@ -4,8 +4,6 @@ const { join } = require('path')
 const EthJsWallet = require('ethereumjs-wallet')
 const HDWalletProvider = require('truffle-hdwallet-provider')
 
-var Rinkeby = require(path.join(__dirname, './rinkeby.json'))
-
 module.exports = {
   compilers: {
     solc: {
@@ -55,6 +53,7 @@ module.exports = {
     },
     rinkeby: {
       provider: ()=>{
+        const Rinkeby = require(path.join(__dirname, './rinkeby.json'))
         console.log('private key: ' + Rinkeby.private_key)
         console.log('api token: ' + Rinkeby.api_token)
 

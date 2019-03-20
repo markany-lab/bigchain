@@ -11,6 +11,10 @@ contract BToken is BFactory {
     Distributors[keccak256(abi.encode(distributor))] = distributor;
   }
 
+  function enrollSearchProvider(address searchProvider) external onlyOwner {
+    SearchProviders[keccak256(abi.encode(searchProvider))] = searchProvider;
+  }
+
   function registerData(string titLe) public returns (uint cid) {
     cid = _Ds.push(Data_(msg.sender, titLe)) - 1;
     Provider2CIDs[msg.sender].push(cid);
@@ -21,22 +25,61 @@ contract BToken is BFactory {
     require(existsD(cid), "unknown data");
     CID2Hashes[cid].push(hash);
     CIDNHash2Contents[cid][hash] = Contents_(fee, true);
+    emit NewHash(cid, hash, fee);
   }
 
   function registerProduct(uint cid, bytes32 hash, address seller, uint value) external onlyProviderOf(cid) onlyEnableContentsOf(cid, hash){
-    require(value >= CIDNHash2Contents[cid][hash]._Fee, "product price is less than licence fee")
-    uint pTokenId = _PTs.push(PToken_(owner, cid, hash, value));
-    Provider2PTokenIds[owner] = pTokenId;
-    emit NewPToken(owner, pTokenId, cid, hash, value);
-    return pTokenId;
+    require(value >= CIDNHash2Contents[cid][hash]._Fee, "product price is less than licence fee");
+    uint pTokenId = _PTs.push(PToken_(seller, cid, hash, value)) - 1;
+    Owner2PTokenIds[seller].push(pTokenId);
+    emit NewPToken(seller, pTokenId, cid, hash, value);
   }
 
-  // buy contents token
-  function buyToken(uint cTokenId) payable public returns (uint uTokenId){
-    // require(ERC721ZInterface.exists(cTokenId), "unknown token");
-    // require(_CTs[cTokenId]._Fee == msg.value, "msg.value is not equal to token Fee");
+  function distContract(uint pTokenId, address distributor, uint cost) public onlyPTokenOwnerOf(pTokenId) onlyDistributorOf(distributor) {
+    require(existsP(pTokenId), "unknown pTokenId");
+    uint totalCost = cost;
+    for(uint i = 0; i < PTokenId2DistConIds[pTokenId].length; i++) {
+      totalCost += _DCs[PTokenId2DistConIds[pTokenId][i]]._Cost;
+    }
+    for(i = 0; i < PTokenId2SearchConIds[pTokenId].length; i++) {
+      totalCost += _SCs[PTokenId2SearchConIds[pTokenId][i]]._Cost;
+    }
+    require(totalCost <= _PTs[pTokenId]._Price, "total cost is bigger than product price");
+    uint dcIndex = _DCs.push(DistCon_(distributor, pTokenId, cost)) - 1;
+    PTokenId2DistConIds[pTokenId].push(dcIndex);
+    Owner2DistConIds[distributor].push(dcIndex);
+    emit NewDistContract(distributor, dcIndex, pTokenId, cost);
+  }
 
-    // CID2Provider[cTokenId].transfer(_CTs[cTokenId]._Fee);
-    uTokenId = createUToken(msg.sender, cTokenId, UTokenState_.sold);
+  function searchContract(uint pTokenId, address searchProvider, uint cost) public onlyPTokenOwnerOf(pTokenId) onlySearchProviderOf(searchProvider) {
+    require(existsP(pTokenId), "unknown pTokenId");
+    uint totalCost = cost;
+    for(uint i = 0; i < PTokenId2DistConIds[pTokenId].length; i++) {
+      totalCost += _DCs[PTokenId2DistConIds[pTokenId][i]]._Cost;
+    }
+    for(i = 0; i < PTokenId2SearchConIds[pTokenId].length; i++) {
+      totalCost += _SCs[PTokenId2SearchConIds[pTokenId][i]]._Cost;
+    }
+    require(totalCost <= _PTs[pTokenId]._Price, "total cost is bigger than product price");
+    uint scIndex = _SCs.push(SearchCon_(searchProvider, pTokenId, cost)) - 1;
+    PTokenId2SearchConIds[pTokenId].push(scIndex);
+    Owner2SearchConIds[searchProvider].push(scIndex);
+    emit NewSearchContract(searchProvider, pTokenId, cost);
+  }
+
+  function buyToken(uint pTokenId) payable public {
+    require(existsP(pTokenId), "unknown pTokenId");
+    require(_PTs[pTokenId]._Price <= msg.value, "msg.value is less than product price");
+    uint totalCost = _PTs[pTokenId]._Price;
+    for(uint i = 0; i < PTokenId2DistConIds[pTokenId].length; i++) {
+      _DCs[PTokenId2DistConIds[pTokenId][i]]._Distributor.transfer(_DCs[PTokenId2DistConIds[pTokenId][i]]._Cost);
+      totalCost -= _DCs[PTokenId2DistConIds[pTokenId][i]]._Cost;
+    }
+    for(i = 0; i < PTokenId2SearchConIds[pTokenId].length; i++) {
+      _SCs[PTokenId2SearchConIds[pTokenId][i]]._SearchProvider.transfer(_SCs[PTokenId2SearchConIds[pTokenId][i]]._Cost);
+      totalCost -= _SCs[PTokenId2SearchConIds[pTokenId][i]]._Cost;
+    }
+    _PTs[pTokenId]._Owner.transfer(totalCost);
+    createUToken(msg.sender, pTokenId, UTokenState_.sold);
   }
 }
