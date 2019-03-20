@@ -119,7 +119,7 @@ async function GetLoomPrivateKeyAsync(waLLet){
   return PrivateKey
 }
 
-async function Mapping(){
+async function main(){
 
   // ganache
   const EthWaLLet = ethWaLLet.fromPrivateKey(ethUtiL.toBuffer('0x7920ca01d3d1ac463dfd55b5ddfdcbb64ae31830f31be045ce2d51a305516a37'))
@@ -215,7 +215,7 @@ async function Mapping(){
   console.log('>>> loom balance: ' + LoomBaLance)
 }
 
-Mapping()
+main()
 .then(()=>{
     process.exit(0)
 })

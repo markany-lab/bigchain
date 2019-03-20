@@ -1,23 +1,24 @@
-//
-var FS = require('fs')
 const Web3 = require('web3')
 
 const {
   NonceTxMiddleware,
   SignedTxMiddleware,
   Client,
-  Address,
   LocalAddress,
   LoomProvider,
-  CryptoUtils,
-  Contracts/*,
-  Web3Signer*/
+  CryptoUtils
 } = require('loom-js/dist')
 
-const PrivateKey = CryptoUtils.generatePrivateKey()
-const PubLicKey = CryptoUtils.publicKeyFromPrivateKey(PrivateKey)
-console.log('private key: ' + PrivateKey)
-console.log('public key: ' + PubLicKey)
+function toHexString(bytes){
+  return bytes.map(function(byte){
+    return (byte & 0xFF).toString(16)
+  }).join('')
+}
+
+const ExtdevPrivateKey = CryptoUtils.generatePrivateKey()
+const ExtdevPubLicKey = CryptoUtils.publicKeyFromPrivateKey(ExtdevPrivateKey)
+console.log('private key: ' + toHexString(ExtdevPrivateKey))
+console.log('public key: ' + toHexString(ExtdevPubLicKey))
 
 const CLient = new Client(
   'extdev-plasma-us1',
@@ -25,69 +26,57 @@ const CLient = new Client(
   'ws://extdev-plasma-us1.dappchains.com:80/queryws'
 )
 
-CLient.on('error', err => {
+CLient.on('error', err=>{
   console.log('>>> error: ' + err)
 })
 
-const WWW3 = new Web3(new LoomProvider(CLient, PrivateKey))
+const WWW3 = new Web3(new LoomProvider(CLient, ExtdevPrivateKey))
 
 CLient.txMiddleware = [
-  new NonceTxMiddleware(PubLicKey, CLient),
-  new SignedTxMiddleware(PrivateKey)
+  new NonceTxMiddleware(ExtdevPubLicKey, CLient),
+  new SignedTxMiddleware(ExtdevPrivateKey)
 ]
 
-/*
-const AddressMapper = Contracts.AddressMapper.createAsync(
-  CLient,
-  new Address(CLient.chainId, LocalAddress.fromPublicKey(PubLicKey))
-)
-
-const EthCoin = await Contracts.EthCoin.createAsync(
-  CLient,
-  new Address(CLient.chainId, LocalAddress.fromPublicKey(PubLicKey))
-)
-
-const TransferGateway = await Contracts.TransferGateway.createAsync(
-  CLient,
-  new Address(CLient.chainId, LocalAddress.fromPublicKey(PubLicKey))
-)
-*/
-
-const NetworkID = CLient.chainId
-const Addr = LocalAddress.fromPublicKey(PubLicKey).toString()
 const jsonBToken = require('../../TruffLeBToken/build/contracts/BToken.json')
 const BTokenCon = new WWW3.eth.Contract(
   jsonBToken.abi,
-  jsonBToken.networks[NetworkID].address, {
-    Addr
-  }
+  jsonBToken.networks[Object.keys(jsonBToken.networks)[0]].address
 )
 
-async function SampLeS() {
-  await BTokenCon.methods.mintX('타이틀', 0, 200, '해쉬값', 5)
-  .send({from: Addr})
-  .then(res => {
+async function main(){
+  const ExtdevAddress = LocalAddress.fromPublicKey(ExtdevPubLicKey).toString()
+
+  // balance 체크
+  WWW3.eth.getBalance(ExtdevAddress).then( balance =>{
+    console.log('loom\'s balance: ' + balance)
+  })
+
+  // 이벤트 생성 샘플
+  BTokenCon.events.NewData({ filter: {fromBlock: 0, toBlock: 'latest'} })
+  .on("data", (event)=>{
+    const Event = event.returnValues
+    console.log('event: ' + JSON.stringify(Event))
+    const CiD = Event.cid
+    console.log('cid: ' + CiD)
+
+    BTokenCon.methods._Ds(CiD).call({from: ExtdevAddress})
+    .then((title)=>{
+      console.log('title: ' + title)
+    })
+  }).on("error", (error)=>{
+    console.log("err: " + error)
+  })
+
+  await BTokenCon.methods.registerData('타이틀')
+  .send({from: ExtdevAddress})
+  .then(res=>{
     const Tx = JSON.stringify(res)
     console.log('tx: ' + Tx)
   })
-
-  // 소유한 토큰ID로 전상 동작 체크
-  const idS = await BTokenCon.methods.GetOwnedCTokens().call({from: Addr})
-  console.log("ids : " + idS)
 }
 
-SampLeS()
-
-// call 함수는 기존대로 보낸다
-BTokenCon.methods.name().call({from: Addr})
-.then(res => {
-  console.log('name: ' + res)
+main()
+.then(()=>{
+  console.log('######## end of code')
+  process.exit(0)
 })
-
-// call 함수는 기존대로 보낸다
-BTokenCon.methods.symbol().call({from: Addr})
-.then(res => {
-  console.log('symbol: ' + res)
-})
-
-console.log('######## end of code')

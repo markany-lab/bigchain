@@ -12,20 +12,23 @@ contract BToken is BFactory {
   }
 
   function registerData(string titLe) public returns (uint cid) {
-    cid = _Ds.push(Data_(titLe)) - 1;
-    CID2Provider[cid] = msg.sender;
-    Provider2CID[msg.sender].push(cid);
+    cid = _Ds.push(Data_(msg.sender, titLe)) - 1;
+    Provider2CIDs[msg.sender].push(cid);
     emit NewData(msg.sender, cid, titLe);
   }
 
   function registerHash(uint cid, bytes32 hash, uint fee) external onlyProviderOf(cid) {
     require(existsD(cid), "unknown data");
     CID2Hashes[cid].push(hash);
-    CIDNHash2Contents[cid][hash] = Contents_(fee);
+    CIDNHash2Contents[cid][hash] = Contents_(fee, true);
   }
 
-  function registerProduct(uint cid, bytes32 hash, address seller, uint value) external onlyProviderOf(cid) {
-
+  function registerProduct(uint cid, bytes32 hash, address seller, uint value) external onlyProviderOf(cid) onlyEnableContentsOf(cid, hash){
+    require(value >= CIDNHash2Contents[cid][hash]._Fee, "product price is less than licence fee")
+    uint pTokenId = _PTs.push(PToken_(owner, cid, hash, value));
+    Provider2PTokenIds[owner] = pTokenId;
+    emit NewPToken(owner, pTokenId, cid, hash, value);
+    return pTokenId;
   }
 
   // buy contents token
@@ -34,6 +37,6 @@ contract BToken is BFactory {
     // require(_CTs[cTokenId]._Fee == msg.value, "msg.value is not equal to token Fee");
 
     // CID2Provider[cTokenId].transfer(_CTs[cTokenId]._Fee);
-    uTokenId = _CreateUToken(msg.sender, cTokenId, UTokenState_.sold);
+    uTokenId = createUToken(msg.sender, cTokenId, UTokenState_.sold);
   }
 }

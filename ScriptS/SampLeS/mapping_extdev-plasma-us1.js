@@ -179,7 +179,7 @@ async function GetCoLdWaLLetAsync(){
   }
 }
 
-async function Mapping(){
+async function main(){
   const EthWaLLet = await GetCoLdWaLLetAsync()
   console.log('>>> wallet private key: ' + EthWaLLet.getPrivateKey().toString('hex'))
   console.log('>>> wallet address: ' +  EthWaLLet.getAddressString())
@@ -274,7 +274,7 @@ async function Mapping(){
   console.log('>>> loom balance: ' + LoomBaLance)
 }
 
-Mapping()
+main()
 .then(()=>{
     process.exit(0)
 })
