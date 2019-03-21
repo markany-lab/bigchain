@@ -48,6 +48,61 @@ contract('BToken', accounts => {
     Owner.should.be.equal(carlos)
   })
 
+  const TitLe01 = '***(01) register data => modify data => register hash => modify hash => register product => buy product'
+  it(TitLe01, async () => {
+    console.log(TitLe01)
+    console.log('# register data')
+    let Tx = await Ct.registerData("test_title01", {
+      from: bob,
+    })
+    let Evt = Tx.logs.find(log => log.event === 'NewData')
+    const CID = Evt.args['cid']
+    console.log(" - data cid: " + CID)
+    console.log("")
+
+    console.log("modify data")
+    const dataDetails1 = await Ct._Ds.call(CID)
+    console.log(" - data details: " + JSON.stringify(dataDetails1))
+    console.log(" - modify: test_title01 => test_title02")
+    await Ct.modifyData(CID, "test_title02", {from: bob})
+    const dataDetails2 = await Ct._Ds.call(CID)
+    console.log(" - data details: " + JSON.stringify(dataDetails2))
+    console.log("")
+
+    console.log("# register hash")
+    Tx = await Ct.registerHash(CID, '0xE29C9C180C6279B0B02ABD6A1801C7C04082CF486EC027AA13515E4F3884BB6B', 10000, {from: bob})
+    Evt = Tx.logs.find(log => log.event === 'NewHash')
+    const hash = Evt.args['hash']
+    console.log(" - hash: " + hash)
+
+    console.log("# modify hash")
+    const hashDetails1 = await Ct.Hash2Contents(hash)
+    console.log(" - hashDetails: " + JSON.stringify(hashDetails1))
+    console.log(" - modify: 10000 => 100000")
+    await Ct.modifyContents(hash, 100000, {from: bob})
+    const hashDetails2 = await Ct.Hash2Contents(hash)
+    console.log(" - hashdetails: " + JSON.stringify(hashDetails2))
+    console.log("")
+
+    console.log("# register product")
+    Tx = await Ct.registerProduct(hash, alice, 200000, {from: bob})
+    Evt = Tx.logs.find(log => log.event === 'NewPToken')
+    const pTokenId = Evt.args['pTokenId']
+    console.log(' - pTokenId: ' + pTokenId)
+    const pTokenDetails = await Ct._PTs.call(pTokenId)
+    console.log(" - pToken details: " + JSON.stringify(pTokenDetails))
+    console.log("")
+
+    console.log("# buy token")
+    Tx = await Ct.buyToken(pTokenId, {
+      from: carlos,
+      value: pTokenDetails._Price
+    })
+    Evt = Tx.logs.find(log => log.event === 'NewUToken')
+    const uTokenId = Evt.args['uTokenId']
+    console.log(" - uTokenId: " + uTokenId)
+  })
+
   const TitLe02 = '***(02) enroll distributor => enroll search provider => distribution contract => search provider contract => buy product'
   it(TitLe02, async () => {
     console.log(TitLe02)
@@ -61,7 +116,7 @@ contract('BToken', accounts => {
     const CID = Evt.args['cid']
 
     await Ct.registerHash(CID, '0xE29C9C180C6279B0B02ABD6A1801C7C04082CF486EC027AA13515E4F3884BB6B', 10000, {from: bob})
-    Tx = await Ct.registerProduct(CID, '0xE29C9C180C6279B0B02ABD6A1801C7C04082CF486EC027AA13515E4F3884BB6B', alice, 200000, {from: bob})
+    Tx = await Ct.registerProduct('0xE29C9C180C6279B0B02ABD6A1801C7C04082CF486EC027AA13515E4F3884BB6B', alice, 200000, {from: bob})
     Evt = Tx.logs.find(log => log.event === 'NewPToken')
     const pTokenId = Evt.args['pTokenId']
     const price = Evt.args['price']
@@ -132,63 +187,6 @@ contract('BToken', accounts => {
 
     const uTokenDetails = await Ct.getUTokenDetails(uTokenId, {from: alice})
     console.log("uToken details: " + JSON.stringify(uTokenDetails))
-
-  })
-  return
-
-  const TitLe01 = '***(01) register data => modify data => register hash => modify hash => register product => buy product'
-  it(TitLe01, async () => {
-    console.log(TitLe01)
-    console.log('# register data')
-    let Tx = await Ct.registerData("test_title01", {
-      from: bob,
-    })
-    let Evt = Tx.logs.find(log => log.event === 'NewData')
-    const CID = Evt.args['cid']
-    console.log(" - data cid: " + CID)
-    console.log("")
-
-    console.log("modify data")
-    const dataDetails1 = await Ct._Ds.call(CID)
-    console.log(" - data details: " + JSON.stringify(dataDetails1))
-    console.log(" - modify: test_title01 => test_title02")
-    await Ct.modifyData(CID, "test_title02", {from: bob})
-    const dataDetails2 = await Ct._Ds.call(CID)
-    console.log(" - data details: " + JSON.stringify(dataDetails2))
-    console.log("")
-
-    console.log("# register hash")
-    Tx = await Ct.registerHash(CID, '0xE29C9C180C6279B0B02ABD6A1801C7C04082CF486EC027AA13515E4F3884BB6B', 10000, {from: bob})
-    Evt = Tx.logs.find(log => log.event === 'NewHash')
-    const hash = Evt.args['hash']
-    console.log(" - hash: " + hash)
-
-    console.log("# modify hash")
-    const hashDetails1 = await Ct.CIDNHash2Contents(CID, hash)
-    console.log(" - hashDetails: " + JSON.stringify(hashDetails1))
-    console.log(" - modify: 10000 => 100000")
-    await Ct.modifyContents(CID, hash, 100000, {from: bob})
-    const hashDetails2 = await Ct.CIDNHash2Contents(CID, hash)
-    console.log(" - hashdetails: " + JSON.stringify(hashDetails2))
-    console.log("")
-
-    console.log("# register product")
-    Tx = await Ct.registerProduct(CID, hash, alice, 200000, {from: bob})
-    Evt = Tx.logs.find(log => log.event === 'NewPToken')
-    const pTokenId = Evt.args['pTokenId']
-    console.log(' - pTokenId: ' + pTokenId)
-    const pTokenDetails = await Ct._PTs.call(pTokenId)
-    console.log(" - pToken details: " + JSON.stringify(pTokenDetails))
-    console.log("")
-
-    console.log("# buy token")
-    Tx = await Ct.buyToken(pTokenId, {
-      from: carlos,
-      value: pTokenDetails._Price
-    })
-    Evt = Tx.logs.find(log => log.event === 'NewUToken')
-    const uTokenId = Evt.args['uTokenId']
-    console.log(" - uTokenId: " + uTokenId)
   })
   return
 

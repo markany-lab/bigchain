@@ -226,6 +226,9 @@ async function main(){
   const bMapped = await AddressMapper.hasMappingAsync(From)
   if(bMapped)
   {
+    const Mapping = await AddressMapper.getMappingAsync(From)
+    console.log("already mapped: " + JSON.stringify(Mapping))
+
     const from = EthWaLLet.getAddressString()
     const to = EthCon.options.address
     const nonce = '0x' + (await EthW3.eth.getTransactionCount(from)).toString(16)

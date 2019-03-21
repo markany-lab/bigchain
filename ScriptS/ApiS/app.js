@@ -89,7 +89,7 @@ async function account_list() {
   }
 }
 
-async function account_blance(index, password) {
+async function account_balance(index, password) {
   try {
     /* init Ethereum elements */
     console.log('# init ethereum tools...')
@@ -233,7 +233,7 @@ async function data_list(index, password) {
     console.log('# init complete')
 
     /* create Dapp token */
-    const cTokenIds = await DappTools.GetOwnedDatasAsync()
+    const cTokenIds = await DappTools.GetOwnedDsAsync()
     console.log(JSON.stringify(cTokenIds))
   } catch (error) {
     console.log('# error occured: ' + error)
@@ -257,15 +257,15 @@ async function data_details(index, password, cid) {
       console.log('# data with cid ' + cid + ' is not exist')
       return
     }
-    const details = await DappTools.GetDataWithCID(cid)
+    const details = await DappTools.GetDataWithID(cid)
     console.log('# data with id ' + cid + ' details')
-    console.log(' - title: ' + details)
+    console.log(JSON.stringify(details))
   } catch (error) {
     console.log('# error occured: ' + error)
   }
 }
 
-async function contents_register(index, password, cid, hash, fee, supply) {
+async function hash_register(index, password, cid, hash, fee) {
   try {
     /* init Ethereum elements */
     console.log('# init ethereum tools...')
@@ -278,13 +278,13 @@ async function contents_register(index, password, cid, hash, fee, supply) {
     console.log('# init complete')
 
     /* create Dapp token */
-    await DappTools.RegisterHash(cid, hash, fee, supply)
+    await DappTools.RegisterHash(cid, hash, fee)
   } catch (error) {
     console.log('# error occured: ' + error)
   }
 }
 
-async function contents_list(index, password) {
+async function hash_list(index, password) {
   try {
     /* init Ethereum elements */
     console.log('# init ethereum tools...')
@@ -296,15 +296,23 @@ async function contents_list(index, password) {
     var DappTools = await Dapp.createAsync(EtherTools.getDappPrivateKey())
     console.log('# init complete')
 
-    /* create Dapp token */
-    const cTokenIds = await DappTools.GetOwnedCTsAsync()
-    console.log(JSON.stringify(cTokenIds))
+    var res = []
+    const cids = await DappTools.GetOwnedDsAsync()
+    for (var i = 0; i < cids.length; i++) {
+      const hashes = await DappTools.GetOwnedHsAsync(cids[0])
+      res.push({
+        cid: cids[i],
+        hashes
+      })
+    }
+    console.log("result: " + JSON.stringify(res))
+
   } catch (error) {
     console.log('# error occured: ' + error)
   }
 }
 
-async function contents_details(index, password, cTokenId) {
+async function hash_details(index, password, hash) {
   try {
     /* init Ethereum elements */
     console.log('# init ethereum tools...')
@@ -316,26 +324,83 @@ async function contents_details(index, password, cTokenId) {
     var DappTools = await Dapp.createAsync(EtherTools.getDappPrivateKey())
     console.log('# init complete')
 
-    /* create Dapp token */
-    if (!(await DappTools.IsExistsData(cTokenId))) {
-      console.log('# data with cTokenId ' + cTokenId + ' is not exist')
+    if (!(await DappTools.IsExistsHash(hash))) {
+      console.log('# data with hash ' + hash + ' is not exist')
       return
     }
-    const details = await DappTools.GetCTWithID(cTokenId)
-    const status = details._DisabLed == true ? 'disable' : 'enable'
-    console.log('# data with cTokenId ' + cTokenId + ' details')
-    console.log(' - cid: ' + details._Cid)
-    console.log(' - hash: ' + details._Hash)
-    console.log(' - fee: ' + details._Fee)
-    console.log(' - supply: ' + details._Supply)
-    console.log(' - status: ' + status)
-    console.log(' - balance: ' + details.balance)
+    const details = await DappTools.GetHashWithCIDandHash(hash)
+    console.log("result: " + JSON.stringify(details))
   } catch (error) {
     console.log('# error occured: ' + error)
   }
 }
 
-async function contents_buy(index, password, cTokenId) {
+async function product_register(index, password, hash) {
+  try {
+    /* init Ethereum elements */
+    console.log('# init ethereum tools...')
+    var EtherTools = await Ether.createAsync(index, password)
+    console.log('# init complete')
+
+    /* init Dappchain elements */
+    console.log('# init dapp tools...')
+    var DappTools = await Dapp.createAsync(EtherTools.getDappPrivateKey())
+    console.log('# init complete')
+
+    if (!(await DappTools.IsExistsHash(hash))) {
+      console.log('# data with hash ' + hash + ' is not exist')
+      return
+    }
+    await DappTools.RegisterProduct(hash, 10000)
+  } catch (error) {
+    console.log('# error occured: ' + error)
+  }
+}
+
+async function product_list(index, password) {
+  try {
+    /* init Ethereum elements */
+    console.log('# init ethereum tools...')
+    var EtherTools = await Ether.createAsync(index, password)
+    console.log('# init complete')
+
+    /* init Dappchain elements */
+    console.log('# init dapp tools...')
+    var DappTools = await Dapp.createAsync(EtherTools.getDappPrivateKey())
+    console.log('# init complete')
+
+    const ids = await DappTools.GetOwnedPTsAsync()
+    console.log(JSON.stringify({pTokenIds: ids}))
+  } catch (error) {
+    console.log('# error occured: ' + error)
+  }
+}
+
+async function product_details(index, password, pTokenId) {
+  try {
+    /* init Ethereum elements */
+    console.log('# init ethereum tools...')
+    var EtherTools = await Ether.createAsync(index, password)
+    console.log('# init complete')
+
+    /* init Dappchain elements */
+    console.log('# init dapp tools...')
+    var DappTools = await Dapp.createAsync(EtherTools.getDappPrivateKey())
+    console.log('# init complete')
+
+    if (!(await DappTools.IsExistsPToken(pTokenId))) {
+      console.log('# data with pTokenId ' + pTokenId + ' is not exist')
+      return
+    }
+
+    const details = await DappTools.GetPTWithID(pTokenId)
+    console.log(JSON.stringify({details}))
+  } catch (error) {
+    console.log('# error occured: ' + error)
+  }
+}
+
+async function product_buy(index, password, pTokenId) {
   /* init Ethereum elements */
   console.log('# init ethereum tools...')
   var EtherTools = await Ether.createAsync(index, password)
@@ -346,9 +411,110 @@ async function contents_buy(index, password, cTokenId) {
   var DappTools = await Dapp.createAsync(EtherTools.getDappPrivateKey())
   console.log('# init complete')
 
-  await DappTools.BuyToken(cTokenId)
+  await DappTools.BuyToken(pTokenId)
 }
 
+async function contract_contract(index, password, pTokenId, address, cost, isDc) {
+  try {
+    /* init Ethereum elements */
+    console.log('# init ethereum tools...')
+    var EtherTools = await Ether.createAsync(index, password)
+    console.log('# init complete')
+
+    /* init Dappchain elements */
+    console.log('# init dapp tools...')
+    var DappTools = await Dapp.createAsync(EtherTools.getDappPrivateKey())
+    console.log('# init complete')
+
+    if (!(await DappTools.IsExistsPToken(pTokenId))) {
+      console.log('# data with pTokenId ' + pTokenId + ' is not exist')
+      return
+    }
+    if(isDc) {
+      await DappTools.DistributionContract(pTokenId, address, cost)
+    } else {
+      await DappTools.SearchProviderContract(pTokenId, address, cost)
+    }
+  } catch (error) {
+    console.log('# error occured: ' + error)
+  }
+}
+
+async function contract_list(index, password, isDc) {
+  try {
+    /* init Ethereum elements */
+    console.log('# init ethereum tools...')
+    var EtherTools = await Ether.createAsync(index, password)
+    console.log('# init complete')
+
+    /* init Dappchain elements */
+    console.log('# init dapp tools...')
+    var DappTools = await Dapp.createAsync(EtherTools.getDappPrivateKey())
+    console.log('# init complete')
+
+    if(isDc) {
+      const dcList = await DappTools.GetOwnedDCsAsync()
+      console.log(JSON.stringify({dcList}))
+    } else {
+      const scList = await DappTools.GetOwnedSCsAsync()
+      console.log(JSON.stringify({scList}))
+    }
+  } catch (error) {
+    console.log('# error occured: ' + error)
+  }
+}
+
+async function contract_List(index, password, pTokenId, isDc) {
+  try {
+    /* init Ethereum elements */
+    console.log('# init ethereum tools...')
+    var EtherTools = await Ether.createAsync(index, password)
+    console.log('# init complete')
+
+    /* init Dappchain elements */
+    console.log('# init dapp tools...')
+    var DappTools = await Dapp.createAsync(EtherTools.getDappPrivateKey())
+    console.log('# init complete')
+
+    if (!(await DappTools.IsExistsPToken(pTokenId))) {
+      console.log('# data with pTokenId ' + pTokenId + ' is not exist')
+      return
+    }
+    if(isDc) {
+      const dcList = await DappTools.GetOwnedDCsWithPTokenAsync(pTokenId)
+      console.log(JSON.stringify({dcList}))
+    } else {
+      const scList = await DappTools.GetOwnedSCsWithPTokenAsync(pTokenId)
+      console.log(JSON.stringify({scList}))
+    }
+  } catch (error) {
+    console.log('# error occured: ' + error)
+  }
+}
+
+async function contract_details(index, password, Index, isDc) {
+  try {
+    /* init Ethereum elements */
+    console.log('# init ethereum tools...')
+    var EtherTools = await Ether.createAsync(index, password)
+    console.log('# init complete')
+
+    /* init Dappchain elements */
+    console.log('# init dapp tools...')
+    var DappTools = await Dapp.createAsync(EtherTools.getDappPrivateKey())
+    console.log('# init complete')
+
+    if(isDc) {
+      const details = await DappTools.GetDCWithID(Index)
+      console.log(JSON.stringify({details}))
+    } else {
+      const details = await DappTools.GetSCWithID(Index)
+      console.log(JSON.stringify({details}))
+    }
+  } catch (error) {
+    console.log('# error occured: ' + error)
+  }
+}
 
 async function token_list(index, password) {
   /* init Ethereum elements */
@@ -380,26 +546,10 @@ async function token_details(index, password, uTokenId) {
     console.log('# user token with id ' + uTokenId + ' is not exist')
     return
   }
-  const details = await DappTools.GetUTWithID(uTokenId)
-  var state
-  switch (details.state) {
-    case '0':
-      state = 'sold';
-      break;
-    case '1':
-      state = 'in progess';
-      break;
-    case '2':
-      state = 'settled';
-      break;
-    default:
-      state = 'unknown state: ' + details.state;
-      break;
-  }
-  console.log('# user token with id ' + uTokenId + ' details')
-  console.log(' - user: ' + details.user)
-  console.log(' - data token: ' + details.cTokenId)
-  console.log(' - token state: ' + state)
+  let details = await DappTools.GetUTWithID(uTokenId)
+  var state = ['sold', 'in progress', 'settled']
+  details.state = state[details.states]
+  console.log(JSON.stringify(details))
 }
 
 async function channel_open(index, password, cid, hash, numOfChunks) {
@@ -445,50 +595,9 @@ async function channel_details(index, password, oTokenId) {
   console.log("details: " + JSON.stringify(details))
 }
 
-async function sendAggregatedReceipt() {
-  console.log('# init ethereum tools...')
-  var EtherTools = await Ether.createAsync(0, 'p@ssw0rd')
-  console.log('# init complete')
-
-  /* init Dappchain elements */
-  console.log('# init dapp tools...')
-  var DappTools = await Dapp.createAsync(EtherTools.getDappPrivateKey())
-  console.log('# init complete')
-
-  await DappTools.sendAggregatedReceipt()
-}
-
 program
   .version('0.1.0')
   .option('-K, --keypath <path>', 'designate private key path')
-
-program
-  .command('send_ether')
-  .option('-U, --unit <unit>', 'ethereum currency unit. choose wei or ether')
-  .option('-A, --amount <amount>', 'ethereum currency amount')
-  .description('send ether between ethereum address and dapp account')
-  .action(function(options) {
-    console.log("# sendEtherToDapp() called")
-    sendEtherToDapp(options.unit, options.amount);
-  })
-
-program
-  .command('send_dapp')
-  .option('-U, --unit <unit>', 'ethereum currency unit. choose wei or ether')
-  .option('-A, --amount <amount>', 'ethereum currency amount')
-  .description('send ether between ethereum address and dapp account')
-  .action(function(options) {
-    console.log("# sendDappToGateway() called")
-    sendDappToGateway(options.unit, options.amount);
-  })
-
-program
-  .command('withdraw')
-  .description('get ether from gateway to ethereum address')
-  .action(function() {
-    console.log("# withdrawEther() called")
-    withdrawEther()
-  })
 
 program
   .command('account')
@@ -523,8 +632,8 @@ program
       await account_remove(options.index)
     }
     if (options.balance) {
-      console.log("account_blance() called")
-      await account_blance(options.index, options.password)
+      console.log("account_balance() called")
+      await account_balance(options.index, options.password)
     }
     process.exit(0)
   })
@@ -580,34 +689,112 @@ program
   })
 
 program
-  .command('contents')
+  .command('hash')
+  .option('-r, --register', 'register contents')
+  .option('-l, --list', 'list up contents')
+  .option('-d, --details', 'details of contents')
+  .option('-I, --index <index>', 'account index')
+  .option('-p, --password <password>', 'account password')
+  .option('-c, --cid <cid>', 'contents cid')
+  .option('-f, --fee <fee>', 'contents fee')
+  .option('-h, --hash <hash>', 'contents hash')
+  .action(async function(options) {
+    if (options.register) {
+      console.log('hash_register() called')
+      await hash_register(options.index, options.password, options.cid, options.hash, options.fee)
+    }
+    if (options.list) {
+      console.log("hash_list() called")
+      await hash_list(options.index, options.password)
+    }
+    if (options.details) {
+      console.log("hash_details() called")
+      await hash_details(options.index, options.password, options.hash)
+    }
+    process.exit(0)
+  })
+
+program
+  .command('product')
   .option('-r, --register', 'register contents')
   .option('-l, --list', 'list up contents')
   .option('-d, --details', 'details of contents')
   .option('-b, --buy', 'buy contents')
   .option('-I, --index <index>', 'account index')
   .option('-p, --password <password>', 'account password')
-  .option('-C, --cTokenId <cTokenId>', 'contents token id')
-  .option('-c, --cid <cid>', 'contents cid')
-  .option('-f, --fee <fee>', 'contents fee')
+  .option('-P, --pTokenId <pTokenId>', 'product token id')
   .option('-h, --hash <hash>', 'contents hash')
-  .option('-s, --supply <supply>', 'contents supply')
+
   .action(async function(options) {
     if (options.register) {
-      console.log('contents_register() called')
-      await contents_register(options.index, options.password, options.cid, options.hash, options.fee, options.supply)
+      console.log('product_register() called')
+      await product_register(options.index, options.password, options.hash)
     }
     if (options.list) {
-      console.log("contents_list() called")
-      await contents_list(options.index, options.password)
+      console.log("product_list() called")
+      await product_list(options.index, options.password)
     }
     if (options.details) {
-      console.log("contents_details() called")
-      await contents_details(options.index, options.password, options.cTokenId)
+      console.log("product_details() called")
+      await product_details(options.index, options.password, options.pTokenId)
     }
     if (options.buy) {
-      console.log("contents_buy() called")
-      await contents_buy(options.index, options.password, options.cTokenId)
+      console.log("product_buy() called")
+      await product_buy(options.index, options.password, options.pTokenId)
+    }
+    process.exit(0)
+  })
+
+program
+  .command('contract')
+  .option('-C, --contract', 'contract')
+  .option('-l, --list', 'list with owner')
+  .option('-L, --List', 'list with pTokenId')
+  .option('-D, --details', 'contract details')
+  .option('-d, --dc', 'distribution contract')
+  .option('-s, --sc', 'search provider contract')
+  .option('-i, --index <index>', 'account index')
+  .option('-P, --password <password', 'account password')
+  .option('-I, --Index <Index>', 'contract index')
+  .option('-p, --pTokenId <pTokenId>', 'pTokenId')
+  .option('-a. --address <address>', 'address')
+  .option('-c. --cost <cost>', 'cost')
+  .action(async function(options) {
+    if(options.contract) {
+      console.log("contract_contract() called")
+      if(options.dc) {
+        await contract_contract(options.index, options.password, options.pTokenId, options.address, options.cost, true)
+      }
+      if(options.sc) {
+        await contract_contract(options.index, options.password, options.pTokenId, options.address, options.cost, false)
+      }
+    }
+    if(options.list) {
+      console.log("contract_list() called")
+      if(options.dc) {
+        await contract_list(options.index, options.password, true)
+      }
+      if(options.sc) {
+        await contract_list(options.index, options.password, false)
+      }
+    }
+    if(options.List) {
+      console.log("contract_List() called")
+      if(options.dc) {
+        await contract_List(options.index, options.password, options.pTokenId, true)
+      }
+      if(options.sc) {
+        await contract_List(options.index, options.password, options.pTokenId, false)
+      }
+    }
+    if(options.details) {
+      console.log("contract_details() called")
+      if(options.dc) {
+        await contract_details(options.index, options.password, options.Index, true)
+      }
+      if(options.sc) {
+        await contract_details(options.index, options.password, options.Index, false)
+      }
     }
     process.exit(0)
   })
@@ -658,12 +845,68 @@ program
     process.exit(0)
   })
 
+//---------------------------------------------------- manager apis ----------------------------------------------------//
+
+async function sendAggregatedReceipt() {
+  console.log('# init ethereum tools...')
+  var EtherTools = await Ether.createAsync(0, 'p@ssw0rd')
+  console.log('# init complete')
+
+  /* init Dappchain elements */
+  console.log('# init dapp tools...')
+  var DappTools = await Dapp.createAsync(EtherTools.getDappPrivateKey())
+  console.log('# init complete')
+
+  await DappTools.sendAggregatedReceipt()
+}
+
+async function enrollDistributor(distributor) {
+  console.log('# init ethereum tools...')
+  var EtherTools = await Ether.createAsync(0, 'p@ssw0rd')
+  console.log('# init complete')
+
+  /* init Dappchain elements */
+  console.log('# init dapp tools...')
+  var DappTools = await Dapp.createAsync(EtherTools.getDappPrivateKey())
+  console.log('# init complete')
+
+  await DappTools.EnrollDistributor(distributor)
+}
+
+async function enrollSearchProvider(searchProvider) {
+  console.log('# init ethereum tools...')
+  var EtherTools = await Ether.createAsync(0, 'p@ssw0rd')
+  console.log('# init complete')
+
+  /* init Dappchain elements */
+  console.log('# init dapp tools...')
+  var DappTools = await Dapp.createAsync(EtherTools.getDappPrivateKey())
+  console.log('# init complete')
+
+  await DappTools.EnrollSearchProvider(searchProvider)
+}
+
 program
-  .command('send_aggregated_receipt')
-  .description('settle')
-  .action(function() {
-    console.log("# settle() called")
-    sendAggregatedReceipt()
+  .command('manager')
+  .option('-e, --enroll_dc', 'enroll distributor')
+  .option('-E, --enroll_sc', 'enroll search provider')
+  .option('-s, --settle', 'settle')
+  .option('-t, --test', 'test')
+  .option('-a, --address <address>', 'address')
+  .action(async function(options) {
+    if(options.test) {
+      console.log("sendAggregatedReceipt() called")
+      await sendAggregatedReceipt()
+    }
+    if(options.enroll_dc) {
+      console.log("enrollDistributor() called")
+      await enrollDistributor(options.address)
+    }
+    if(options.enroll_sc) {
+      console.log("enrollSearchProvider() called")
+      await enrollSearchProvider(options.address)
+    }
+    process.exit(0)
   })
 
 program.parse(process.argv)

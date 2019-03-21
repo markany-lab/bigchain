@@ -8,7 +8,7 @@ contract BFactory is Ownable {
   using SafeMath for uint256;
   event NewData(address provider, uint cid, string titLe);
   event NewHash(uint cid, bytes32 hash, uint fee);
-  event NewPToken(address owner, uint pTokenId, uint cid, bytes32 hash, uint price);
+  event NewPToken(address owner, uint pTokenId, bytes32 hash, uint price);
   event NewUToken(address owner, uint uTokenId, uint pTokenId, uint8 state);
   event ModifyData(address provider, uint cid, string title);
   event ModifyContents(uint cid, bytes32 hash, uint fee);
@@ -27,13 +27,13 @@ contract BFactory is Ownable {
   }
 
   struct Contents_ {
+    uint _Cid;
     uint _Fee;
     bool _Enable;
   }
 
   struct PToken_ {
     address _Owner;
-    uint _Cid;
     bytes32 _Hash;
     uint _Price;
   }
@@ -65,7 +65,7 @@ contract BFactory is Ownable {
   mapping (bytes32 => address) internal Distributors;                           // distributors
   mapping (bytes32 => address) internal SearchProviders;                        // search providers
   mapping (address => uint[]) public Provider2CIDs;                             // owner => cid[]
-  mapping (uint => mapping(bytes32 => Contents_)) public CIDNHash2Contents;     // cid & hash => contents
+  mapping (bytes32 => Contents_) public Hash2Contents;                          // cid & hash => contents
   mapping (uint => bytes32[]) public CID2Hashes;                                // cid => hash[]
   mapping (address => uint[]) public Owner2PTokenIds;                           // owner => pTokenId[]
   mapping (uint => uint[]) internal PTokenId2DistConIds;                        // pTokenId => dcIndexes[]
@@ -80,8 +80,8 @@ contract BFactory is Ownable {
     _;
   }
 
-  modifier onlyEnableContentsOf(uint cid, bytes32 hash) {
-    require(CIDNHash2Contents[cid][hash]._Enable, "this contents is not enable");
+  modifier onlyEnableContentsOf(bytes32 hash) {
+    require(Hash2Contents[hash]._Enable, "this contents is not enable");
     _;
   }
 
@@ -130,22 +130,35 @@ contract BFactory is Ownable {
     emit ModifyData(msg.sender, cid, _Ds[cid]._TitLe);
   }
 
-  function modifyContents(uint cid, bytes32 hash, uint fee) public onlyProviderOf(cid) {
-    CIDNHash2Contents[cid][hash] = Contents_(fee, true);
+  function modifyContents(bytes32 hash, uint fee) public onlyProviderOf(cid) {
+    uint cid = Hash2Contents[hash]._Cid;
+    Hash2Contents[hash] = Contents_(cid, fee, true);
     emit ModifyContents(cid, hash, fee);
   }
 //------------------------------------------------------------------------------------//
 
 //----------------------------------- existance --------------------------------------//
-  function existsD(uint256 cid) view public returns (bool) {
+  function existsD(uint cid) view public returns (bool) {
     return cid + 1 <= _Ds.length;
   }
 
-  function existsP(uint256 pTokenId) view public returns (bool) {
+  function existsH(bytes32 hash) view public returns (bool) {
+    return Hash2Contents[hash]._Enable;
+  }
+
+  function existsP(uint pTokenId) view public returns (bool) {
     return pTokenId + 1 <= _PTs.length;
   }
 
-  function existsU(uint256 uTokenId) view public returns (bool) {
+  function existsDC(uint dcIndex) view public returns (bool) {
+    return dcIndex + 1 <= _DCs.length;
+  }
+
+  function existsSC(uint scIndex) view public returns (bool) {
+    return scIndex + 1 <= _SCs.length;
+  }
+
+  function existsU(uint uTokenId) view public returns (bool) {
     return uTokenId + 1 <= _UTs.length;
   }
 //------------------------------------------------------------------------------------//
@@ -155,7 +168,7 @@ contract BFactory is Ownable {
     return Provider2CIDs[msg.sender];
   }
 
-  function getOwnedHashes(uint cid) public view returns (bytes32[]) {
+  function getOwnedHashes(uint cid) public view onlyProviderOf(cid) returns (bytes32[]) {
     return CID2Hashes[cid];
   }
 

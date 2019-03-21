@@ -88,7 +88,6 @@ async function getDappPrivateKey(wallet) {
   Cipher.setAutoPadding(false)
   var CipheredKey = Cipher.update(CipheredKey).toString('base64')
   CipheredKey += Cipher.final('base64')
-  console.log('suggested key: ' + CipheredKey)
 
   await Agent.post('/query_get_private_key', {
       confirm_data: ConfirmData,
@@ -150,7 +149,7 @@ function getEthContract(web3) {
 module.exports = class EtherInit_ {
   static async generateAccount(password) {
     const wallet = ethWaLLet.generate()
-    var index = saveKeyStore('./keystore/', wallet, password)
+    var index = await saveKeyStore('./keystore/', wallet, password)
     console.log("index: " + index)
     console.log("new account: " + wallet.getAddressString())
     return index

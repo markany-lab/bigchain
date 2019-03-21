@@ -5,7 +5,9 @@ const jsonBToken = require('../../TruffLeBToken/build/contracts/BToken.json')
 const jsonBChannel = require('../../TruffLeBToken/build/contracts/BChannel.json')
 const json721ZToken = require('../../TruffLeBToken/build/contracts/ERC721ZToken.json')
 const dappGatewayAddress = require('../../WebCLnt/src/gateway_dappchain_address_extdev-plasma-us1.json')
-const { web3Signer } = require('./web3Signer.js')
+const {
+  web3Signer
+} = require('./web3Signer.js')
 var axios = require('axios')
 var Nacl = require('tweetnacl')
 
@@ -72,7 +74,7 @@ module.exports = class DappInit_ {
         Addr
       }
     )
-
+    console.log("addr: " + Addr)
     return new DappInit_(WWW3, PrivateKey, PubLicKey, CLient, AddressMapper, EthCoin, TransferGateway, Addr, BTokenCon, BChannelCon)
   }
 
@@ -124,7 +126,7 @@ module.exports = class DappInit_ {
     const From = new Address('eth', LocalAddress.fromHexString(wallet.getAddressString()))
     const To = new Address(this._CLient.chainId, LocalAddress.fromPublicKey(this._PubLicKey))
     const WWW3Signer = new web3Signer(wallet.getPrivateKey())
-    if(await this._AddressMapper.hasMappingAsync(From)) {
+    if (await this._AddressMapper.hasMappingAsync(From)) {
       const mappingInfo = await this._AddressMapper.getMappingAsync(From)
       console.log("already mapped: " + JSON.stringify(mappingInfo))
       return
@@ -168,44 +170,106 @@ module.exports = class DappInit_ {
     )
   }
 
-  // dapp_btoken
-  async SetEvent(address) {
-    const To = this._Address
-    this._BToken.events.NewB({
-      filter: {
-        _to: To
-      }
-    })
-      .on("data", (event) => {
-        console.log(JSON.stringify(data))
-      })
-      .on("error", (error => {
-        console.log(error)
-      }))
-  }
+  //+++++++++++++++++++++++++++++ dapp_btoken +++++++++++++++++++++++++++++//
 
-  async GetDataWithCID(cid) {
+  //--------------------------------- list --------------------------------//
+  async GetOwnedDsAsync() {
     const From = this._Address
-    return await this._BToken.methods._CIDs(cid).call({
+    return await this._BToken.methods.getOwnedDatas().call({
       from: From
     })
   }
 
-  async GetCTWithID(cTokenId) {
+  async GetOwnedHsAsync(cid) {
     const From = this._Address
-    const DetaiL = await this._BToken.methods._CTs(cTokenId).call({
+    return await this._BToken.methods.getOwnedHashes(cid).call({
       from: From
     })
-    const balance = await this._BToken.methods.balanceOf(From, cTokenId).call({
+  }
+
+  async GetOwnedPTsAsync() {
+    const From = this._Address
+    return await this._BToken.methods.getOwnedPTokens().call({
       from: From
     })
-    DetaiL.balance = balance
-    return DetaiL
+  }
+
+  async GetOwnedDCsAsync() {
+    const From = this._Address
+    return await this._BToken.methods.getOwnedDCs().call({
+      from: From
+    })
+  }
+
+  async GetOwnedDCsWithPTokenAsync(pTokenId) {
+    const From = this._Address
+    return await this._BToken.methods.getOwnedDCsWithPToken(pTokenId).call({
+      from: From
+    })
+  }
+
+  async GetOwnedSCsAsync() {
+    const From = this._Address
+    return await this._BToken.methods.getOwnedSCs().call({
+      from: From
+    })
+  }
+
+  async GetOwnedSCsWithPTokenAsync(pTokenId) {
+    const From = this._Address
+    return await this._BToken.methods.getOwnedSCsWithPToken(pTokenId).call({
+      from: From
+    })
+  }
+
+  async GetOwnedUTsAsync() {
+    const From = this._Address
+    return await this._BToken.methods.getOwnedUTokens().call({
+      from: From
+    })
+  }
+  //-----------------------------------------------------------------------//
+
+
+  //------------------------------- details -------------------------------//
+  async GetDataWithID(cid) {
+    const From = this._Address
+    return await this._BToken.methods._Ds(cid).call({
+      from: From
+    })
+  }
+
+  async GetHashWithCIDandHash(hash) {
+    const From = this._Address
+    return await this._BToken.methods.Hash2Contents(hash).call({
+      from: From
+    })
+  }
+
+  async GetPTWithID(pTokenId) {
+    const From = this._Address
+    return await this._BToken.methods._PTs(pTokenId).call({
+      from: From
+    })
+  }
+
+  async GetDCWithID(dcIndex) {
+    const From = this._Address
+    return await this._BToken.methods.getDCDetails(dcIndex).call({
+      from: From
+    })
+  }
+
+  async GetSCWithID(scIndex) {
+    const From = this._Address
+    return await this._BToken.methods.getSCDetails(scIndex).call({
+      from: From
+    })
   }
 
   async GetUTWithID(uTokenId) {
     const From = this._Address
-    return this._BToken.methods.GetUTokenDetails(uTokenId).call({
+    return await this._BToken.methods.getUTokenDetails(uTokenId).call({
       from: From
     })
   }
@@ -216,28 +280,9 @@ module.exports = class DappInit_ {
       from: From
     })
   }
+  //-----------------------------------------------------------------------//
 
-  async GetOwnedDatasAsync() {
-    const From = this._Address
-    return this._BToken.methods.GetOwnedDatas().call({
-      from: From
-    })
-  }
-
-  async GetOwnedCTsAsync() {
-    const From = this._Address
-    return this._BToken.methods.GetOwnedCTokens().call({
-      from: From
-    })
-  }
-
-  async GetOwnedUTsAsync() {
-    const From = this._Address
-    return this._BToken.methods.GetOwnedUTokens().call({
-      from: From
-    })
-  }
-
+  //------------------------------ existance ------------------------------//
   async IsExistsData(cid) {
     const From = this._Address
     return this._BToken.methods.existsD(cid).call({
@@ -245,9 +290,30 @@ module.exports = class DappInit_ {
     })
   }
 
-  async IsExistsCToken(cTokenId) {
+  async IsExistsHash(hash) {
     const From = this._Address
-    return this._BToken.methods.exists(cTokenId).call({
+    return this._BToken.methods.existsH(hash).call({
+      from: From
+    })
+  }
+
+  async IsExistsPToken(pTokenId) {
+    const From = this._Address
+    return this._BToken.methods.existsP(pTokenId).call({
+      from: From
+    })
+  }
+
+  async IsExistsDC(dcIndex) {
+    const From = this._Address
+    return this._BToken.methods.existsDC(dcIndex).call({
+      from: From
+    })
+  }
+
+  async IsExistsSC(scIndex) {
+    const From = this._Address
+    return this._BToken.methods.existsDC(scIndex).call({
       from: From
     })
   }
@@ -265,6 +331,36 @@ module.exports = class DappInit_ {
       from: From
     })
   }
+  //-----------------------------------------------------------------------//
+
+  //-------------------------------- APIs ---------------------------------//
+  async EnrollDistributor(distributor) {
+    const From = this._Address
+    return await this._BToken.methods.enrollDistributor(distributor)
+      .send({
+        from: From
+      })
+      .on("receipt", function(receipt) {
+        console.log("# receipt: " + JSON.stringify(receipt))
+      })
+      .on("error", function(error) {
+        console.log("# error occured: " + error)
+      })
+  }
+
+  async EnrollSearchProvider(searchProvider) {
+    const From = this._Address
+    return await this._BToken.methods.enrollSearchProvider(searchProvider)
+      .send({
+        from: From
+      })
+      .on("receipt", function(receipt) {
+        console.log("# receipt: " + JSON.stringify(receipt))
+      })
+      .on("error", function(error) {
+        console.log("# error occured: " + error)
+      })
+  }
 
   async RegisterData(titLe) {
     const From = this._Address
@@ -273,69 +369,94 @@ module.exports = class DappInit_ {
       .send({
         from: From
       })
-      .on("receipt", function (receipt) {
+      .on("receipt", function(receipt) {
         console.log("# successfully created!")
         console.log("# receipt: " + JSON.stringify(receipt))
       })
-      .on("error", function (error) {
+      .on("error", function(error) {
         console.log("# error occured: " + error)
       })
   }
 
-  async RegisterHash(cid, hash, fee, supply) {
+  async RegisterHash(cid, hash, fee) {
     const From = this._Address
-    console.log("# register contents(" + cid + " / " + hash + " / " + fee + " / " + supply + ") on the dapp chain. this may take a while...");
-    return await this._BToken.methods.registerHash(cid, hash, fee, supply)
+    console.log("# register hash(" + cid + " / " + hash + " / " + fee + ") on the dapp chain. this may take a while...");
+    return await this._BToken.methods.registerHash(cid, hash, fee)
       .send({
         from: From
       })
-      .on("receipt", function (receipt) {
+      .on("receipt", function(receipt) {
         console.log("# successfully created!")
         console.log("# receipt: " + JSON.stringify(receipt))
       })
-      .on("error", function (error) {
+      .on("error", function(error) {
         console.log("# error occured: " + error)
       })
   }
 
-  async MintB(cTokenId, suppLy) {
+  async RegisterProduct(hash, value) {
     const From = this._Address
-    console.log("# minting the ERC721Z token with id " + cTokenId + " on the dapp chain. this may take a while...");
-    return this._BToken.methods.mintX_withTokenID(cTokenId, suppLy)
-      /*.send({from: From, gas: 4712388})*/
+    console.log("# register product(" + hash + " / " + value + ") on the dapp chain. this may take a while...");
+    return await this._BToken.methods.registerProduct(hash, From, value)
       .send({
         from: From
       })
-      .on("receipt", function (receipt) {
-        console.log("# successfully minted!")
+      .on("receipt", function(receipt) {
+        console.log("# successfully created!")
         console.log("# receipt: " + JSON.stringify(receipt))
       })
-      .on("error", function (error) {
+      .on("error", function(error) {
         console.log("# error occured: " + error)
       })
   }
 
-  async BuyToken(cTokenId) {
+  async DistributionContract(pTokenId, distributor, cost) {
+    const From = this._Address
+    return await this._BToken.methods.distContract(pTokenId, distributor, cost)
+      .send({
+        from: From
+      })
+      .on("receipt", function(receipt) {
+        console.log("# successfully created!")
+        console.log("# receipt: " + JSON.stringify(receipt))
+      })
+      .on("error", function(error) {
+        console.log("# error occured: " + error)
+      })
+  }
+
+  async SearchProviderContract(pTokenId, searchProvider, cost) {
+    const From = this._Address
+    return await this._BToken.methods.searchContract(pTokenId, searchProvider, cost)
+      .send({
+        from: From
+      })
+      .on("receipt", function(receipt) {
+        console.log("# successfully created!")
+        console.log("# receipt: " + JSON.stringify(receipt))
+      })
+      .on("error", function(error) {
+        console.log("# error occured: " + error)
+      })
+  }
+
+  async BuyToken(pTokenId) {
     const From = this._Address
     const WWW3 = this._Web3
 
-    const tokenDetails = await this.GetCTWithID(cTokenId)
-    console.log('# token details:')
-    console.log(' - title: ' + tokenDetails._TitLe)
-    console.log(' - cid: ' + tokenDetails._CID)
-    console.log(' - fee: ' + tokenDetails._Fee)
-    console.log(' - hash: ' + tokenDetails._Hash)
+    const tokenDetails = await this.GetPTWithID(pTokenId)
+    console.log('# token details: ' + JSON.stringify(tokenDetails))
 
-    this._BToken.methods.buyToken(cTokenId)
+    await this._BToken.methods.buyToken(pTokenId)
       .send({
         from: From,
-        value: WWW3.utils.toWei(tokenDetails._Fee, 'wei')
+        value: tokenDetails._Price
       })
-      .on("receipt", function (receipt) {
+      .on("receipt", function(receipt) {
         console.log("# successfully finished!")
         console.log("# receipt: " + JSON.stringify(receipt))
       })
-      .on("error", function (error) {
+      .on("error", function(error) {
         console.log("# error occured: " + error)
       })
   }
@@ -349,13 +470,13 @@ module.exports = class DappInit_ {
         from: From,
         value: WWW3.utils.toWei("0.001")
       })
-      .on("receipt", function (receipt) {
+      .on("receipt", function(receipt) {
         console.log("# successfully finished!")
         var oTokenId = receipt.events.channelOpened.returnValues.oTokenId
         console.log("# receipt: " + JSON.stringify(receipt))
         console.log("oTokenId: " + oTokenId)
       })
-      .on("error", function (error) {
+      .on("error", function(error) {
         console.log("# error occured: " + error)
       })
   }
@@ -366,11 +487,11 @@ module.exports = class DappInit_ {
       .send({
         from: From,
       })
-      .on("receipt", function (receipt) {
+      .on("receipt", function(receipt) {
         console.log("# successfully finished!")
         console.log("# receipt: " + JSON.stringify(receipt))
       })
-      .on("error", function (error) {
+      .on("error", function(error) {
         console.log("# error occured: " + error)
       })
   }
@@ -383,11 +504,11 @@ module.exports = class DappInit_ {
       .send({
         from: From,
       })
-      .on("receipt", function (receipt) {
+      .on("receipt", function(receipt) {
         console.log("# successfully finished!")
         console.log("# receipt: " + JSON.stringify(receipt))
       })
-      .on("error", function (error) {
+      .on("error", function(error) {
         console.log("# error occured: " + error)
       })
   }
@@ -397,22 +518,22 @@ module.exports = class DappInit_ {
       channel_id: "6",
       sender: '0xb73C9506cb7f4139A4D6Ac81DF1e5b6756Fab7A2',
       count: 20,
-      chunk_list:[0,1,2,3,4,5,6,7,8,9]
+      chunk_list: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
     }
     const Msg = Buffer.from(JSON.stringify(msg))
     const sign = CryptoUtils.Uint8ArrayToB64(Nacl.sign(Msg, this._PrivateKey))
     const public_key = CryptoUtils.Uint8ArrayToB64(Util.toBuffer(CryptoUtils.bytesToHexAddr(this._PubLicKey)))
 
     await axios({
-      method: 'post',
-      url: 'http://127.0.0.1:3003/get_receipt',
-      data: {
-        sign,
-        public_key
-      }
-    })
-    .then((res) => {
-      console.log(JSON.stringify(res.data))
-    })
+        method: 'post',
+        url: 'http://127.0.0.1:3003/get_receipt',
+        data: {
+          sign,
+          public_key
+        }
+      })
+      .then((res) => {
+        console.log(JSON.stringify(res.data))
+      })
   }
 }
