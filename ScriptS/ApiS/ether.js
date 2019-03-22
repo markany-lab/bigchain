@@ -1,3 +1,4 @@
+var Env = require('../../.env.json')
 const jsonGateway = require('./Gateway.json')
 var crypto = require('crypto')
 var Web3 = require('web3')
@@ -7,11 +8,13 @@ var ethWaLLet = require('ethereumjs-wallet')
 var ethTx = require('ethereumjs-tx')
 var Https = require('https')
 var Axios = require('axios')
+var Log4JS = require('log4js')
+var Logger = Log4JS.getLogger('Ether')
+Logger.level = Env.log_level
 
 var FiLeSystem = require('fs')
 const {
-  unlink,
-  readdir,
+  unlinkSync,
   readdirSync,
   existsSync,
   readFileSync,
@@ -23,7 +26,7 @@ var {
   CryptoUtils
 } = require('loom-js/dist')
 
-var Env = require('../../.env.json')
+
 const HotWaLLetAddr = Env.hot_wallet_url + ':' + Env.hot_wallet_port
 var Agent = Axios.create({
   baseURL: HotWaLLetAddr,
@@ -32,9 +35,15 @@ var Agent = Axios.create({
   })
 })
 
-async function saveKeyStore(path, wallet, password) {
+function getKeyFiles(path) {
   var FiLeS = readdirSync(path)
   FiLeS = FiLeS.filter(el => !(el.indexOf('UTC')))
+  FiLeS.sort()
+  return FiLeS
+}
+
+async function saveKeyStore(path, wallet, password) {
+  var FiLeS = getKeyFiles(path)
 
   const Path = path + wallet.getV3Filename(Date.now())
   const V3 = wallet.toV3(password)
@@ -43,17 +52,17 @@ async function saveKeyStore(path, wallet, password) {
 }
 
 async function loadKeyStore(index, path, password) {
-  var FiLeS = readdirSync(path)
-  FiLeS = FiLeS.filter(el => !(el.indexOf('UTC')))
+  var FiLeS = getKeyFiles(path)
   if (FiLeS.length == 0) {
     throw ('error: can\'t not found any account in keystore: ' + path)
   }
-  FiLeS.sort()
 
   var FiLePath = path + FiLeS[index]
   var V3 = JSON.parse(readFileSync(FiLePath, 'utf8'))
   return ethWaLLet.fromV3(V3, password)
 }
+
+
 
 async function getDappPrivateKey(wallet) {
   var Token
@@ -76,7 +85,7 @@ async function getDappPrivateKey(wallet) {
         Sign = ethUtiL.bufferToHex(PreSign.r) + ethUtiL.bufferToHex(PreSign.s).substr(2) + ethUtiL.bufferToHex(PreSign.v).substr(2)
         Token = res.data.token
       })
-    .catch(err => console.log(err))
+    .catch(err => Logger.error(err))
 
   const ConfirmData = {
     addr: wallet.getAddressString(),
@@ -105,7 +114,7 @@ async function getDappPrivateKey(wallet) {
           Enc = res.data.enc
         } else {}
       })
-    .catch(err => console.log('>>> ' + err))
+    .catch(err => Logger.error('>>> ' + err))
   if (Enc) {
     var DecipheredKey = CryptoUtils.B64ToUint8Array(PrivateKey)
     var Decipher = crypto.createDecipheriv("aes-256-ecb", EncKey, '')
@@ -132,7 +141,7 @@ async function getDappPrivateKey(wallet) {
         })
         .then(await
           function(res) {
-            console.log("status: " + res.data.status)
+            Logger.debug("status: " + res.data.status)
           })
     }
   }
@@ -150,8 +159,6 @@ module.exports = class EtherInit_ {
   static async generateAccount(password) {
     const wallet = ethWaLLet.generate()
     var index = await saveKeyStore('./keystore/', wallet, password)
-    console.log("index: " + index)
-    console.log("new account: " + wallet.getAddressString())
     return index
   }
 
@@ -166,34 +173,23 @@ module.exports = class EtherInit_ {
   }
 
   static async removeAccount(index) {
-    if (!existsSync('./keystore/key_manager.json')) {
-      console.error("no account exists")
-      return
+    var FiLeS = getKeyFiles('./keystore/')
+    if(index + 1 < FiLeS.length) {
+      return {error: 'unknown index'}
     }
-    const keyManager = JSON.parse(readFileSync('./keystore/key_manager.json'))
-    const filename = keyManager[index].filename
-    keyManager.splice(index, index + 1)
-    writeFileSync('./keystore/key_manager.json', JSON.stringify(keyManager), 'utf8')
-    await unlink('./keystore/' + filename, function(error) {
-      if (error) {
-        console.log("error occured: " + error)
-      }
-    })
+    Logger.debug('remove account: ' + FiLeS[index])
+    const test = unlinkSync('./keystore/' + FiLeS[index])
+    return FiLeS[index]
   }
 
   static async listAccount() {
-    if (!existsSync('./keystore/key_manager.json')) {
-      console.error("no account exists")
-      return
-    }
-    return JSON.parse(readFileSync('./keystore/key_manager.json'))
-
+    return getKeyFiles('./keystore/')
   }
 
   static async createAsync(index, password) {
     var Provider = new Web3.providers.WebsocketProvider('wss://rinkeby.infura.io/ws')
     var web3 = new Web3(Provider)
-    console.log("# web3 version: " + web3.version)
+    Logger.debug("web3 version: " + web3.version)
 
     const wallet = await loadKeyStore(index, './keystore/', password)
     const dappPrvKey = await getDappPrivateKey(wallet)
@@ -244,7 +240,7 @@ module.exports = class EtherInit_ {
     }
 
     let EstimateGas = await this._Web3.eth.estimateGas(rawTx)
-    console.log("# EstimateGas: " + EstimateGas)
+    Logger.debug("EstimateGas: " + EstimateGas)
 
     rawTx.gas = EstimateGas
     var tx = new ethTx(rawTx)
@@ -253,7 +249,7 @@ module.exports = class EtherInit_ {
     EstimateGas = await this._Web3.eth.estimateGas(rawTx)
 
     const transaction = await this._Web3.eth.sendSignedTransaction("0x" + serializedTx.toString('hex'))
-    console.log("transaction: " + JSON.stringify(transaction))
+    Logger.debug("transaction: " + JSON.stringify(transaction))
   }
 
   async Deposit2GatewayAsync(from, unit, amount) {
@@ -266,7 +262,7 @@ module.exports = class EtherInit_ {
     }
 
     let EstimateGas = await this._Web3.eth.estimateGas(rawTx)
-    console.log("# EstimateGas: " + EstimateGas)
+    Logger.debug("EstimateGas: " + EstimateGas)
 
     rawTx = {
       nonce: '0x' + (await this._Web3.eth.getTransactionCount(from)).toString(16),
@@ -283,37 +279,10 @@ module.exports = class EtherInit_ {
     var serializedTx = tx.serialize()
 
     const transaction = await this._Web3.eth.sendSignedTransaction("0x" + serializedTx.toString('hex'))
-    console.log("transaction: " + JSON.stringify(transaction))
+    Logger.debug("transaction: " + JSON.stringify(transaction))
   }
 
   async GetBaLanceAsync(address) {
     return await this._Web3.eth.getBalance(address)
-  }
-
-  async sendAggregatedReceipt() {
-    let msg = {
-      channel_id: "0",
-      receiver: this._Wallet.getAddressString(),
-      sender: '0xb73C9506cb7f4139A4D6Ac81DF1e5b6756Fab7A2',
-      count: 10,
-      chunk_list: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
-    }
-    const Msg = Buffer.from(JSON.stringify(msg))
-    const ECSign = ethUtiL.ecsign(ethUtiL.keccak256(Msg), this._Wallet.getPrivateKey())
-    const Sign = ethUtiL.bufferToHex(ECSign.r) + ethUtiL.bufferToHex(ECSign.s).substr(2) + ethUtiL.bufferToHex(ECSign.v).substr(2)
-
-    await Axios({
-        method: 'post',
-        url: 'http://127.0.0.1:3003/get_receipt',
-        data: {
-          msg,
-          Sign
-        }
-      })
-      .then((res) => {
-        console.log(JSON.stringify(res.data))
-
-        // console.log(JSON.stringify(res))
-      })
   }
 }

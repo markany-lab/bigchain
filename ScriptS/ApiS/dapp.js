@@ -1,6 +1,10 @@
+var Env = require('../../.env.json')
 const Web3 = require('web3');
 const Util = require('ethereumjs-util')
 const BN = require('bn.js')
+var Log4JS = require('log4js')
+var Logger = Log4JS.getLogger('Ether')
+Logger.level = Env.log_level
 const jsonBToken = require('../../TruffLeBToken/build/contracts/BToken.json')
 const jsonBChannel = require('../../TruffLeBToken/build/contracts/BChannel.json')
 const json721ZToken = require('../../TruffLeBToken/build/contracts/ERC721ZToken.json')
@@ -74,7 +78,7 @@ module.exports = class DappInit_ {
         Addr
       }
     )
-    console.log("addr: " + Addr)
+
     return new DappInit_(WWW3, PrivateKey, PubLicKey, CLient, AddressMapper, EthCoin, TransferGateway, Addr, BTokenCon, BChannelCon)
   }
 
@@ -109,6 +113,10 @@ module.exports = class DappInit_ {
     return this._CLient
   }
 
+  GetAddress() {
+    return this._Address
+  }
+
   GetAccount() {
     return LocalAddress.fromPublicKey(this._PubLicKey).toString()
   }
@@ -128,10 +136,12 @@ module.exports = class DappInit_ {
     const WWW3Signer = new web3Signer(wallet.getPrivateKey())
     if (await this._AddressMapper.hasMappingAsync(From)) {
       const mappingInfo = await this._AddressMapper.getMappingAsync(From)
-      console.log("already mapped: " + JSON.stringify(mappingInfo))
-      return
+      const ethAddress = CryptoUtils.bytesToHexAddr(mappingInfo.from.local.bytes)
+      const dappAddress = CryptoUtils.bytesToHexAddr(mappingInfo.to.local.bytes)
+      return {newAddress: ethAddress, mappedAddress: dappAddress}
     }
-    return await this._AddressMapper.addIdentityMappingAsync(From, To, WWW3Signer)
+    await this._AddressMapper.addIdentityMappingAsync(From, To, WWW3Signer)
+    return {newAddress: wallet.getAddressString(), mappedAddress: LocalAddress.fromPublicKey(this._PubLicKey)}
   }
 
   async ApproveAsync(amount) {
@@ -341,10 +351,10 @@ module.exports = class DappInit_ {
         from: From
       })
       .on("receipt", function(receipt) {
-        console.log("# receipt: " + JSON.stringify(receipt))
+        Logger.debug("receipt: " + JSON.stringify(receipt))
       })
       .on("error", function(error) {
-        console.log("# error occured: " + error)
+        Logger.error("error occured: " + error)
       })
   }
 
@@ -355,89 +365,86 @@ module.exports = class DappInit_ {
         from: From
       })
       .on("receipt", function(receipt) {
-        console.log("# receipt: " + JSON.stringify(receipt))
+        Logger.debug("receipt: " + JSON.stringify(receipt))
       })
       .on("error", function(error) {
-        console.log("# error occured: " + error)
+        Logger.error("error occured: " + error)
       })
   }
 
   async RegisterData(titLe) {
     const From = this._Address
-    console.log("# register data(" + titLe + ") on the dapp chain. this may take a while...");
-    return await this._BToken.methods.registerData(titLe)
+    const transaction = await this._BToken.methods.registerData(titLe)
       .send({
         from: From
       })
       .on("receipt", function(receipt) {
-        console.log("# successfully created!")
-        console.log("# receipt: " + JSON.stringify(receipt))
+        Logger.debug("receipt: " + JSON.stringify(receipt))
       })
       .on("error", function(error) {
-        console.log("# error occured: " + error)
+        Logger.error("error occured: " + error)
       })
+    return transaction.events.NewData.returnValues
   }
 
   async RegisterHash(cid, hash, fee) {
     const From = this._Address
-    console.log("# register hash(" + cid + " / " + hash + " / " + fee + ") on the dapp chain. this may take a while...");
-    return await this._BToken.methods.registerHash(cid, hash, fee)
+    const transaction = await this._BToken.methods.registerHash(cid, hash, fee)
       .send({
         from: From
       })
       .on("receipt", function(receipt) {
-        console.log("# successfully created!")
-        console.log("# receipt: " + JSON.stringify(receipt))
+        Logger.debug("receipt: " + JSON.stringify(receipt))
       })
       .on("error", function(error) {
-        console.log("# error occured: " + error)
+        Logger.error("error occured: " + error)
       })
+    return transaction.events.NewHash.returnValues
   }
 
   async RegisterProduct(hash, value) {
     const From = this._Address
-    console.log("# register product(" + hash + " / " + value + ") on the dapp chain. this may take a while...");
-    return await this._BToken.methods.registerProduct(hash, From, value)
+    const transaction =  await this._BToken.methods.registerProduct(hash, From, value)
       .send({
         from: From
       })
       .on("receipt", function(receipt) {
-        console.log("# successfully created!")
-        console.log("# receipt: " + JSON.stringify(receipt))
+        Logger.debug("receipt: " + JSON.stringify(receipt))
       })
       .on("error", function(error) {
-        console.log("# error occured: " + error)
+        Logger.error("error occured: " + error)
       })
+    return transaction.events.NewPToken.returnValues
   }
 
   async DistributionContract(pTokenId, distributor, cost) {
     const From = this._Address
-    return await this._BToken.methods.distContract(pTokenId, distributor, cost)
+    const transaction = await this._BToken.methods.distContract(pTokenId, distributor, cost)
       .send({
         from: From
       })
       .on("receipt", function(receipt) {
-        console.log("# successfully created!")
-        console.log("# receipt: " + JSON.stringify(receipt))
+        Logger.debug("receipt: " + JSON.stringify(receipt))
       })
       .on("error", function(error) {
-        console.log("# error occured: " + error)
+        Logger.error("error occured: " + error)
       })
+    return transaction.events.NewDistContract.returnValues
   }
 
   async SearchProviderContract(pTokenId, searchProvider, cost) {
     const From = this._Address
-    return await this._BToken.methods.searchContract(pTokenId, searchProvider, cost)
+    const transaction = await this._BToken.methods.searchContract(pTokenId, searchProvider, cost)
       .send({
         from: From
       })
       .on("receipt", function(receipt) {
-        console.log("# successfully created!")
-        console.log("# receipt: " + JSON.stringify(receipt))
+        Logger.debug("receipt: " + JSON.stringify(receipt))
       })
       .on("error", function(error) {
-        console.log("# error occured: " + error)
+        Logger.error("error occured: " + error)
       })
+    return transaction.events.NewSearchContract.returnValues
   }
 
   async BuyToken(pTokenId) {
@@ -445,20 +452,20 @@ module.exports = class DappInit_ {
     const WWW3 = this._Web3
 
     const tokenDetails = await this.GetPTWithID(pTokenId)
-    console.log('# token details: ' + JSON.stringify(tokenDetails))
+    Logger.debug('token details: ' + JSON.stringify(tokenDetails))
 
-    await this._BToken.methods.buyToken(pTokenId)
+    const transaction = await this._BToken.methods.buyToken(pTokenId)
       .send({
         from: From,
         value: tokenDetails._Price
       })
       .on("receipt", function(receipt) {
-        console.log("# successfully finished!")
-        console.log("# receipt: " + JSON.stringify(receipt))
+        Logger.debug("receipt: " + JSON.stringify(receipt))
       })
       .on("error", function(error) {
-        console.log("# error occured: " + error)
+        Logger.error("error occured: " + error)
       })
+    return transaction.events.NewUToken.returnValues
   }
 
   async ChannelOpen(cid, hash, numOfChunks) {
@@ -471,13 +478,11 @@ module.exports = class DappInit_ {
         value: WWW3.utils.toWei("0.001")
       })
       .on("receipt", function(receipt) {
-        console.log("# successfully finished!")
         var oTokenId = receipt.events.channelOpened.returnValues.oTokenId
-        console.log("# receipt: " + JSON.stringify(receipt))
-        console.log("oTokenId: " + oTokenId)
+        Logger.debug("receipt: " + JSON.stringify(receipt))
       })
       .on("error", function(error) {
-        console.log("# error occured: " + error)
+        Logger.error("error occured: " + error)
       })
   }
 
@@ -488,11 +493,10 @@ module.exports = class DappInit_ {
         from: From,
       })
       .on("receipt", function(receipt) {
-        console.log("# successfully finished!")
-        console.log("# receipt: " + JSON.stringify(receipt))
+        Logger.debug("receipt: " + JSON.stringify(receipt))
       })
       .on("error", function(error) {
-        console.log("# error occured: " + error)
+        Logger.error("error occured: " + error)
       })
   }
 
@@ -505,11 +509,10 @@ module.exports = class DappInit_ {
         from: From,
       })
       .on("receipt", function(receipt) {
-        console.log("# successfully finished!")
-        console.log("# receipt: " + JSON.stringify(receipt))
+        Logger.debug("receipt: " + JSON.stringify(receipt))
       })
       .on("error", function(error) {
-        console.log("# error occured: " + error)
+        Logger.error("error occured: " + error)
       })
   }
 
@@ -533,7 +536,7 @@ module.exports = class DappInit_ {
         }
       })
       .then((res) => {
-        console.log(JSON.stringify(res.data))
+        Logger.debug(JSON.stringify(res.data))
       })
   }
 }

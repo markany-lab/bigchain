@@ -8,10 +8,12 @@ contract BToken is BFactory {
 
   // register contents
   function enrollDistributor(address distributor) external onlyOwner {
+    require(Distributors[keccak256(abi.encode(distributor))] != distributor, "already enrolled distributor");
     Distributors[keccak256(abi.encode(distributor))] = distributor;
   }
 
   function enrollSearchProvider(address searchProvider) external onlyOwner {
+    require(SearchProviders[keccak256(abi.encode(searchProvider))] != searchProvider, "already enrolled search provider");
     SearchProviders[keccak256(abi.encode(searchProvider))] = searchProvider;
   }
 
@@ -23,6 +25,7 @@ contract BToken is BFactory {
 
   function registerHash(uint cid, bytes32 hash, uint fee) external onlyProviderOf(cid) {
     require(existsD(cid), "unknown data");
+    require(!Hash2Contents[hash]._Enable, 'hash already exists')
     Hash2Contents[hash] = Contents_(cid, fee, true);
     CID2Hashes[cid].push(hash);
     emit NewHash(cid, hash, fee);
