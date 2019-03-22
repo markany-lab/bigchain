@@ -73,6 +73,11 @@
   $ source ~/.bashrc
   ```
 
+# 프로젝트 초기화
+  ```bash
+  $./FirstNetwork.sh setup
+  ```
+
 # ipfs 설치
   ```bash
   $ go get -u -d github.com/ipfs/go-ipfs
@@ -99,7 +104,43 @@
   $ yarn deploy
   ```
 
-# 프로젝트 초기화
+# TENSORFLOW WITH ANACONDA 설치
+- anaconda 다운로드 & 설치
+  >https://www.anaconda.com/distribution/#download-section
   ```bash
-  $./FirstNetwork.sh setup
+  $ ./Anaconda2-2018.12-Linux-x86_64.sh
+  $ source ~/.bashrc
+  $ conda --version
+  $ conda update conda
+  ```
+- anaconda에 가상환경 생성
+  ```bash
+  $ conda create --name TestVM python=2.7
+  $ conda info --envs # 가상환경 리스트 확인
+  $ conda activate TestVM # 가상환경 활성화
+  $ conda deactivate TestVM # 가상환경 비활성화
+  $ conda remove --name TestVM --all # 가상환경 삭제
+  ```
+- 쥬비터 설치 & 실행(http://localhost:8888/)
+  ```bash
+  $ sudo apt-get install python-pip
+  $ pip install jupyter
+  $ nohup jupyter notebook --ip='*' & # 아나콘다의 활성화된 가상환경에서 쥬비터 실행
+  ```
+- tensorflow 패키지 설치
+  ```bash
+  $ conda search tensorflow
+  $ conda install tensorflow
+  $ conda list
+  #$ conda install --name TestVM tensorflow # 특정 가상환경에만 패키지를 설치
+  #$ conda remove --name TestVM tensorflow # 패키지 제거
+  ```
+
+# TENSORFLOW 설치
+  ```bash
+  $ pip install tensorflow # GPU버전은 pip3 install tensorflow-gpu
+  $ sudo apt-get install python-dev
+  $ sudo apt-get install python-virtualenv
+  $ virtualenv --system-site-packages -p python ~/tensorflow
+  $ source ~/tensorflow/bin/activate
   ```
