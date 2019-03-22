@@ -138,7 +138,7 @@
 
 # TENSORFLOW 설치
   ```bash
-  $ pip install tensorflow # GPU버전은 pip3 install tensorflow-gpu
+  $ pip install tensorflow # GPU버전은 pip install tensorflow-gpu
   $ sudo apt-get install python-dev
   $ sudo apt-get install python-virtualenv
   $ virtualenv --system-site-packages -p python ~/tensorflow
