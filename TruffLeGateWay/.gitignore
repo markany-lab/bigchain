@@ -1,6 +1,6 @@
 _backup/
 node_modules/
 build/
+rinkeby.json
 ganache.pid
 ganache.log
-rinkeby.json
