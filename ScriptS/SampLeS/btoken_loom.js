@@ -10,9 +10,7 @@ const {
 } = require('loom-js/dist')
 
 function toHexString(bytes){
-  return bytes.map(function(byte){
-    return (byte & 0xFF).toString(16)
-  }).join('')
+  return bytes.reduce((str, byte) => str + byte.toString(16).padStart(2, '0'), '');
 }
 
 const LoomPrivateKey = CryptoUtils.generatePrivateKey()
