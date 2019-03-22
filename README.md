@@ -54,12 +54,13 @@
   $ export GO_VER=1.11.1
   $ export GO_URL=https://storage.googleapis.com/golang/go${GO_VER}.linux-amd64.tar.gz
   $ sudo mkdir -p $GOROOT
+  $ sudo mkdir -p $GOPATH
   $ sudo curl -sL $GO_URL | (cd $GOROOT && sudo tar --strip-components 1 -xz)
   ```
 
 # go-ethereum 설치
   ```bash
-  $cd $GOPATH
+  $ d $GOPATH
   $ git clone https://github.com/ethereum/go-ethereum.git
   $ cd go-ethereum
   $ make geth
