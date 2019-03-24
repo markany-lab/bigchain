@@ -118,12 +118,13 @@
   $ conda create --name TestVM python=2.7
   $ conda info --envs # 가상환경 리스트 확인
   $ conda activate TestVM # 가상환경 활성화
-  $ conda deactivate TestVM # 가상환경 비활성화
+  $ conda deactivate # 가상환경 비활성화
   $ conda remove --name TestVM --all # 가상환경 삭제
   ```
 - 쥬비터 설치 & 실행(http://localhost:8888/)
   ```bash
   $ sudo apt-get install python-pip
+  $ pip install --upgrade pip
   $ pip install jupyter
   $ nohup jupyter notebook --ip='*' & # 아나콘다의 활성화된 가상환경에서 쥬비터 실행
   ```
