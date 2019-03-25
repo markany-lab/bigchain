@@ -495,7 +495,7 @@ program
   .option('-b, --balance', 'balance info')
   .option('-I, --index <index>', 'account index')
   .option('-p, --password <password>', 'account password')
-  .option('-P, --prvKey <prvKey>', 'private key')
+  .option('-P, --privateKey <privateKey>', 'private key')
   .action(async function(options) {
     if (options.generate) {
       Logger.debug("account_generate() called")
@@ -503,7 +503,7 @@ program
     }
     if (options.import) {
       Logger.debug("account_import() called")
-      await account_import(options.prvKey, options.password)
+      await account_import(options.privateKey, options.password)
     }
     if (options.export) {
       Logger.debug("account_export() called")

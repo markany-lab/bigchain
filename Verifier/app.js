@@ -7,10 +7,6 @@ var Web3 = require('web3');
 var jsonBChannel = require('../TruffLeBToken/build/contracts/BChannel.json')
 var Nacl = require('tweetnacl')
 var fs = require('fs')
-var rinkeby = require('./rinkeby.json')
-var axios = require('axios')
-var https = require('https')
-var EthWallet = require('ethereumjs-wallet')
 
 const {
   Client,
@@ -19,7 +15,7 @@ const {
   CryptoUtils,
 } = require('loom-js/dist')
 
-const PrivateKey = CryptoUtils.B64ToUint8Array('ZGTsP8LUJkEWiqEZq3hqOKfCHCeV+CbYgbZK2/y53aDAaCJPBla4uLTsEtzm/Dczk8Ml8TL5+rAwKNfbuRZihg==')
+const PrivateKey = CryptoUtils.B64ToUint8Array('iCiGlOSClr3ZuZjFHVN/ia+weW7Rxg/QBsNlLyv2WO8fGa+24uMV1FeVe3GJI5uB3PQaPfbVQtd64qRI5j/oLg==')
 const PubLicKey = CryptoUtils.publicKeyFromPrivateKey(PrivateKey)
 
 const CLient = new Client(

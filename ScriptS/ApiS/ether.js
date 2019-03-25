@@ -62,8 +62,6 @@ async function loadKeyStore(index, path, password) {
   return ethWaLLet.fromV3(V3, password)
 }
 
-
-
 async function getDappPrivateKey(wallet) {
   var Token
   var Sign

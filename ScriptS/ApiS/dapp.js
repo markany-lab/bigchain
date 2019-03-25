@@ -29,6 +29,7 @@ const {
 
 module.exports = class DappInit_ {
   static async createAsync(b64_private_key) {
+    console.log("b64_private_key: " + b64_private_key)
     const PrivateKey = CryptoUtils.B64ToUint8Array(b64_private_key);
     const PubLicKey = CryptoUtils.publicKeyFromPrivateKey(PrivateKey)
     const CLient = new Client(

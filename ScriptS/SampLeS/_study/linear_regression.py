@@ -13,7 +13,7 @@ PhY=tf.placeholder(tf.float32)
 A=tf.Variable(tf.random_uniform([1], -100, 100))
 B=tf.Variable(tf.random_uniform([1], -100, 100))
 
-H = A * PhX + B # 가설식(1차방정식)
+H = A * PhX + B # 예측함수(1차방정식)
 
 # 경사하강 알고리즘의 점프 간격
 P = tf.Variable(0.01)
