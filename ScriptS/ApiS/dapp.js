@@ -140,7 +140,7 @@ module.exports = class DappInit_ {
       return {newAddress: ethAddress, mappedAddress: dappAddress}
     }
     await this._AddressMapper.addIdentityMappingAsync(From, To, WWW3Signer)
-    return {newAddress: wallet.getAddressString(), mappedAddress: LocalAddress.fromPublicKey(this._PubLicKey)}
+    return {newAddress: wallet.getAddressString(), mappedAddress: Util.bufferToHex(LocalAddress.fromPublicKey(this._PubLicKey).bytes)}
   }
 
   async ApproveAsync(amount) {
