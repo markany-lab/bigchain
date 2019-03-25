@@ -7,7 +7,6 @@ var Logger = Log4JS.getLogger('Ether')
 Logger.level = Env.log_level
 const jsonBToken = require('../../TruffLeBToken/build/contracts/BToken.json')
 const jsonBChannel = require('../../TruffLeBToken/build/contracts/BChannel.json')
-const json721ZToken = require('../../TruffLeBToken/build/contracts/ERC721ZToken.json')
 const dappGatewayAddress = require('../../WebCLnt/src/gateway_dappchain_address_extdev-plasma-us1.json')
 const {
   web3Signer
@@ -29,7 +28,6 @@ const {
 
 module.exports = class DappInit_ {
   static async createAsync(b64_private_key) {
-    console.log("b64_private_key: " + b64_private_key)
     const PrivateKey = CryptoUtils.B64ToUint8Array(b64_private_key);
     const PubLicKey = CryptoUtils.publicKeyFromPrivateKey(PrivateKey)
     const CLient = new Client(
@@ -64,7 +62,7 @@ module.exports = class DappInit_ {
       new Address(CLient.chainId, LocalAddress.fromPublicKey(PubLicKey))
     )
 
-    const NetworkID = CLient.chainId
+    const NetworkID = Object.keys(jsonBToken.networks)[0]
     const Addr = LocalAddress.fromPublicKey(PubLicKey).toString()
     const BTokenCon = new WWW3.eth.Contract(
       jsonBToken.abi,
