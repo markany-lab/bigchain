@@ -104,7 +104,7 @@
   $ yarn deploy
   ```
 
-# TENSORFLOW WITH ANACONDA 설치
+# 텐서플로 with 아나콘다 설치
 - anaconda 다운로드 & 설치
   >https://www.anaconda.com/distribution/#download-section
   ```bash
@@ -113,7 +113,8 @@
   $ conda --version
   $ conda update conda
   ```
-- anaconda에 가상환경 생성
+
+- 아나콘다에 가상환경 생성
   ```bash
   $ conda create --name TestVM python=2.7
   $ conda info --envs # 가상환경 리스트 확인
@@ -122,7 +123,7 @@
   $ conda remove --name TestVM --all # 가상환경 삭제
   ```
 
-- tensorflow 패키지 설치
+- 텐서플로 패키지 설치
   ```bash
   $ conda search tensorflow
   $ conda install tensorflow
@@ -139,7 +140,7 @@
   $ nohup jupyter notebook --ip='*' & # 아나콘다의 활성화된 가상환경에서 쥬비터 실행
   ```
 
-# TENSORFLOW 설치
+# 텐서플로 설치
   ```bash
   $ pip install tensorflow # GPU버전은 pip install tensorflow-gpu
   $ sudo apt-get install python-dev
