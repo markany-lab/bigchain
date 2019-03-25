@@ -22,3 +22,5 @@
   > https://www.coursera.org/learn/machine-learning/home/welcome
 - 텐서플로우 파이썬 유투브 강의
   > https://www.youtube.com/watch?v=qxUD7fOseBQ&list=PLRx0vPvlEmdAbnmLH9yh03cw9UQU_o7PO
+- 기타
+  > https://github.com/golbin/TensorFlow-Tutorials
