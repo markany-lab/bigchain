@@ -121,13 +121,7 @@
   $ conda deactivate # 가상환경 비활성화
   $ conda remove --name TestVM --all # 가상환경 삭제
   ```
-- 쥬비터 설치 & 실행(http://localhost:8888/)
-  ```bash
-  $ sudo apt-get install python-pip
-  $ pip install --upgrade pip
-  $ pip install jupyter
-  $ nohup jupyter notebook --ip='*' & # 아나콘다의 활성화된 가상환경에서 쥬비터 실행
-  ```
+
 - tensorflow 패키지 설치
   ```bash
   $ conda search tensorflow
@@ -135,6 +129,14 @@
   $ conda list
   #$ conda install --name TestVM tensorflow # 특정 가상환경에만 패키지를 설치
   #$ conda remove --name TestVM tensorflow # 패키지 제거
+  ```
+
+- 쥬비터 설치 & 실행(http://localhost:8081/)
+  ```bash
+  $ sudo apt-get install python-pip
+  $ pip install --upgrade pip
+  $ pip install jupyter
+  $ nohup jupyter notebook --ip='*' & # 아나콘다의 활성화된 가상환경에서 쥬비터 실행
   ```
 
 # TENSORFLOW 설치

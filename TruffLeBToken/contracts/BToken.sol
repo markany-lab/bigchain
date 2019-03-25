@@ -25,7 +25,7 @@ contract BToken is BFactory {
 
   function registerHash(uint cid, bytes32 hash, uint fee) external onlyProviderOf(cid) {
     require(existsD(cid), "unknown data");
-    require(!Hash2Contents[hash]._Enable, 'hash already exists')
+    require(!Hash2Contents[hash]._Enable, 'hash already exists');
     Hash2Contents[hash] = Contents_(cid, fee, true);
     CID2Hashes[cid].push(hash);
     emit NewHash(cid, hash, fee);
