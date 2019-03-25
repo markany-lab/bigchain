@@ -132,6 +132,7 @@ module.exports = class DappInit_ {
   async SignAsync(wallet) {
     const From = new Address('eth', LocalAddress.fromHexString(wallet.getAddressString()))
     const To = new Address(this._CLient.chainId, LocalAddress.fromPublicKey(this._PubLicKey))
+    const address = Util.bufferToHex(LocalAddress.fromPublicKey(this._PubLicKey).bytes)
     const WWW3Signer = new web3Signer(wallet.getPrivateKey())
     if (await this._AddressMapper.hasMappingAsync(From)) {
       const mappingInfo = await this._AddressMapper.getMappingAsync(From)
@@ -140,7 +141,7 @@ module.exports = class DappInit_ {
       return {newAddress: ethAddress, mappedAddress: dappAddress}
     }
     await this._AddressMapper.addIdentityMappingAsync(From, To, WWW3Signer)
-    return {newAddress: wallet.getAddressString(), mappedAddress: LocalAddress.fromPublicKey(this._PubLicKey)}
+    return {newAddress: wallet.getAddressString(), mappedAddress: Util.bufferToHex(LocalAddress.fromPublicKey(this._PubLicKey).bytes)}
   }
 
   async ApproveAsync(amount) {

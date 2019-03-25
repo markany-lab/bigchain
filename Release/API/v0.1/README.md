@@ -1,20 +1,20 @@
 # 온체인 APIs
- - 아래 API들은 commander npm 모듈을 이용하여 생성한 것이다.
- - "node app.js 명령어 --옵션 --파라미터이름 파라미터" 형태로 사용
+  - 아래 API들은 commander npm 모듈을 이용하여 생성한 것이다.
+  - "node app.js 명령어 --옵션 --파라미터이름 파라미터" 형태로 사용
 
 ## account
- - 계정 관련 API
- - 옵션
-  * generate: 계정 생성
-  * import: 계정 가져오기
-  * export: 개인키 내보내기
-  * remove: 계정 삭제
-  * list: 계정 목록
-  * balance: 계정 잔고
- - 파라미터
-  * index: 계정의 index(list 명령어 결과의 순서)
-  * password: 계정의 패스워드
-  * privateKey: 개인키
+  - 계정 관련 API
+  - 옵션
+    * generate: 계정 생성
+    * import: 계정 가져오기
+    * export: 개인키 내보내기
+    * remove: 계정 삭제
+    * list: 계정 목록
+    * balance: 계정 잔고
+  - 파라미터
+    * index: 계정의 index(list 명령어 결과의 순서)
+    * password: 계정의 패스워드
+    * privateKey: 개인키
 
 #### generate
  - 이더리움 계정 생성
