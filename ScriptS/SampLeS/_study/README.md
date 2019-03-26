@@ -14,7 +14,23 @@
 # troubleshooting
   - ImportError: cannot import name 'main'
   ```bash
-  $ sudo python -m pip uninstall pip && sudo apt-get install python-pip --reinstall
+  $ sudo python3 -m pip uninstall pip && sudo apt-get install python-pip --reinstall
+  ```
+  - matplotlib 재설치?
+  ```bash
+  pip uninstall matplotlib
+  python -m pip install --upgrade pip
+  pip install matplotlib
+  ```
+
+# 한글폰트 설치
+  ```bash
+  $ sudo apt-get install fonts-nanum*
+  $ sudo fc-cache -fv
+
+
+  $ cp /usr/share/fonts/truetype/nanum/Nanum* ~/.local/lib/python2.7/site-packages/matplotlib/mpl-data/fonts/ttf/
+  $ rm -rf ~/.cache/matplotlib/*
   ```
 
 # 참고 url

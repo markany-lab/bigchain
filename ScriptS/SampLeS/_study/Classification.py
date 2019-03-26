@@ -80,9 +80,11 @@ for step in range(100):
 #    [[0.2 0.7 0.1] [0.9 0.1 0.]] -> [1 0]
 prediction = tf.argmax(model, 1)
 target = tf.argmax(Y, 1)
-print('예측값:', sess.run(prediction, feed_dict={X: x_data}))
-print('실제값:', sess.run(target, feed_dict={Y: y_data}))
+print(u'예측값:')
+print(sess.run(prediction, feed_dict={X: x_data}))
+print(u'실제값:')
+print(sess.run(target, feed_dict={Y: y_data}))
 
 is_correct = tf.equal(prediction, target)
 accuracy = tf.reduce_mean(tf.cast(is_correct, tf.float32))
-print('정확도: %.2f' % sess.run(accuracy * 100, feed_dict={X: x_data, Y: y_data}))
+print(u'정확도: %.2f' % sess.run(accuracy * 100, feed_dict={X: x_data, Y: y_data}))
