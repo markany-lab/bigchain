@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # GAN 모델을 이용해 단순히 랜덤한 숫자를 생성하는 아닌,
 # 원하는 손글씨 숫자를 생성하는 모델을 만들어봅니다.
 # 이런 방식으로 흑백 사진을 컬러로 만든다든가, 또는 선화를 채색한다든가 하는 응용이 가능합니다.
@@ -141,4 +142,4 @@ for epoch in range(total_epoch):
         plt.savefig('samples2/{}.png'.format(str(epoch).zfill(3)), bbox_inches='tight')
         plt.close(fig)
 
-print('최적화 완료!')
+print(u'최적화 완료!')
