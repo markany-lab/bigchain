@@ -1,5 +1,6 @@
 # 온체인 APIs
   - 아래 API들은 commander npm 모듈을 이용하여 생성한 것이다.
+  - 실행 전 모듈을 설치하기 위해 "yarn" 명령어 입력
   - "node app.js 명령어 --옵션 --파라미터이름 파라미터" 형태로 사용
 
 ## account
@@ -36,13 +37,13 @@
 #### list
   - 이더리움 계정 리스트를 반환
   - 사용 예
-  ```bash
+  ``` bash
   $ node app.js account --list
   ```
   - 리턴 예
   ```json
   {
-    "list": ["1ee77618b9e4f7651381e2ede71b0d389f27a5c6", "16c73f26ba85fbe294b346130d2dcf603fcc3ff2", "1ee77618b9e4f7651381e2ede71b0d389f27a5c6"]
+    "list": ["1ee77618b9e4f7651381e2ede71b0d389f27a5c6", "9f5b09c73d678aed01475c2689b7d136249636b3"]
   }
   ```
 
@@ -74,7 +75,7 @@
   - 리턴 예
   ```json
   {
-    "privateKey": "0x4e97e81d425966c00422a8fc5602382da74862a239e941b2777ab0cb968d115b"
+    "privateKey": "0x4e97e81d425966c02422a8fc5602382da73862a239e941b2b77ab0cb968d115a"
   }
   ```
 
@@ -88,7 +89,7 @@
   - 리턴 예
   ```json
   {
-    "remove": "UTC--2019-03-21T07-19-20.109Z--1ee77618b9e4f7651381e2ede71b0d389f27a5c6"
+    "remove": "UTC--2019-03-27T01-45-37.310Z--9f5b09c73d678aed01475c2689b7d136249636b3"
   }
   ```
 
@@ -105,8 +106,8 @@
   ```json
   {
     "ethAddress": "0x1ee77618b9e4f7651381e2ede71b0d389f27a5c6",
-    "ethBalance": "29187685585976984542",
-    "dappBalance": "5fec5b60eee168"
+    "ethBalance": "28704743207976984542",
+    "dappBalance": "5fec5b60eeb9f4"
   }
   ```
 
@@ -135,8 +136,8 @@
   ```json
   {
     "ethAddress": "0x1ee77618b9e4f7651381e2ede71b0d389f27a5c6",
-    "balanceBefore": "29187685585976984542",
-    "balanceAfter": "29177663207976984542"
+    "balanceBefore": "28704743207976984542",
+    "balanceAfter": "28694720829976984542"
   }
   ```
 
@@ -150,7 +151,7 @@
   - 리턴 예
   ```json
   {
-    "send": "10000000000000000"
+    "send":"10000000000000000"
   }
   ```
 
@@ -164,7 +165,7 @@
   - 리턴 예
   ```json
   {
-    "withdraw": 10000000000000000
+    "withdraw":10000000000000000
   }
   ```
 
@@ -192,11 +193,11 @@
   - 리턴 예
   ```json
   {
-    "0": "0x7b054d36078B73069181C683513Fd45FDC0CD642",
-    "1": "1",
+    "0": "0x2E940cF0DFC7C8f2e116D979d2216FCc3C33E82D",
+    "1": "3",
     "2": "test_title01",
-    "provider": "0x7b054d36078B73069181C683513Fd45FDC0CD642",
-    "cid": "1",
+    "provider": "0x2E940cF0DFC7C8f2e116D979d2216FCc3C33E82D",
+    "cid": "3",
     "titLe": "test_title01"
   }
   ```
@@ -210,9 +211,7 @@
   ```
   - 리턴 예
   ```json
-  {
-    "cids": ["1", "2"]
-  }
+  {"cids":["1","2","3"]}
   ```
 
 #### details
@@ -226,9 +225,9 @@
   ```json
   {
     "details": {
-      "0": "0x1EcE9Cd6C0E61DC9209979F8a9B603733b27f43e",
+      "0": "0x7b054d36078B73069181C683513Fd45FDC0CD642",
       "1": "test_title01",
-      "_Owner": "0x1EcE9Cd6C0E61DC9209979F8a9B603733b27f43e",
+      "_Owner": "0x7b054d36078B73069181C683513Fd45FDC0CD642",
       "_TitLe": "test_title01"
     }
   }
@@ -259,11 +258,11 @@
   ```json
   {
     "newHash": {
-      "0": "0",
-      "1": "0xe29c9c180c6279b0b02abd6a1801c7c04082cf486ec027aa13515e4f3884bb6b",
+      "0": "3",
+      "1": "0xe29c9c180c6279b0b02abd6a1801c7c04082cf486ec027aa13515e4f3884bb60",
       "2": "200",
-      "cid": "0",
-      "hash": "0xe29c9c180c6279b0b02abd6a1801c7c04082cf486ec027aa13515e4f3884bb6b",
+      "cid": "3",
+      "hash": "0xe29c9c180c6279b0b02abd6a1801c7c04082cf486ec027aa13515e4f3884bb60",
       "fee": "200"
     }
   }
@@ -280,8 +279,8 @@
   ```json
   {
     "list": [{
-      "cid": "0",
-      "hashes": ["0xe29c9c180c6279b0b02abd6a1801c7c04082cf486ec027aa13515e4f3884bb6b"]
+      "cid": "3",
+      "hashes": ["0xe29c9c180c6279b0b02abd6a1801c7c04082cf486ec027aa13515e4f3884bb60", "0xe29c9c180c6279b0b02abd6a1801c7c04082cf486ec027aa13515e4f3881af25"]
     }]
   }
   ```
@@ -291,16 +290,16 @@
   - 사용 예
   ``` bash
   $ node app.js hash --details --index <index> --password <password> --hash <hash>
-  $ node app.js hash --details --index 1 --password p@ssw0rd --hash 0xE29C9C180C6279B0B02ABD6A1801C7C04082CF486EC027AA13515E4F3884BB6B
+  $ node app.js hash --details --index 1 --password p@ssw0rd --hash 0xe29c9c180c6279b0b02abd6a1801c7c04082cf486ec027aa13515e4f3884bb60
   ```
   - 리턴 예
   ```json
   {
     "details": {
-      "0": "0",
+      "0": "3",
       "1": "200",
       "2": true,
-      "_Cid": "0",
+      "_Cid": "3",
       "_Fee": "200",
       "_Enable": true
     }
@@ -326,19 +325,19 @@
   - 사용 예
   ```bash
   $ node app.js product --register --index <index> --password <password --hash <hash>
-  $ node app.js product --register --index 1 --password p@ssw0rd --hash 0xE29C9C180C6279B0B02ABD6A1801C7C04082CF486EC027AA13515E4F3884BB6B
+  $ node app.js product --register --index 1 --password p@ssw0rd --hash 0xe29c9c180c6279b0b02abd6a1801c7c04082cf486ec027aa13515e4f3884bb60
   ```
   - 리턴 예
   ```json
   {
     "newPToken": {
-      "0": "0x7b054d36078B73069181C683513Fd45FDC0CD642",
-      "1": "0",
-      "2": "0xe29c9c180c6279b0b02abd6a1801c7c04082cf486ec027aa13515e4f3884bb6b",
+      "0": "0x2E940cF0DFC7C8f2e116D979d2216FCc3C33E82D",
+      "1": "2",
+      "2": "0xe29c9c180c6279b0b02abd6a1801c7c04082cf486ec027aa13515e4f3884bb60",
       "3": "10000",
-      "owner": "0x7b054d36078B73069181C683513Fd45FDC0CD642",
-      "pTokenId": "0",
-      "hash": "0xe29c9c180c6279b0b02abd6a1801c7c04082cf486ec027aa13515e4f3884bb6b",
+      "owner": "0x2E940cF0DFC7C8f2e116D979d2216FCc3C33E82D",
+      "pTokenId": "2",
+      "hash": "0xe29c9c180c6279b0b02abd6a1801c7c04082cf486ec027aa13515e4f3884bb60",
       "price": "10000"
     }
   }
@@ -354,7 +353,7 @@
   - 리턴 예
   ```json
   {
-    "pTokenIds": ["0"]
+    "pTokenIds":["2","3"]
   }
   ```
 
@@ -367,7 +366,7 @@
   ```
   - 리턴 예
   ```json
-  $ node app.js product--details--index 1--password p @ssw0rd--pTokenId 0 {
+  {
     "details": {
       "0": "0x7b054d36078B73069181C683513Fd45FDC0CD642",
       "1": "0xe29c9c180c6279b0b02abd6a1801c7c04082cf486ec027aa13515e4f3884bb6b",
@@ -382,7 +381,7 @@
 #### buy
   - 상품 구입
   - 사용 예
-  ```bash
+  ```bash  
   $ node app.js product --buy --index <index> --password <password> --pTokenId <pTokenId>
   $ node app.js product --buy --index 0 --password p@ssw0rd --pTokenId 0
   ```
@@ -391,11 +390,11 @@
   {
     "newUToken": {
       "0": "0xF2869f974a82EB59df913353882d40bD186cF353",
-      "1": "0",
+      "1": "1",
       "2": "0",
       "3": "0",
       "owner": "0xF2869f974a82EB59df913353882d40bD186cF353",
-      "uTokenId": "0",
+      "uTokenId": "1",
       "pTokenId": "0",
       "state": "0"
     }

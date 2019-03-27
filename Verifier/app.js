@@ -7,6 +7,9 @@ var Web3 = require('web3');
 var jsonBChannel = require('../TruffLeBToken/build/contracts/BChannel.json')
 var Nacl = require('tweetnacl')
 var fs = require('fs')
+var Log4JS = require('log4js')
+var Logger = Log4JS.getLogger('Verifier')
+Logger.level = 'debug'
 
 const {
   Client,
@@ -26,9 +29,10 @@ const CLient = new Client(
 const WWW3 = new Web3(new LoomProvider(CLient, PrivateKey))
 
 const Addr = LocalAddress.fromPublicKey(PubLicKey).toString()
+const NetworkID = Object.keys(jsonBChannel.networks)[0]
 const BChannelCon = new WWW3.eth.Contract(
   jsonBChannel.abi,
-  jsonBChannel.networks[CLient.chainId].address, {
+  jsonBChannel.networks[NetworkID].address, {
     Addr
   }
 )
@@ -66,9 +70,9 @@ async function verifySignature(signB64, publicKeyB64) {
   const publicKeyOwner = LocalAddress.fromPublicKey(publicKey).toString()
 
   if (receiver.toLowerCase() != publicKeyOwner.toLowerCase()) {
-    console.log("# verification failed: ")
-    console.log(" - receiver: " + receiver.toLowerCase())
-    console.log(" - pub_key owner: " + publicKeyOwner.toLowerCase())
+    Logger.error("# verification failed: ")
+    Logger.error(" - receiver: " + receiver.toLowerCase())
+    Logger.error(" - pub_key owner: " + publicKeyOwner.toLowerCase())
     return { code: -1, err: "you are not receiver" }
   }
   return { code: 1, msg, channelInfo: oTokenInfo }
@@ -117,32 +121,32 @@ app.post('/get_receipt', async function (req, res) {
   try {
     const verifySign = await verifySignature(req.body.sign, req.body.public_key)
     if (verifySign.code == -1) {
-      console.log("verify signature failed: " + verifySign.err)
+      Logger.error("verify signature failed: " + verifySign.err)
       res.json(verifySign)
       return
     } else {
-      console.log("verify signatrue succeed")
+      Logger.debug("verify signatrue succeed")
     }
 
     const aggregate = await aggregateReceipt(verifySign.msg, verifySign.channelInfo)
     if (aggregate.code == -1) {
-      console.log("aggregate failed: " + aggregate.err)
+      Logger.error("aggregate failed: " + aggregate.err)
       res.json(aggregate)
       return
     } else {
-      console.log("aggregate succeed")
+      Logger.debug("aggregate succeed")
     }
 
     res.json({ code: "1", msg: "aggregate complete" })
   } catch (err) {
-    console.log("error occured: " + err)
+    Logger.error("error occured: " + err)
     res.json({ code: "-1", err: "internal error" })
   }
 })
 
 async function manageChannel() {
   if (!channelManagerReady) {
-    console.log("channelManager in progress")
+    Logger.debug("channelManager in progress")
     return
   }
   channelManagerReady = 0
@@ -165,16 +169,16 @@ async function manageChannel() {
         countArr.push(latestReceipt.count * (100 / numOfChunks))
       }
 
-      console.log("timeout: " + channelInfo.leftTime)
+      Logger.debug("timeout: " + channelInfo.leftTime)
 
       if (count == numOfChunks || channelInfo.leftTime <= 0) {
-        console.log("sending contents complete")
-        console.log("off-chain close...")
+        Logger.debug("sending contents complete")
+        Logger.debug("off-chain close...")
         var receipt = await BChannelCon.methods.channelOff(open[i]).send({ from: Addr })
-        console.log("channel off receipt: " + JSON.stringify(receipt))
-        console.log("settle...")
+        Logger.debug("channel off receipt: " + JSON.stringify(receipt))
+        Logger.debug("settle...")
         receipt = await BChannelCon.methods.settleChannel(open[i], senders, countArr).send({ from: Addr })
-        console.log("settle receipt: " + JSON.stringify(receipt))
+        Logger.debug("settle receipt: " + JSON.stringify(receipt))
         off.push(open[i])
         open.splice(i, i + 1)
         fs.writeFileSync(channelManagerPath, JSON.stringify({open, off}))
@@ -182,7 +186,7 @@ async function manageChannel() {
     }
     channelManagerReady = 1
   } catch (err) {
-    console.log("error occured: " + err)
+    Logger.error("error occured: " + err)
     channelManagerReady = 1
   }
 }
@@ -190,5 +194,5 @@ async function manageChannel() {
 setInterval(manageChannel, 2000)
 
 app.listen(3003, () => {
-  console.log('Example app listening on port 3003!');
+  Logger.debug('Example app listening on port 3003!');
 });
