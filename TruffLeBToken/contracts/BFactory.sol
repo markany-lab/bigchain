@@ -61,6 +61,7 @@ contract BFactory is Ownable {
   DistCon_[] internal _DCs;
   SearchCon_[] internal _SCs;
   UToken_[] internal _UTs;
+  bytes32[] public _Hs;
 
   mapping (bytes32 => address) internal Distributors;                           // distributors
   mapping (bytes32 => address) internal SearchProviders;                        // search providers
@@ -164,6 +165,10 @@ contract BFactory is Ownable {
 //------------------------------------------------------------------------------------//
 
 //-------------------------------------- list ----------------------------------------//
+  function getElementLength() view public returns (uint cidLength, uint hashLength, uint pTokenIdLength) {
+    return (_Ds.length, _Hs.length, _PTs.length);
+  }
+
   function getOwnedDatas() public view returns (uint[]) {
     return Provider2CIDs[msg.sender];
   }

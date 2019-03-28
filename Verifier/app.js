@@ -88,7 +88,7 @@ async function aggregateReceipt(msg) {
   const timestamp = Date.now()
   const managerPath = channelPath + 'aggregate_manager.json'
   const fileName = channelPath + sender + '_' + timestamp + '.json'
-  var channelManager = JSON.parse(fs.readFileSync(channelManagerPath), 'utf8')
+  var channelManager = JSON.parse(fs.readFileSync(channelManagerPath, 'utf8'))
   if (!fs.existsSync(managerPath)) {
     channelManager.open.push(msg.channel_id)
     fs.writeFileSync(channelManagerPath, JSON.stringify(channelManager))

@@ -28,6 +28,7 @@ contract BToken is BFactory {
     require(!Hash2Contents[hash]._Enable, 'hash already exists');
     Hash2Contents[hash] = Contents_(cid, fee, true);
     CID2Hashes[cid].push(hash);
+    _Hs.push(hash);
     emit NewHash(cid, hash, fee);
   }
 
