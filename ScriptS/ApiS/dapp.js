@@ -7,7 +7,9 @@ var Logger = Log4JS.getLogger('Ether')
 Logger.level = Env.log_level
 const jsonBToken = require('../../TruffLeBToken/build/contracts/BToken.json')
 const jsonBChannel = require('../../TruffLeBToken/build/contracts/BChannel.json')
+const jsonBIdentity = require('../../TruffLeBToken/build/contracts/BIdentity.json')
 const dappGatewayAddress = require('../../WebCLnt/src/gateway_dappchain_address_extdev-plasma-us1.json')
+
 const {
   web3Signer
 } = require('./web3Signer.js')
@@ -78,10 +80,17 @@ module.exports = class DappInit_ {
       }
     )
 
-    return new DappInit_(WWW3, PrivateKey, PubLicKey, CLient, AddressMapper, EthCoin, TransferGateway, Addr, BTokenCon, BChannelCon)
+    const BIdentityCon = new WWW3.eth.Contract(
+      jsonBIdentity.abi,
+      jsonBIdentity.networks[NetworkID].address, {
+        Addr
+      }
+    )
+
+    return new DappInit_(WWW3, PrivateKey, PubLicKey, CLient, AddressMapper, EthCoin, TransferGateway, Addr, BTokenCon, BChannelCon, BIdentityCon)
   }
 
-  constructor(www3, private_key, pubLic_key, cLient, address_mapper, eth_coin, transfer_gateway, addr, btoken_con, bchannel_con) {
+  constructor(www3, private_key, pubLic_key, cLient, address_mapper, eth_coin, transfer_gateway, addr, btoken_con, bchannel_con, bidentity_con) {
     this._Web3 = www3
     this._PrivateKey = private_key
     this._PubLicKey = pubLic_key
@@ -92,6 +101,7 @@ module.exports = class DappInit_ {
     this._Address = addr
     this._BToken = btoken_con
     this._BChannel = bchannel_con
+    this._BIdentity = bidentity_con
     this._TransferGateway.on(Contracts.TransferGateway.EVENT_TOKEN_WITHDRAWAL, event => {
       if (this._OnTokenWithdrawaL) {
         this._OnTokenWithdrawaL(event)
@@ -514,6 +524,13 @@ module.exports = class DappInit_ {
         Logger.error("error occured: " + error)
       })
   }
+
+  //-------------------------------- Identity ---------------------------------//
+    async makeAddressKey(address) {
+      console.log("address: " + address)
+    }
+
+  //---------------------------------------------------------------------------//
 
   async sendAggregatedReceipt() {
     let msg = {

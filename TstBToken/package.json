@@ -3,18 +3,22 @@
   "license": "MIT",
   "scripts": {
     "truffle": "truffle",
-    "update": "rm -rf contracts; cp -r ../TruffLeBToken/contracts ./; rm -rf migrations; cp -r ../TruffLeBToken/migrations ./",
+    "update:t": "rm -rf contracts; cp -r ../TruffLeBToken/contracts ./; rm -rf migrations; cp -r ../TruffLeBToken/migrations ./",
+    "update:i": "rm -rf contracts; cp -r ../TruffLeBIdentity/contracts ./; rm -rf migrations; cp -r ../TruffLeBIdentity/migrations ./",
     "compile": "rm -rf build; truffle compile",
     "ganache": "ganache-cli -p 7545",
-    "test": "truffle test --reset --network ganache"
+    "test:t": "truffle test ./test/BToken.test.js --reset --network ganache",
+    "test:i": "truffle test ./test/BIdentity.test.js --reset --network ganache"
   },
   "dependencies": {
+    "bigi": "^1.4.2",
     "bignumber.js": "^7.2.1",
     "bn-chai": "^1.0.1",
     "bn.js": "^4.11.8",
     "chai": "^4.1.2",
     "chai-as-promised": "^7.1.1",
     "chai-bignumber": "^2.0.2",
+    "ecurve": "^1.0.6",
     "eth-gas-reporter": "^0.1.10",
     "ethereumjs-util": "^5.2.0",
     "ganache-cli": "^6.1.8",

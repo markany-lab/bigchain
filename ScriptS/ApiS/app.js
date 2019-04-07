@@ -59,7 +59,9 @@ async function account_import(privateKey, password) {
 async function account_export(index, password) {
   try {
     const privateKey = await Ether.exportAccount(index, password)
-    console.log(JSON.stringify({privateKey}))
+    console.log(JSON.stringify({
+      privateKey
+    }))
   } catch (error) {
     Logger.error('error occured: ' + error)
   }
@@ -68,7 +70,9 @@ async function account_export(index, password) {
 async function account_remove(index) {
   try {
     const removedAddress = await Ether.removeAccount(index)
-    console.log(JSON.stringify({remove: removedAddress}))
+    console.log(JSON.stringify({
+      remove: removedAddress
+    }))
   } catch (error) {
     Logger.error('error occured: ' + error)
   }
@@ -95,7 +99,11 @@ async function account_balance(index, password) {
     const ethAddress = EtherTools.getWallet().getAddressString()
     const ethBalance = await EtherTools.GetBaLanceAsync(ethAddress)
     const dappBalance = await DappTools.GetBaLanceAsync()
-    console.log(JSON.stringify({ethAddress, ethBalance, dappBalance}))
+    console.log(JSON.stringify({
+      ethAddress,
+      ethBalance,
+      dappBalance
+    }))
   } catch (error) {
     Logger.error('error occured: ' + error)
   }
@@ -111,7 +119,11 @@ async function send_ethereum(index, password, unit, amount) {
     const balanceBefore = await EthWeb3.eth.getBalance(ethAddress)
     await EtherTools.Deposit2GatewayAsync(ethAddress, unit, amount)
     const balanceAfter = await EthWeb3.eth.getBalance(ethAddress)
-    console.log(JSON.stringify({ethAddress, balanceBefore, balanceAfter}))
+    console.log(JSON.stringify({
+      ethAddress,
+      balanceBefore,
+      balanceAfter
+    }))
   } catch (error) {
     Logger.error('error occured: ' + error)
   }
@@ -127,15 +139,21 @@ async function send_dappchain(index, password, unit, amount) {
     const balance = (await DappTools.GetBaLanceAsync()).toString()
     const sendAmount = Web3Util.toWei(amount, unit)
     if (balance < sendAmount) {
-      console.log(JSON.stringify({error: 'insufficient balance'}))
+      console.log(JSON.stringify({
+        error: 'insufficient balance'
+      }))
       return
     }
     await DappTools.ApproveAsync(sendAmount)
     await DappTools.WithdrawEthAsync(sendAmount)
-    console.log(JSON.stringify({send: sendAmount}))
+    console.log(JSON.stringify({
+      send: sendAmount
+    }))
   } catch (error) {
     if (error.message.indexOf('pending') > -1) {
-      console.log(JSON.stringify({error: 'pending already exists'}))
+      console.log(JSON.stringify({
+        error: 'pending already exists'
+      }))
     } else {
       Logger.error('error occured: ' + error)
     }
@@ -164,7 +182,9 @@ async function withdraw(index, password) {
     const Owner = Data.tokenOwner.local.toString()
     const Signature = CryptoUtils.bytesToHexAddr(Data.oracleSignature)
     await EtherTools.WithdrawEthAsync(Owner, EtherBaLance, Signature)
-    console.log(JSON.stringify({withdraw: EtherBaLance}))
+    console.log(JSON.stringify({
+      withdraw: EtherBaLance
+    }))
   } catch (error) {
     Logger.error('error occured: ' + error)
   }
@@ -191,7 +211,9 @@ async function data_list(index, password) {
     var DappTools = Tools.DappTools
 
     const cids = await DappTools.GetOwnedDsAsync()
-    console.log(JSON.stringify({cids}))
+    console.log(JSON.stringify({
+      cids
+    }))
   } catch (error) {
     Logger.error('error occured: ' + error)
   }
@@ -204,11 +226,15 @@ async function data_details(index, password, cid) {
     var DappTools = Tools.DappTools
 
     if (!(await DappTools.IsExistsData(cid))) {
-      console.log(JSON.stringify({error: 'unkown cid'}))
+      console.log(JSON.stringify({
+        error: 'unkown cid'
+      }))
       return
     }
     const details = await DappTools.GetDataWithID(cid)
-    console.log(JSON.stringify({details}))
+    console.log(JSON.stringify({
+      details
+    }))
   } catch (error) {
     Logger.error('error occured: ' + error)
   }
@@ -222,7 +248,9 @@ async function hash_register(index, password, cid, hash, fee) {
 
     Logger.debug('register hash...')
     const newHash = await DappTools.RegisterHash(cid, hash, fee)
-    console.log(JSON.stringify({newHash}))
+    console.log(JSON.stringify({
+      newHash
+    }))
   } catch (error) {
     Logger.error('error occured: ' + error)
   }
@@ -243,7 +271,9 @@ async function hash_list(index, password) {
         hashes
       })
     }
-    console.log(JSON.stringify({list}))
+    console.log(JSON.stringify({
+      list
+    }))
 
   } catch (error) {
     Logger.error('error occured: ' + error)
@@ -257,11 +287,15 @@ async function hash_details(index, password, hash) {
     var DappTools = Tools.DappTools
 
     if (!(await DappTools.IsExistsHash(hash))) {
-      console.log(JSON.stringify({error: 'unkown hash'}))
+      console.log(JSON.stringify({
+        error: 'unkown hash'
+      }))
       return
     }
     const details = await DappTools.GetHashWithCIDandHash(hash)
-    console.log(JSON.stringify({details}))
+    console.log(JSON.stringify({
+      details
+    }))
   } catch (error) {
     Logger.error('error occured: ' + error)
   }
@@ -274,12 +308,16 @@ async function product_register(index, password, hash) {
     var DappTools = Tools.DappTools
 
     if (!(await DappTools.IsExistsHash(hash))) {
-      console.log(JSON.stringify({error: 'unkown hash'}))
+      console.log(JSON.stringify({
+        error: 'unkown hash'
+      }))
       return
     }
     Logger.debug('register product...')
     const newPToken = await DappTools.RegisterProduct(hash, 10000)
-    console.log(JSON.stringify({newPToken}))
+    console.log(JSON.stringify({
+      newPToken
+    }))
   } catch (error) {
     Logger.error('error occured: ' + error)
   }
@@ -292,7 +330,9 @@ async function product_list(index, password) {
     var DappTools = Tools.DappTools
 
     const pTokenIds = await DappTools.GetOwnedPTsAsync()
-    console.log(JSON.stringify({pTokenIds}))
+    console.log(JSON.stringify({
+      pTokenIds
+    }))
   } catch (error) {
     Logger.error('error occured: ' + error)
   }
@@ -305,12 +345,16 @@ async function product_details(index, password, pTokenId) {
     var DappTools = Tools.DappTools
 
     if (!(await DappTools.IsExistsPToken(pTokenId))) {
-      console.log(JSON.stringify({error: 'unkown pTokenId'}))
+      console.log(JSON.stringify({
+        error: 'unkown pTokenId'
+      }))
       return
     }
 
     const details = await DappTools.GetPTWithID(pTokenId)
-    console.log(JSON.stringify({details}))
+    console.log(JSON.stringify({
+      details
+    }))
   } catch (error) {
     Logger.error('error occured: ' + error)
   }
@@ -324,7 +368,9 @@ async function product_buy(index, password, pTokenId) {
 
     Logger.debug('buy product...')
     const newUToken = await DappTools.BuyToken(pTokenId)
-    console.log(JSON.stringify({newUToken}))
+    console.log(JSON.stringify({
+      newUToken
+    }))
   } catch (error) {
     Logger.error('error occured: ' + error)
   }
@@ -337,17 +383,23 @@ async function contract_contract(index, password, pTokenId, address, cost, isDc)
     var DappTools = Tools.DappTools
 
     if (!(await DappTools.IsExistsPToken(pTokenId))) {
-      console.log(JSON.stringify({error: 'unkown pTokenId'}))
+      console.log(JSON.stringify({
+        error: 'unkown pTokenId'
+      }))
       return
     }
     if (isDc) {
       Logger.debug('sign distribution contract...')
       const newDC = await DappTools.DistributionContract(pTokenId, address, cost)
-      console.log(JSON.stringify({newDC}))
+      console.log(JSON.stringify({
+        newDC
+      }))
     } else {
       Logger.debug('sign search provider contract...')
       const newSC = await DappTools.SearchProviderContract(pTokenId, address, cost)
-      console.log(JSON.stringify({newSC}))
+      console.log(JSON.stringify({
+        newSC
+      }))
     }
   } catch (error) {
     Logger.error('error occured: ' + error)
@@ -362,10 +414,14 @@ async function contract_list(index, password, isDc) {
 
     if (isDc) {
       const dcList = await DappTools.GetOwnedDCsAsync()
-      console.log(JSON.stringify({dcList}))
+      console.log(JSON.stringify({
+        dcList
+      }))
     } else {
       const scList = await DappTools.GetOwnedSCsAsync()
-      console.log(JSON.stringify({scList}))
+      console.log(JSON.stringify({
+        scList
+      }))
     }
   } catch (error) {
     Logger.error('error occured: ' + error)
@@ -379,15 +435,21 @@ async function contract_List(index, password, pTokenId, isDc) {
     var DappTools = Tools.DappTools
 
     if (!(await DappTools.IsExistsPToken(pTokenId))) {
-      console.log(JSON.stringify({error: 'unkown pTokenId'}))
+      console.log(JSON.stringify({
+        error: 'unkown pTokenId'
+      }))
       return
     }
     if (isDc) {
       const dcList = await DappTools.GetOwnedDCsWithPTokenAsync(pTokenId)
-      console.log(JSON.stringify({dcList}))
+      console.log(JSON.stringify({
+        dcList
+      }))
     } else {
       const scList = await DappTools.GetOwnedSCsWithPTokenAsync(pTokenId)
-      console.log(JSON.stringify({scList}))
+      console.log(JSON.stringify({
+        scList
+      }))
     }
   } catch (error) {
     Logger.error('error occured: ' + error)
@@ -402,10 +464,14 @@ async function contract_details(index, password, Index, isDc) {
 
     if (isDc) {
       const details = await DappTools.GetDCWithID(Index)
-      console.log(JSON.stringify({details}))
+      console.log(JSON.stringify({
+        details
+      }))
     } else {
       const details = await DappTools.GetSCWithID(Index)
-      console.log(JSON.stringify({details}))
+      console.log(JSON.stringify({
+        details
+      }))
     }
   } catch (error) {
     Logger.error('error occured: ' + error)
@@ -419,7 +485,9 @@ async function token_list(index, password) {
     var DappTools = Tools.DappTools
 
     const list = await DappTools.GetOwnedUTsAsync()
-    console.log(JSON.stringify({list}))
+    console.log(JSON.stringify({
+      list
+    }))
   } catch (error) {
     Logger.error('error occured: ' + error)
   }
@@ -433,13 +501,17 @@ async function token_details(index, password, uTokenId) {
     var DappTools = Tools.DappTools
 
     if (!(await DappTools.IsExistsUToken(uTokenId))) {
-      console.log(JSON.stringify({error: 'unkown uTokenId'}))
+      console.log(JSON.stringify({
+        error: 'unkown uTokenId'
+      }))
       return
     }
     let details = await DappTools.GetUTWithID(uTokenId)
     var state = ['sold', 'in progress', 'settled']
     details.state = state[details.states]
-    console.log(JSON.stringify({details}))
+    console.log(JSON.stringify({
+      details
+    }))
   } catch (error) {
     Logger.error('error occured: ' + error)
   }
@@ -475,7 +547,9 @@ async function channel_details(index, password, oTokenId) {
     var DappTools = Tools.DappTools
 
     const details = await DappTools.GetOTWithID(oTokenId)
-    console.log(JSON.stringify({details}))
+    console.log(JSON.stringify({
+      details
+    }))
   } catch (error) {
     Logger.error('error occured: ' + error)
   }
@@ -788,5 +862,32 @@ program
     }
     process.exit(0)
   })
+
+async function addRequest() {
+  try {
+    var Tools = []
+    var EtherTools = []
+    var DappTools = []
+    var wallet = []
+    Tools.push(await initTools(0, 'p@ssw0rd'))
+    EtherTools.push(Tools[0].EtherTools)
+    DappTools.push(Tools[0].DappTools)
+    wallet.push(EtherTools[0].getWallet())
+    console.log(wallet.getPrivateKeyString())
+  } catch (error) {
+    Logger.error('error occured: ' + error)
+  }
+
+  program
+    .command('identity')
+    .option('-t, --test', 'test')
+    .action(async function(options) {
+      if (options.test) {
+        Logger.debug("sendAggregatedReceipt() called")
+        await sendAggregatedReceipt()
+      }
+      process.exit(0)
+    })
+}
 
 program.parse(process.argv)

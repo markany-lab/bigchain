@@ -48,6 +48,14 @@ contract('BToken', accounts => {
     Owner.should.be.equal(carlos)
   })
 
+  const TitLeTest = '***Test'
+  it(TitLeTest, async () => {
+    console.log(TitLeTest)
+    const test = await Ct.testFunction.call(1, 2, {from: bob})
+    console.log(JSON.stringify(test))
+  })
+  return
+
   const TitLe01 = '***(01) register data => modify data => register hash => modify hash => register product => buy product'
   it(TitLe01, async () => {
     console.log(TitLe01)
