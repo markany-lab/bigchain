@@ -42,7 +42,7 @@ contract BChannel is BToken {
   onlyVCOf(cTokenId)
   returns(address, uint, uint, uint, int, uint8) {
     _Channel memory _C = _Cs[cTokenId];
-    return (_C.receiver, _Ts[_C.uTokenId].pTokenId, _C.deposit, _C.timestamp, _C.timeout - (now - _C.timestamp), uint8(_C.state));
+    return (_C.receiver, _Ts[_C.uTokenId].pTokenId, _C.deposit, _C.timestamp, int(_C.timeout - (now - _C.timestamp)), uint8(_C.state));
   }
 
   function getDepositAmount(uint uTokenId)
