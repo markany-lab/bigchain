@@ -1,88 +1,117 @@
 pragma solidity ^0.4.24;
+// pragma experimental ABIEncoderV2;
 
 import "./BFactory.sol";
-// import "./Core/ERC721Z/ERC721ZToken.sol";
-import "./Interfaces/ERC721Z.sol";
 
 contract BToken is BFactory {
-
-  // register contents
-  function enrollDistributor(address distributor) external onlyOwner {
-    require(Distributors[keccak256(abi.encode(distributor))] != distributor, "already enrolled distributor");
-    Distributors[keccak256(abi.encode(distributor))] = distributor;
+  uint8 _cid = 0;
+  function getCID() public {
+    require(verifyRole(msg.sender, P) || verifyRole(msg.sender, CP));
+    Cid2O[_cid] = msg.sender;
+    emit NewID(_cid);
+    _cid++;
   }
 
-  function enrollSearchProvider(address searchProvider) external onlyOwner {
-    require(SearchProviders[keccak256(abi.encode(searchProvider))] != searchProvider, "already enrolled search provider");
-    SearchProviders[keccak256(abi.encode(searchProvider))] = searchProvider;
+  //------------------------------------------ regist ------------------------------------------//
+  function registData(address dOwner, uint8 cid, string ccid, string version, string category, string subCategory, string title, string fileDetails)
+  public
+  onlyRoleOf(dOwner, CP) {
+    require(verifyRole(msg.sender, P) || verifyRole(msg.sender, CP) && msg.sender == dOwner);
+    require(msg.sender == Cid2O[cid]);
+    _Data memory data = _Data(dOwner, cid, ccid, version, category, subCategory, title, fileDetails);
+    uint dataId = _Ds.push(data) - 1;
+    O2Dids[dOwner].push(dataId);
+    K2Did[keccak256(abi.encodePacked(ccid, version))] = dataId;
+    emit NewID(dataId);
   }
 
-  function registerData(string titLe) external {
-    uint cid = _Ds.push(Data_(msg.sender, titLe)) - 1;
-    Provider2CIDs[msg.sender].push(cid);
-    emit NewData(msg.sender, cid, titLe);
+  function registFileFee(string ccid, string version, string filePath, uint fee, uint chunks)
+  public
+  onlyRoleOf(msg.sender, CP) {
+    require(_Ds[getDataIndex(ccid, version)].owner == msg.sender);
+    K2F[keccak256(abi.encodePacked(ccid, version, filePath))] = _File(fee, chunks, true);
   }
 
-  function registerHash(uint cid, bytes32 hash, uint fee) external onlyProviderOf(cid) {
-    require(existsD(cid), "unknown data");
-    require(!Hash2Contents[hash]._Enable, 'hash already exists');
-    Hash2Contents[hash] = Contents_(cid, fee, true);
-    CID2Hashes[cid].push(hash);
-    _Hs.push(hash);
-    emit NewHash(cid, hash, fee);
+  function registProduct(string ccid, string version, string filePath, uint price)
+  public
+  onlyRoleOf(msg.sender, D)
+  onlyVFOf(ccid, version, filePath) {
+    require(getFileInfo(ccid, version, filePath).fee <= price);
+    _Product memory product = _Product(msg.sender, ccid, version, filePath, price);
+    uint pTokenId = _Ps.push(product) - 1;
+    O2Pids[msg.sender].push(pTokenId);
+    emit NewID(pTokenId);
   }
 
-  function registerProduct(bytes32 hash, address seller, uint value) external onlyProviderOf(Hash2Contents[hash]._Cid) onlyEnableContentsOf(hash){
-    require(value >= Hash2Contents[hash]._Fee, "product price is less than licence fee");
-    uint pTokenId = _PTs.push(PToken_(seller, hash, value)) - 1;
-    Owner2PTokenIds[seller].push(pTokenId);
-    emit NewPToken(seller, pTokenId, hash, value);
+  function buyProduct(uint pTokenId)
+  payable public
+  onlyVPOf(pTokenId) {
+    _Product memory _P = _Ps[pTokenId];
+    require(msg.value >= _P.price);
+    uint uTokenId = _Ts.push(_Token(msg.sender, pTokenId, TokenState.valid)) - 1;
+    O2Tids[msg.sender].push(uTokenId);
+    address cOwner = _Ds[getDataIndex(_P.ccid, _P.version)].owner;
+    uint fee = getFileInfo(_P.ccid, _P.version, _P.filePath).fee;
+    cOwner.transfer(fee);
+    _P.owner.transfer(_P.price - fee);
+    msg.sender.transfer(msg.value - _P.price);
+    emit NewID(uTokenId);
+  }
+  //--------------------------------------------------------------------------------------------//
+
+  //------------------------------------------- list -------------------------------------------//
+  function getDataList()
+  view public
+  returns (uint[] list) {
+    return O2Dids[msg.sender];
   }
 
-  function getContractsTotalCost(uint pTokenId) view internal returns(uint totalCost) {
-    totalCost = 0;
-    for(uint i = 0; i < PTokenId2DistConIds[pTokenId].length; i++) {
-      totalCost += _DCs[PTokenId2DistConIds[pTokenId][i]]._Cost;
-    }
-    for(i = 0; i < PTokenId2SearchConIds[pTokenId].length; i++) {
-      totalCost += _SCs[PTokenId2SearchConIds[pTokenId][i]]._Cost;
-    }
+  function getProductList()
+  view public
+  returns (uint[] list) {
+    return O2Pids[msg.sender];
   }
 
-  function distContract(uint pTokenId, address distributor, uint cost) external onlyPTokenOwnerOf(pTokenId) onlyDistributorOf(distributor) {
-    require(existsP(pTokenId), "unknown pTokenId");
-    uint totalCost = getContractsTotalCost(pTokenId);
-    require(totalCost <= _PTs[pTokenId]._Price, "total cost is bigger than product price");
-    uint dcIndex = _DCs.push(DistCon_(distributor, pTokenId, cost)) - 1;
-    PTokenId2DistConIds[pTokenId].push(dcIndex);
-    Owner2DistConIds[distributor].push(dcIndex);
-    emit NewDistContract(distributor, dcIndex, pTokenId, cost);
+  function getTokenList()
+  view public
+  returns (uint[] list) {
+    return O2Tids[msg.sender];
+  }
+  //--------------------------------------------------------------------------------------------//
+
+  //----------------------------------------- details ------------------------------------------//
+  function getDataDetails(uint dataId)
+  view public
+  returns (address, uint8, string, string, string, string, string, string) {
+    require(_Ds[dataId].owner != address(0));
+    _Data memory _D = _Ds[dataId];
+    return (_D.owner, _D.cid, _D.ccid, _D.version, _D.category, _D.subCategory, _D.title, _D.fileDetails);
   }
 
-  function searchContract(uint pTokenId, address searchProvider, uint cost) external onlyPTokenOwnerOf(pTokenId) onlySearchProviderOf(searchProvider) {
-    require(existsP(pTokenId), "unknown pTokenId");
-    uint totalCost = getContractsTotalCost(pTokenId);
-    require(totalCost <= _PTs[pTokenId]._Price, "total cost is bigger than product price");
-    uint scIndex = _SCs.push(SearchCon_(searchProvider, pTokenId, cost)) - 1;
-    PTokenId2SearchConIds[pTokenId].push(scIndex);
-    Owner2SearchConIds[searchProvider].push(scIndex);
-    emit NewSearchContract(searchProvider, pTokenId, cost);
+  function getFileFee(string ccid, string version, string filePath)
+  view public
+  onlyVFOf(ccid, version, filePath)
+  returns (uint fee) {
+    return getFileInfo(ccid, version, filePath).fee;
   }
 
-  function buyToken(uint pTokenId) payable external {
-    require(existsP(pTokenId), "unknown pTokenId");
-    require(_PTs[pTokenId]._Price <= msg.value, "msg.value is less than product price");
-    uint totalCost = _PTs[pTokenId]._Price;
-    msg.sender.transfer(msg.value - totalCost);
-    for(uint i = 0; i < PTokenId2DistConIds[pTokenId].length; i++) {
-      _DCs[PTokenId2DistConIds[pTokenId][i]]._Distributor.transfer(_DCs[PTokenId2DistConIds[pTokenId][i]]._Cost);
-      totalCost -= _DCs[PTokenId2DistConIds[pTokenId][i]]._Cost;
-    }
-    for(i = 0; i < PTokenId2SearchConIds[pTokenId].length; i++) {
-      _SCs[PTokenId2SearchConIds[pTokenId][i]]._SearchProvider.transfer(_SCs[PTokenId2SearchConIds[pTokenId][i]]._Cost);
-      totalCost -= _SCs[PTokenId2SearchConIds[pTokenId][i]]._Cost;
-    }
-    _PTs[pTokenId]._Owner.transfer(totalCost);
-    createUToken(msg.sender, pTokenId, UTokenState_.sold);
+  function getProductDetails(uint pTokenId)
+  view public
+  onlyVPOf(pTokenId)
+  returns (address, string, string, string, uint) {
+    _Product memory _P = _Ps[pTokenId];
+    return (_P.owner, _P.ccid, _P.version, _P.filePath, _P.price);
   }
+
+  function getTokenDetails(uint uTokenId)
+  view public
+  onlyUOf(uTokenId)
+  returns (address, uint, uint8) {
+    _Token memory _T = _Ts[uTokenId];
+    return (_T.owner, _T.pTokenId, uint8(_T.state));
+  }
+  //--------------------------------------------------------------------------------------------//
+
+
+
 }

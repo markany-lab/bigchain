@@ -2,12 +2,13 @@ var Env = require('../../.env.json')
 const Web3 = require('web3');
 const Util = require('ethereumjs-util')
 const BN = require('bn.js')
+const ECurve = require('ecurve')
+const BI = require('bigi')
 var Log4JS = require('log4js')
-var Logger = Log4JS.getLogger('Ether')
+var Logger = Log4JS.getLogger('DApp')
 Logger.level = Env.log_level
-const jsonBToken = require('../../TruffLeBToken/build/contracts/BToken.json')
 const jsonBChannel = require('../../TruffLeBToken/build/contracts/BChannel.json')
-const jsonBIdentity = require('../../TruffLeBToken/build/contracts/BIdentity.json')
+const jsonBIdentity = require('../../TruffLeBIdentity/build/contracts/BIdentity.json')
 const dappGatewayAddress = require('../../WebCLnt/src/gateway_dappchain_address_extdev-plasma-us1.json')
 
 const {
@@ -64,15 +65,8 @@ module.exports = class DappInit_ {
       new Address(CLient.chainId, LocalAddress.fromPublicKey(PubLicKey))
     )
 
-    const NetworkID = Object.keys(jsonBToken.networks)[0]
+    const NetworkID = Object.keys(jsonBChannel.networks)[0]
     const Addr = LocalAddress.fromPublicKey(PubLicKey).toString()
-    const BTokenCon = new WWW3.eth.Contract(
-      jsonBToken.abi,
-      jsonBToken.networks[NetworkID].address, {
-        Addr
-      }
-    )
-
     const BChannelCon = new WWW3.eth.Contract(
       jsonBChannel.abi,
       jsonBChannel.networks[NetworkID].address, {
@@ -87,10 +81,10 @@ module.exports = class DappInit_ {
       }
     )
 
-    return new DappInit_(WWW3, PrivateKey, PubLicKey, CLient, AddressMapper, EthCoin, TransferGateway, Addr, BTokenCon, BChannelCon, BIdentityCon)
+    return new DappInit_(WWW3, PrivateKey, PubLicKey, CLient, AddressMapper, EthCoin, TransferGateway, Addr, BChannelCon, BIdentityCon)
   }
 
-  constructor(www3, private_key, pubLic_key, cLient, address_mapper, eth_coin, transfer_gateway, addr, btoken_con, bchannel_con, bidentity_con) {
+  constructor(www3, private_key, pubLic_key, cLient, address_mapper, eth_coin, transfer_gateway, addr, bchannel_con, bidentity_con) {
     this._Web3 = www3
     this._PrivateKey = private_key
     this._PubLicKey = pubLic_key
@@ -99,7 +93,6 @@ module.exports = class DappInit_ {
     this._EthCoin = eth_coin
     this._TransferGateway = transfer_gateway
     this._Address = addr
-    this._BToken = btoken_con
     this._BChannel = bchannel_con
     this._BIdentity = bidentity_con
     this._TransferGateway.on(Contracts.TransferGateway.EVENT_TOKEN_WITHDRAWAL, event => {
@@ -147,10 +140,16 @@ module.exports = class DappInit_ {
       const mappingInfo = await this._AddressMapper.getMappingAsync(From)
       const ethAddress = CryptoUtils.bytesToHexAddr(mappingInfo.from.local.bytes)
       const dappAddress = CryptoUtils.bytesToHexAddr(mappingInfo.to.local.bytes)
-      return {newAddress: ethAddress, mappedAddress: dappAddress}
+      return {
+        ethAddress: ethAddress,
+        dappAddress: dappAddress
+      }
     }
     await this._AddressMapper.addIdentityMappingAsync(From, To, WWW3Signer)
-    return {newAddress: wallet.getAddressString(), mappedAddress: Util.bufferToHex(LocalAddress.fromPublicKey(this._PubLicKey).bytes)}
+    return {
+      ethAddress: wallet.getAddressString(),
+      dappAddress: Util.bufferToHex(LocalAddress.fromPublicKey(this._PubLicKey).bytes)
+    }
   }
 
   async ApproveAsync(amount) {
@@ -189,175 +188,11 @@ module.exports = class DappInit_ {
     )
   }
 
-  //+++++++++++++++++++++++++++++ dapp_btoken +++++++++++++++++++++++++++++//
-
-  //--------------------------------- list --------------------------------//
-  async GetOwnedDsAsync() {
-    const From = this._Address
-    return await this._BToken.methods.getOwnedDatas().call({
-      from: From
-    })
-  }
-
-  async GetOwnedHsAsync(cid) {
-    const From = this._Address
-    return await this._BToken.methods.getOwnedHashes(cid).call({
-      from: From
-    })
-  }
-
-  async GetOwnedPTsAsync() {
-    const From = this._Address
-    return await this._BToken.methods.getOwnedPTokens().call({
-      from: From
-    })
-  }
-
-  async GetOwnedDCsAsync() {
-    const From = this._Address
-    return await this._BToken.methods.getOwnedDCs().call({
-      from: From
-    })
-  }
-
-  async GetOwnedDCsWithPTokenAsync(pTokenId) {
-    const From = this._Address
-    return await this._BToken.methods.getOwnedDCsWithPToken(pTokenId).call({
-      from: From
-    })
-  }
-
-  async GetOwnedSCsAsync() {
-    const From = this._Address
-    return await this._BToken.methods.getOwnedSCs().call({
-      from: From
-    })
-  }
-
-  async GetOwnedSCsWithPTokenAsync(pTokenId) {
-    const From = this._Address
-    return await this._BToken.methods.getOwnedSCsWithPToken(pTokenId).call({
-      from: From
-    })
-  }
-
-  async GetOwnedUTsAsync() {
-    const From = this._Address
-    return await this._BToken.methods.getOwnedUTokens().call({
-      from: From
-    })
-  }
-  //-----------------------------------------------------------------------//
-
-
-  //------------------------------- details -------------------------------//
-  async GetDataWithID(cid) {
-    const From = this._Address
-    return await this._BToken.methods._Ds(cid).call({
-      from: From
-    })
-  }
-
-  async GetHashWithCIDandHash(hash) {
-    const From = this._Address
-    return await this._BToken.methods.Hash2Contents(hash).call({
-      from: From
-    })
-  }
-
-  async GetPTWithID(pTokenId) {
-    const From = this._Address
-    return await this._BToken.methods._PTs(pTokenId).call({
-      from: From
-    })
-  }
-
-  async GetDCWithID(dcIndex) {
-    const From = this._Address
-    return await this._BToken.methods.getDCDetails(dcIndex).call({
-      from: From
-    })
-  }
-
-  async GetSCWithID(scIndex) {
-    const From = this._Address
-    return await this._BToken.methods.getSCDetails(scIndex).call({
-      from: From
-    })
-  }
-
-  async GetUTWithID(uTokenId) {
-    const From = this._Address
-    return await this._BToken.methods.getUTokenDetails(uTokenId).call({
-      from: From
-    })
-  }
-
-  async GetOTWithID(oTokenId) {
-    const From = this._Address
-    return await this._BChannel.methods.getOTokenDetails(oTokenId).call({
-      from: From
-    })
-  }
-  //-----------------------------------------------------------------------//
-
-  //------------------------------ existance ------------------------------//
-  async IsExistsData(cid) {
-    const From = this._Address
-    return this._BToken.methods.existsD(cid).call({
-      from: From
-    })
-  }
-
-  async IsExistsHash(hash) {
-    const From = this._Address
-    return this._BToken.methods.existsH(hash).call({
-      from: From
-    })
-  }
-
-  async IsExistsPToken(pTokenId) {
-    const From = this._Address
-    return this._BToken.methods.existsP(pTokenId).call({
-      from: From
-    })
-  }
-
-  async IsExistsDC(dcIndex) {
-    const From = this._Address
-    return this._BToken.methods.existsDC(dcIndex).call({
-      from: From
-    })
-  }
-
-  async IsExistsSC(scIndex) {
-    const From = this._Address
-    return this._BToken.methods.existsDC(scIndex).call({
-      from: From
-    })
-  }
-
-  async IsExistsUToken(uTokenId) {
-    const From = this._Address
-    return this._BToken.methods.existsU(uTokenId).call({
-      from: From
-    })
-  }
-
-  async IsExistsOToken(oTokenId) {
-    const From = this._Address
-    return this._BChannel.methods.existsO(oTokenId).call({
-      from: From
-    })
-  }
-  //-----------------------------------------------------------------------//
-
-  //-------------------------------- APIs ---------------------------------//
-  async EnrollDistributor(distributor) {
-    const From = this._Address
-    return await this._BToken.methods.enrollDistributor(distributor)
+  //----------------------------------------------------------------- msp ---------------------------------------------------------------//
+  async requestEnroll(role) {
+    await this._BChannel.methods.requestEnroll(role)
       .send({
-        from: From
+        from: this._Address
       })
       .on("receipt", function(receipt) {
         Logger.debug("receipt: " + JSON.stringify(receipt))
@@ -367,181 +202,353 @@ module.exports = class DappInit_ {
       })
   }
 
-  async EnrollSearchProvider(searchProvider) {
-    const From = this._Address
-    return await this._BToken.methods.enrollSearchProvider(searchProvider)
-      .send({
-        from: From
-      })
-      .on("receipt", function(receipt) {
-        Logger.debug("receipt: " + JSON.stringify(receipt))
-      })
-      .on("error", function(error) {
-        Logger.error("error occured: " + error)
-      })
-  }
-
-  async RegisterData(titLe) {
-    const From = this._Address
-    const transaction = await this._BToken.methods.registerData(titLe)
-      .send({
-        from: From
-      })
-      .on("receipt", function(receipt) {
-        Logger.debug("receipt: " + JSON.stringify(receipt))
-      })
-      .on("error", function(error) {
-        Logger.error("error occured: " + error)
-      })
-    return transaction.events.NewData.returnValues
-  }
-
-  async RegisterHash(cid, hash, fee) {
-    const From = this._Address
-    const transaction = await this._BToken.methods.registerHash(cid, hash, fee)
-      .send({
-        from: From
-      })
-      .on("receipt", function(receipt) {
-        Logger.debug("receipt: " + JSON.stringify(receipt))
-      })
-      .on("error", function(error) {
-        Logger.error("error occured: " + error)
-      })
-    return transaction.events.NewHash.returnValues
-  }
-
-  async RegisterProduct(hash, value) {
-    const From = this._Address
-    const transaction =  await this._BToken.methods.registerProduct(hash, From, value)
-      .send({
-        from: From
-      })
-      .on("receipt", function(receipt) {
-        Logger.debug("receipt: " + JSON.stringify(receipt))
-      })
-      .on("error", function(error) {
-        Logger.error("error occured: " + error)
-      })
-    return transaction.events.NewPToken.returnValues
-  }
-
-  async DistributionContract(pTokenId, distributor, cost) {
-    const From = this._Address
-    const transaction = await this._BToken.methods.distContract(pTokenId, distributor, cost)
-      .send({
-        from: From
-      })
-      .on("receipt", function(receipt) {
-        Logger.debug("receipt: " + JSON.stringify(receipt))
-      })
-      .on("error", function(error) {
-        Logger.error("error occured: " + error)
-      })
-    return transaction.events.NewDistContract.returnValues
-  }
-
-  async SearchProviderContract(pTokenId, searchProvider, cost) {
-    const From = this._Address
-    const transaction = await this._BToken.methods.searchContract(pTokenId, searchProvider, cost)
-      .send({
-        from: From
-      })
-      .on("receipt", function(receipt) {
-        Logger.debug("receipt: " + JSON.stringify(receipt))
-      })
-      .on("error", function(error) {
-        Logger.error("error occured: " + error)
-      })
-    return transaction.events.NewSearchContract.returnValues
-  }
-
-  async BuyToken(pTokenId) {
-    const From = this._Address
-    const WWW3 = this._Web3
-
-    const tokenDetails = await this.GetPTWithID(pTokenId)
-    Logger.debug('token details: ' + JSON.stringify(tokenDetails))
-
-    const transaction = await this._BToken.methods.buyToken(pTokenId)
-      .send({
-        from: From,
-        value: tokenDetails._Price
-      })
-      .on("receipt", function(receipt) {
-        Logger.debug("receipt: " + JSON.stringify(receipt))
-      })
-      .on("error", function(error) {
-        Logger.error("error occured: " + error)
-      })
-    return transaction.events.NewUToken.returnValues
-  }
-
-  async ChannelOpen(cid, hash, numOfChunks) {
-    const From = this._Address
-    const WWW3 = this._Web3
-
-    await this._BChannel.methods.channelOpen(cid, hash, numOfChunks)
-      .send({
-        from: From,
-        value: WWW3.utils.toWei("0.001")
-      })
-      .on("receipt", function(receipt) {
-        var oTokenId = receipt.events.channelOpened.returnValues.oTokenId
-        Logger.debug("receipt: " + JSON.stringify(receipt))
-      })
-      .on("error", function(error) {
-        Logger.error("error occured: " + error)
-      })
-  }
-
-  async ChannelOff(oTokenId) {
-    const From = this._Address
-    await this._BChannel.methods.channelOff(oTokenId)
-      .send({
-        from: From,
-      })
-      .on("receipt", function(receipt) {
-        Logger.debug("receipt: " + JSON.stringify(receipt))
-      })
-      .on("error", function(error) {
-        Logger.error("error occured: " + error)
-      })
-  }
-
-  async Settle(oTokenId) {
-    const From = this._Address
-    var addresses = ['0x16db17db1113c9d409e37c820ff0e5dd5b229f64', '0x101b70635498929bf4b14b0ecaf55d0a19a02ade'];
-    var portions = [70, 30]
-    await this._BChannel.methods.settleChannel(oTokenId, addresses, portions)
-      .send({
-        from: From,
-      })
-      .on("receipt", function(receipt) {
-        Logger.debug("receipt: " + JSON.stringify(receipt))
-      })
-      .on("error", function(error) {
-        Logger.error("error occured: " + error)
-      })
-  }
-
-  //-------------------------------- Identity ---------------------------------//
-    async makeAddressKey(address) {
-      console.log("address: " + address)
+  async getRequestDetails() {
+    var detailsArray = []
+    const roles = {
+      1: 'Packager',
+      2: 'ContentsProvider',
+      4: 'StorageProvider',
+      8: 'Distributor'
     }
-
-  //---------------------------------------------------------------------------//
-
-  async sendAggregatedReceipt() {
-    let msg = {
-      channel_id: "0",
-      sender: '0xb73C9506cb7f4139A4D6Ac81DF1e5b6756Fab7A2',
-      count: 20,
-      chunk_list: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+    const nextIndex = await this._BChannel.methods.getNextIndex().call({
+      from: this._Address
+    })
+    const requestLength = await this._BChannel.methods.getRequestLength().call({
+      from: this._Address
+    })
+    for (var i = nextIndex; i < requestLength; i++) {
+      var obj = {
+        index: i
+      }
+      var details = await this._BChannel.methods.getRequestDetails(i).call({
+        from: this._Address
+      })
+      obj.requester = details.requester
+      obj.role = roles[details.role]
+      detailsArray.push(obj)
     }
+    return detailsArray
+  }
+
+  async approveRole(approvals) {
+    await this._BChannel.methods.approveRole(approvals)
+      .send({
+        from: this._Address
+      })
+      .on("receipt", function(receipt) {
+        Logger.debug("receipt: " + JSON.stringify(receipt))
+      })
+      .on("error", function(error) {
+        Logger.error("error occured: " + error)
+      })
+  }
+
+  async revokeRole(target, role) {
+    const From = new Address('eth', LocalAddress.fromHexString('0x' + target))
+    if (!(await this._AddressMapper.hasMappingAsync(From))) {
+        Logger.error("not dapp user")
+        return false
+    }
+    const mappingInfo = await this._AddressMapper.getMappingAsync(From)
+    const dappAddress = CryptoUtils.bytesToHex(mappingInfo.to.local.bytes)
+    await this._BChannel.methods.revokeRole(dappAddress, role)
+      .send({
+        from: this._Address
+      })
+      .on("receipt", function(receipt) {
+        Logger.debug("receipt: " + JSON.stringify(receipt))
+      })
+      .on("error", function(error) {
+        Logger.error("error occured: " + error)
+      })
+  }
+
+  async verifyRole(target, role) {
+    const From = new Address('eth', LocalAddress.fromHexString('0x' + target))
+    if (!(await this._AddressMapper.hasMappingAsync(From))) {
+        Logger.error("not dapp user")
+        return false
+    }
+    const mappingInfo = await this._AddressMapper.getMappingAsync(From)
+    const dappAddress = CryptoUtils.bytesToHex(mappingInfo.to.local.bytes)
+    return await this._BChannel.methods.verifyRole(dappAddress.toLowerCase(), role).call({
+      from: this._Address
+    })
+  }
+
+  async requestCleanup() {
+    await this._BChannel.methods.cleanupRequest()
+    .send({
+      from: this._Address
+    })
+    .on("receipt", function(receipt) {
+      Logger.debug("receipt: " + JSON.stringify(receipt))
+    })
+    .on("error", function(error) {
+      Logger.error("error occured: " + error)
+    })
+  }
+  //-------------------------------------------------------------------------------------------------------------------------------------//
+
+  //-------------------------------------------------------------- get cid --------------------------------------------------------------//
+    async getCID() {
+      const tx = await this._BChannel.methods.getCID()
+      .send({
+        from: this._Address
+      })
+      .on("receipt", function(receipt) {
+        Logger.debug("receipt: " + JSON.stringify(receipt))
+      })
+      .on("error", function(error) {
+        Logger.error("error occured: " + error)
+      })
+      return tx.events.NewID.returnValues.Id
+    }
+  //-------------------------------------------------------------------------------------------------------------------------------------//
+
+  //-------------------------------------------------------- invoke transaction ---------------------------------------------------------//
+  async registData(cid, ccid, version, category, subCategory, title, fileDetails) {
+    const tx = await this._BChannel.methods.registData(this._Address, cid, ccid, version, category, subCategory, title, fileDetails)
+    .send({
+      from: this._Address
+    })
+    .on("receipt", function(receipt) {
+      Logger.debug("receipt: " + JSON.stringify(receipt))
+    })
+    .on("error", function(error) {
+      Logger.error("error occured: " + error)
+    })
+    return tx.events.NewID.returnValues.Id
+  }
+
+  async registFileFee(ccid, version, filePath, fee, chunks) {
+    await this._BChannel.methods.registFileFee(ccid, version, filePath, fee, chunks)
+    .send({
+      from: this._Address
+    })
+    .on("receipt", function(receipt) {
+      Logger.debug("receipt: " + JSON.stringify(receipt))
+    })
+    .on("error", function(error) {
+      Logger.error("error occured: " + error)
+    })
+  }
+
+  async registProduct(ccid, version, filePath, price) {
+    const tx = await this._BChannel.methods.registProduct(ccid, version, filePath, price)
+    .send({
+      from: this._Address
+    })
+    .on("receipt", function(receipt) {
+      Logger.debug("receipt: " + JSON.stringify(receipt))
+    })
+    .on("error", function(error) {
+      Logger.error("error occured: " + error)
+    })
+    return tx.events.NewID.returnValues.Id
+  }
+
+  async buyToken(productId) {
+    const productPrice = (await this.getProductDetails(productId)).price
+    const tx = await this._BChannel.methods.buyProduct(productId)
+    .send({
+      from: this._Address,
+      value: productPrice
+    })
+    .on("receipt", function(receipt) {
+      Logger.debug("receipt: " + JSON.stringify(receipt))
+    })
+    .on("error", function(error) {
+      Logger.error("error occured: " + error)
+    })
+    return tx.events.NewID.returnValues.Id
+  }
+
+  async channelOpen(tokenId) {
+    const deposit = (await this.getDepositAmount(tokenId))
+    const tx = await this._BChannel.methods.channelOpen(tokenId)
+    .send({
+      from: this._Address,
+      value: deposit
+    })
+    .on("receipt", function(receipt) {
+      Logger.debug("receipt: " + JSON.stringify(receipt))
+    })
+    .on("error", function(error) {
+      Logger.error("error occured: " + error)
+    })
+    return tx.events.NewID.returnValues.Id
+  }
+
+  async channelOff(channelId) {
+    await this._BChannel.methods.channelOff(channelId)
+    .send({
+      from: this._Address,
+    })
+    .on("receipt", function(receipt) {
+      Logger.debug("receipt: " + JSON.stringify(receipt))
+    })
+    .on("error", function(error) {
+      Logger.error("error occured: " + error)
+    })
+  }
+
+  async channelSettle(channelId, senders, chunks) {
+    await this._BChannel.methods.settleChannel(channelId, senders, chunks)
+    .send({
+      from: this._Address,
+    })
+    .on("receipt", function(receipt) {
+      Logger.debug("receipt: " + JSON.stringify(receipt))
+    })
+    .on("error", function(error) {
+      Logger.error("error occured: " + error)
+    })
+  }
+
+  //-------------------------------------------------------------------------------------------------------------------------------------//
+
+  //--------------------------------------------------------------- list ----------------------------------------------------------------//
+  async getDataList() {
+    return this._BChannel.methods.getDataList().call({from: this._Address})
+  }
+
+  async getProductList() {
+    return this._BChannel.methods.getProductList().call({from: this._Address})
+  }
+
+  async getTokenList() {
+    return this._BChannel.methods.getTokenList().call({from: this._Address})
+  }
+  //-------------------------------------------------------------------------------------------------------------------------------------//
+
+  //-------------------------------------------------------------- details --------------------------------------------------------------//
+  async getDataDetails(dataId) {
+    return this._BChannel.methods.getDataDetails(dataId).call({from: this._Address})
+  }
+
+  async getFileFee(ccid, version, filePath) {
+    return this._BChannel.methods.getFileFee(ccid, version, filePath).call({from: this._Address})
+  }
+
+  async getProductDetails(productId) {
+    return this._BChannel.methods.getProductDetails(productId).call({from: this._Address})
+  }
+
+  async getTokenDetails(tokenId) {
+    return this._BChannel.methods.getTokenDetails(tokenId).call({from: this._Address})
+  }
+
+  async getDepositAmount(tokenId) {
+    return this._BChannel.methods.getDepositAmount(tokenId).call({from: this._Address})
+  }
+
+  async getChannelDetails(channelId) {
+    return this._BChannel.methods.getChannelDetails(channelId).call({from: this._Address})
+  }
+  //-------------------------------------------------------------------------------------------------------------------------------------//
+
+
+  //---------------------------------------------------------------- sign ---------------------------------------------------------------//
+  async signReceipt(msg) {
     const Msg = Buffer.from(JSON.stringify(msg))
     const sign = CryptoUtils.Uint8ArrayToB64(Nacl.sign(Msg, this._PrivateKey))
-    const public_key = CryptoUtils.Uint8ArrayToB64(Util.toBuffer(CryptoUtils.bytesToHexAddr(this._PubLicKey)))
+    const pubKey = CryptoUtils.Uint8ArrayToB64(Util.toBuffer(CryptoUtils.bytesToHexAddr(this._PubLicKey)))
+    return {
+      sign,
+      pubKey
+    }
+  }
+
+  async verifyReceript(signB64, publicKeyB64) {
+    const sign = CryptoUtils.B64ToUint8Array(signB64)
+    const publicKey = CryptoUtils.B64ToUint8Array(publicKeyB64)
+    const msgBytes = Nacl.sign.open(sign, publicKey)
+    const msg = JSON.parse(Buffer.from(msgBytes.buffer, msgBytes.byteOffset, msgBytes.byteLength).toString())
+    return msg
+  }
+  //-------------------------------------------------------------------------------------------------------------------------------------//
+
+  //---------------------------------------------------------------- test ---------------------------------------------------------------//
+  //------------------------------------------- identity -------------------------------------------//
+  async enrollIssuer(ethAddress) {
+    const EthAddress = new Address('eth', LocalAddress.fromHexString(ethAddress))
+    var DappAddress
+    if (await this._AddressMapper.hasMappingAsync(EthAddress)) {
+      const mappingInfo = await this._AddressMapper.getMappingAsync(EthAddress)
+      DappAddress = CryptoUtils.bytesToHexAddr(mappingInfo.to.local.bytes)
+    } else {
+      Logger.error("unmapped address")
+      return
+    }
+
+    let transaction = await this._BIdentity.methods.enrollIssuer(DappAddress, ethAddress)
+      .send({
+        from: this._Address
+      })
+      .on("receipt", function(receipt) {
+        Logger.debug("receipt: " + JSON.stringify(receipt))
+      })
+      .on("error", function(error) {
+        Logger.error("error occured: " + error)
+      })
+    return transaction.events.NewIssuer.returnValues.issuer
+  }
+
+  async getAddressKey(address) {
+    console.log("address: " + address)
+    var ecparams = ECurve.getCurveByName('secp256k1')
+    var convert = ecparams.G.multiply(BI.fromBuffer(new Buffer(address.substring(2), 'hex')))
+    return Buffer.concat([convert.affineX.toBuffer(32), convert.affineY.toBuffer(32)])
+  }
+
+  async getDataHash(addressKey, data) {
+    return Util.keccak256(addressKey + JSON.stringify(data))
+  }
+
+  async requestAdd(addressKey, dataHash, privateKey) {
+    var ecSign = Util.ecsign(dataHash, privateKey)
+    var signature = Util.bufferToHex(ecSign.r) + Util.bufferToHex(ecSign.s).substr(2) + Util.bufferToHex(ecSign.v).substr(2)
+    const transaction = await this._BIdentity.methods.requestAdd('0x' + addressKey.toString('hex'), '0x' + dataHash.toString('hex'), signature)
+      .send({
+        from: this._Address
+      })
+      .on("receipt", function(receipt) {
+        Logger.debug("receipt: " + JSON.stringify(receipt))
+      })
+      .on("error", function(error) {
+        Logger.error("error occured: " + error)
+      })
+    return transaction.events.RequestAdd.returnValues.requestKey
+  }
+
+  async approveAdd(dataHash, requestKey, isApprove) {
+    const transaction = await this._BIdentity.methods.approveAdd('0x' + dataHash.toString('hex'), requestKey, isApprove)
+      .send({
+        from: this._Address
+      })
+      .on("receipt", function(receipt) {
+        Logger.debug("receipt: " + JSON.stringify(receipt))
+      })
+      .on("error", function(error) {
+        Logger.error("error occured: " + error)
+      })
+  }
+
+  async getSignature(addressKey, dataHash) {
+    return await this._BIdentity.methods.getSignature('0x' + addressKey.toString('hex'), '0x' + dataHash.toString('hex'))
+      .call({
+        from: this._Address
+      })
+  }
+  //------------------------------------------------------------------------------------------------//
+
+  //------------------------------------------- verifier -------------------------------------------//
+  async sendAggregatedReceipt(msg) {
+    const Msg = Buffer.from(JSON.stringify(msg))
+    const sign = CryptoUtils.Uint8ArrayToB64(Nacl.sign(Msg, this._PrivateKey))
+    // const public_key = CryptoUtils.Uint8ArrayToB64(Util.toBuffer(CryptoUtils.bytesToHexAddr(this._PubLicKey)))
+    const public_key = 'HxmvtuLjFdRXlXtxiSObgdz0Gj321ULXeuKkSOY/6C4='
 
     await axios({
         method: 'post',
@@ -555,4 +562,5 @@ module.exports = class DappInit_ {
         Logger.debug(JSON.stringify(res.data))
       })
   }
+  //------------------------------------------------------------------------------------------------//
 }

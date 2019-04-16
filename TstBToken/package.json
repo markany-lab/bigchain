@@ -6,7 +6,7 @@
     "update:t": "rm -rf contracts; cp -r ../TruffLeBToken/contracts ./; rm -rf migrations; cp -r ../TruffLeBToken/migrations ./",
     "update:i": "rm -rf contracts; cp -r ../TruffLeBIdentity/contracts ./; rm -rf migrations; cp -r ../TruffLeBIdentity/migrations ./",
     "compile": "rm -rf build; truffle compile",
-    "ganache": "ganache-cli -p 7545",
+    "ganache": "ganache-cli -l 10000000 -p 7545",
     "test:t": "truffle test ./test/BToken.test.js --reset --network ganache",
     "test:i": "truffle test ./test/BIdentity.test.js --reset --network ganache"
   },

@@ -35,10 +35,10 @@ contract('BIdentity', accounts => {
     })
   })
 
-  const alicePrvKey = Buffer.from('a7aad62210b164c21ef9e36d1b1956bf0f06b8439e45f7ef3354c23ffb8a2399', 'hex')
-  const bobPrvKey = Buffer.from('72dba32dd3955477393a9d060474eacee5f392f7926347d6d32bef44b4dacc35', 'hex')
-  const carlosPrvKey = Buffer.from('0e349116b3259ce9246709354c9dff0cd2c7032c6a9492766c338822e55c79be', 'hex')
-  
+  const alicePrvKey = Buffer.from('bd8cdfe50ad365f979caa887841ae5452ff60d7d78e1e1ed918625a223dc2aad', 'hex')
+  const bobPrvKey = Buffer.from('40593ffa02e032a807acfecfcdfca79a76af87afa5357a72ade9320fc05e89fa', 'hex')
+  const carlosPrvKey = Buffer.from('0566e06904b9ea8e00450d6634b7dc757443e762c8cdb1c2732269126b158c34', 'hex')
+
   describe("request to add & approve request", () => {
     let convertedAddress
     let dataHash

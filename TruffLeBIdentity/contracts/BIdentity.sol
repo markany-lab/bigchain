@@ -7,6 +7,10 @@ import "./Utils.sol";
 contract BIdentity is Ownable, Utils{
   using ECRecovery for bytes32;
 
+  struct _Issuer {
+    address _dappAddr;
+    address _ethAddr;
+  }
   struct _Signature {
     bytes _signature;
     address _signer;
@@ -17,7 +21,7 @@ contract BIdentity is Ownable, Utils{
     _Signature _signature;
   }
 
-  mapping(bytes32 => address) public issuers;
+  mapping(bytes32 => _Issuer) public issuers;
   mapping(bytes => mapping(bytes32 => _Signature)) private signatures;
   mapping(uint => _Approval) public approvals;
 
@@ -26,23 +30,23 @@ contract BIdentity is Ownable, Utils{
 
   modifier onlyIssuer() {
     require(msg.sender != address(0), "invalid address");
-    require(issuers[keccak256(abi.encodePacked(msg.sender))] == msg.sender, "not issuer");
+    require(issuers[keccak256(abi.encodePacked(msg.sender))]._dappAddr == msg.sender, "not issuer");
     _;
   }
 
   modifier onlySigner(bytes convertedAddress, bytes32 dataHash) {
     require(msg.sender != address(0), "invalid address");
-    require(signatures[convertedAddress][getDataKey(convertedAddress, dataHash)]._signer == msg.sender, "not signer");
+    require(signatures[convertedAddress][getDataKey(convertedAddress, dataHash)]._signer == issuers[keccak256(abi.encodePacked(msg.sender))]._ethAddr, "not signer");
     _;
   }
 
-  function enrollIssuer(address issuer) public onlyOwner {
-      issuers[keccak256(abi.encodePacked(issuer))] = issuer;
-      emit NewIssuer(issuer);
+  function enrollIssuer(address dappIssuer, address ethIssuer) public onlyOwner {
+      issuers[keccak256(abi.encodePacked(dappIssuer))] = _Issuer(dappIssuer, ethIssuer);
+      emit NewIssuer(ethIssuer);
   }
 
   function requestAdd(bytes convertedAddress, bytes32 dataHash, bytes signature) public onlyIssuer {
-    require(dataHash.recover(signature) == msg.sender, "msg.sender is not issuer");
+    require(dataHash.recover(signature) == issuers[keccak256(abi.encodePacked(msg.sender))]._ethAddr, "msg.sender is not issuer");
     uint requestKey = uint(keccak256(abi.encodePacked(convertedAddress, dataHash, signature)));
     approvals[requestKey] = _Approval(convertedAddress, _Signature(signature, msg.sender));
     emit RequestAdd(requestKey);

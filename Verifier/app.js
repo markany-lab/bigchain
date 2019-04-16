@@ -66,9 +66,8 @@ async function verifySignature(signB64, publicKeyB64) {
   }
 
   const oTokenInfo = await BChannelCon.methods.getOTokenDetails(msg.channel_id).call({ from: Addr })
-  const receiver = oTokenInfo.orderer
+  const receiver = oTokenInfo.receiver
   const publicKeyOwner = LocalAddress.fromPublicKey(publicKey).toString()
-
   if (receiver.toLowerCase() != publicKeyOwner.toLowerCase()) {
     Logger.error("# verification failed: ")
     Logger.error(" - receiver: " + receiver.toLowerCase())
@@ -92,8 +91,8 @@ async function aggregateReceipt(msg) {
   if (!fs.existsSync(managerPath)) {
     channelManager.open.push(msg.channel_id)
     fs.writeFileSync(channelManagerPath, JSON.stringify(channelManager))
-    var manager = new Object
     fs.writeFileSync(fileName, JSON.stringify(msg))
+    var manager = {}
     manager[sender] = timestamp
     fs.writeFileSync(managerPath, JSON.stringify(manager))
   } else {
@@ -105,7 +104,7 @@ async function aggregateReceipt(msg) {
       fs.writeFileSync(managerPath, JSON.stringify(manager))
     } else {
       var priorFile = JSON.parse(fs.readFileSync(channelPath + sender + '_' + manager[sender] + '.json', 'utf8'))
-      if (priorFile.count < msg.count) {
+      if (priorFile.size < msg.size) {
         fs.writeFileSync(fileName, JSON.stringify(msg))
         manager[sender] = timestamp
         fs.writeFileSync(managerPath, JSON.stringify(manager))
@@ -191,7 +190,7 @@ async function manageChannel() {
   }
 }
 
-setInterval(manageChannel, 2000)
+// setInterval(manageChannel, 2000)
 
 app.listen(3003, () => {
   Logger.debug('Example app listening on port 3003!');

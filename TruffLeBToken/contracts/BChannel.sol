@@ -1,96 +1,95 @@
 pragma solidity ^0.4.24;
 
-import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
+// import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
+import "./BToken.sol";
 
-contract BChannel is Ownable {
+contract BChannel is BToken {
 
-  uint minDeposit = 0;
-  uint unitPrice = 0;
+  uint prcieByChunk = 0;
+  uint timeout = 86400;
 
-  event channelOpened(uint oTokenId, address orderer, uint cid, string contents_hash, uint deposit);
-  event settleFinished(address[] contributors, uint[] portions);
-
-  // config
-  function setConfig(uint deposit, uint price) external onlyOwner {
-    minDeposit = deposit;
-    unitPrice = price;
+  function setConfig(uint _prcieByChunk, uint _timeout) external onlyOwner {
+    prcieByChunk = _prcieByChunk;
+    timeout = _timeout;
   }
 
-  enum OTokenState_ {
+  enum ChannelState {
+    invalid,
     open,
     off,
     settle
   }
 
   // off-chain channel token
-  struct OToken_ {
-    address _Orderer;
-    uint _CID;
-    string _CHash;
-    uint16 _NumOfChunks;
-    OTokenState_ _State;
-    uint _TimeStamp;
-    uint _TimeOut;
+  struct _Channel {
+    address receiver;
+    uint uTokenId;
+    uint deposit;
+    uint timestamp;
+    uint timeout;
+    ChannelState state;
   }
 
-  OToken_[] internal _OTs;  // offchain channel tokens array
+  _Channel[] internal _Cs;  // offchain channel tokens array
 
-  mapping (uint => uint) public OToken2Deposit; // otokenId => deposit
-
-  function existsO(uint256 oTokenId) view public returns (bool) {
-    return oTokenId + 1 <= _OTs.length;
+  modifier onlyVCOf(uint cTokenId) {
+    require(_Cs[cTokenId].state != ChannelState.invalid);
+    _;
   }
 
-  function getOTokenDetails(uint oTokenId) public view returns(address orderer, uint cid, string cHash, uint16 numOfChunks, uint deposit, uint8 state, uint timestamp, uint leftTime ) {
-    OToken_ memory O = _OTs[oTokenId];
-    return (
-      O._Orderer,
-      O._CID,
-      O._CHash,
-      O._NumOfChunks,
-      OToken2Deposit[oTokenId],
-      uint8(O._State),
-      O._TimeStamp,
-      O._TimeOut - (now - O._TimeStamp)
-    );
+  function getChannelDetails(uint cTokenId)
+  public view
+  onlyVCOf(cTokenId)
+  returns(address, uint, uint, uint, int, uint8) {
+    _Channel memory _C = _Cs[cTokenId];
+    return (_C.receiver, _Ts[_C.uTokenId].pTokenId, _C.deposit, _C.timestamp, _C.timeout - (now - _C.timestamp), uint8(_C.state));
   }
 
-  // off-chain APIs
-  function channelOpen(uint cid, string contentsHash, uint16 numOfChunks) payable public returns (uint oTokenId) {
-    require(minDeposit <= msg.value, "deposit is too little");
-
-    oTokenId = _OTs.push(OToken_(msg.sender, cid, contentsHash, numOfChunks, OTokenState_.open, now, 1000000/*timeout*/ )) - 1;
-    OToken2Deposit[oTokenId] = msg.value;
-    emit channelOpened(oTokenId, msg.sender, cid, contentsHash, msg.value);
+  function getDepositAmount(uint uTokenId)
+  view public
+  onlyUOf(uTokenId)
+  onlyVTOf(uTokenId)
+  returns (uint amount) {
+    _Product memory _P = _Ps[_Ts[uTokenId].pTokenId];
+    uint chunks = getFileInfo(_P.ccid, _P.version, _P.filePath).chunks;
+    return chunks * prcieByChunk;
   }
 
-  function channelOff(uint oTokenId) public {
-    require(existsO(oTokenId), "this off-chain is not exists");
-    require(_OTs[oTokenId]._State == OTokenState_.open, "this off-chain is already offed");
-    _OTs[oTokenId]._State = OTokenState_.off;
+  function channelOpen(uint uTokenId)
+  payable public
+  onlyUOf(uTokenId)
+  onlyVTOf(uTokenId) {
+    require(getDepositAmount(uTokenId) <= msg.value);
+    uint cTokenId = _Cs.push(_Channel(msg.sender, uTokenId, msg.value, now, timeout, ChannelState.open)) - 1;
+    _Ts[uTokenId].state = TokenState.in_progress;
+    emit NewID(cTokenId);
   }
 
-  function settleChannel(uint oTokenId, address[] contributor, uint[] portion) onlyOwner external {
-    require(_OTs[oTokenId]._State == OTokenState_.off, "channel is not offed yet");
+  function channelOff(uint cTokenId)
+  public
+  onlyOwner
+  onlyVCOf(cTokenId) {
+    // require(msg.sender == owner || msg.sender == _Cs[cTokenId].receiver, "you are not permissioned");
+    require(_Cs[cTokenId].state == ChannelState.open);
+    _Cs[cTokenId].state = ChannelState.off;
+  }
 
-    uint balanceForUser = OToken2Deposit[oTokenId];
-    uint[] memory payForSender = new uint[](contributor.length);
-    uint totalPay = 0;
-    for(uint i = 0; i < contributor.length; i++) {
-      payForSender[i] = (unitPrice * portion[i]) / 100;
-      totalPay += payForSender[i];
-      require(totalPay <= balanceForUser, "deposit is less than total payment");
+  function settleChannel(uint cTokenId, address[] contributors, uint[] chunks)
+  external
+  onlyOwner {
+    require(_Cs[cTokenId].state == ChannelState.off);
+    require(contributors.length == chunks.length);
+
+    uint leftDeposit = _Cs[cTokenId].deposit;
+    for(uint i = 0; i < contributors.length; i++) {
+      uint payment = chunks[i] * prcieByChunk;
+      contributors[i].transfer(payment);
+      leftDeposit -= payment;
     }
 
-    for(i = 0; i < contributor.length; i++) {
-      contributor[i].transfer(payForSender[i]);
-      balanceForUser -= payForSender[i];
-    }
-
-    (_OTs[oTokenId]._Orderer).transfer(balanceForUser);
-    OToken2Deposit[oTokenId] = 0;
-    _OTs[oTokenId]._State = OTokenState_.settle;
-
-    emit settleFinished(contributor, portion);
+    (_Cs[cTokenId].receiver).transfer(leftDeposit);
+    _Cs[cTokenId].deposit = 0;
+    _Cs[cTokenId].state = ChannelState.settle;
+    _Ts[_Cs[cTokenId].uTokenId].state = TokenState.invalid;
   }
 }

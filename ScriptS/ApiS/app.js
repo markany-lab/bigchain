@@ -4,6 +4,11 @@ var Dapp = require('./dapp.js')
 var Util = require('ethereumjs-util')
 var Web3Util = require('web3-utils')
 var Log4JS = require('log4js')
+var Log4JSExtend = require('log4js-extend')
+Log4JSExtend(Log4JS, {
+  path: __dirname,
+  format: "at @name (@file:@line:@column)"
+})
 var Logger = Log4JS.getLogger('API MAIN')
 Logger.level = Env.log_level
 var {
@@ -12,10 +17,10 @@ var {
 var program = require('commander')
 var crypto = require('crypto')
 
-async function initTools(index, password) {
+async function initTools(address, password) {
   /* init Ethereum elements */
   Logger.debug('init ethereum tools...')
-  var EtherTools = await Ether.createAsync(index, password)
+  var EtherTools = await Ether.createAsync(address, password)
   Logger.debug('init complete')
 
   /* init Dappchain elements */
@@ -28,52 +33,77 @@ async function initTools(index, password) {
   }
 }
 
+const roles = ['P', 'CP', 'SP', 'D']
+//------------------------------------------------------------ account apis -----------------------------------------------------------//
 async function account_generate(password) {
   try {
-    const index = await Ether.generateAccount(password)
-    var Tools = await initTools(index, password)
+    const address = await Ether.generateAccount(password)
+    var Tools = await initTools(address[1], password)
     var EtherTools = Tools.EtherTools
     var DappTools = Tools.DappTools
 
     const mappingResult = await DappTools.SignAsync(EtherTools.getWallet())
-    console.log(JSON.stringify(mappingResult))
+    const result = {
+      state: 'new',
+      ethAddress: mappingResult.ethAddress,
+      dappAddress: mappingResult.dappAddress
+    }
+    console.log(JSON.stringify(result))
   } catch (error) {
+    console.log(JSON.stringify({
+      error: error.message
+    }))
     Logger.error('error occured: ' + error)
   }
 }
 
 async function account_import(privateKey, password) {
   try {
-    const index = await Ether.importAccount(privateKey, password)
-    var Tools = await initTools(index, password)
+    const address = await Ether.importAccount(privateKey, password)
+    var Tools = await initTools(address[1], password)
     var EtherTools = Tools.EtherTools
     var DappTools = Tools.DappTools
 
+    const state = address[0] ? "new" : "exists"
     const mappingResult = await DappTools.SignAsync(EtherTools.getWallet())
-    console.log(JSON.stringify(mappingResult))
+    const result = {
+      state,
+      ethAddress: mappingResult.ethAddress,
+      dappAddress: mappingResult.dappAddress
+    }
+    console.log(JSON.stringify(result))
   } catch (error) {
+    console.log(JSON.stringify({
+      error: error.message
+    }))
     Logger.error('error occured: ' + error)
   }
 }
 
-async function account_export(index, password) {
+async function account_export(address, password) {
   try {
-    const privateKey = await Ether.exportAccount(index, password)
+    const privateKey = await Ether.exportAccount(address, password)
     console.log(JSON.stringify({
       privateKey
     }))
   } catch (error) {
+    console.log(JSON.stringify({
+      error: error.message
+    }))
     Logger.error('error occured: ' + error)
   }
 }
 
-async function account_remove(index) {
+async function account_remove(address) {
   try {
-    const removedAddress = await Ether.removeAccount(index)
+    const state = await Ether.removeAccount(address)
     console.log(JSON.stringify({
-      remove: removedAddress
+      state
     }))
   } catch (error) {
+    console.log(JSON.stringify({
+      error: error.message
+    }))
     Logger.error('error occured: ' + error)
   }
 }
@@ -89,9 +119,9 @@ async function account_list() {
   }))
 }
 
-async function account_balance(index, password) {
+async function account_balance(address, password) {
   try {
-    var Tools = await initTools(index, password)
+    var Tools = await initTools(address, password)
     var EtherTools = Tools.EtherTools
     var DappTools = Tools.DappTools
 
@@ -105,13 +135,18 @@ async function account_balance(index, password) {
       dappBalance
     }))
   } catch (error) {
+    console.log(JSON.stringify({
+      error: error.message
+    }))
     Logger.error('error occured: ' + error)
   }
 }
+//-------------------------------------------------------------------------------------------------------------------------------------//
 
-async function send_ethereum(index, password, unit, amount) {
+//------------------------------------------------------------ gateway apis -----------------------------------------------------------//
+async function send_ethereum(address, password, unit, amount) {
   try {
-    var EtherTools = await Ether.createAsync(index, password)
+    var EtherTools = await Ether.createAsync(address, password)
 
     /* send ether from ethereum account to dapp account */
     var EthWeb3 = EtherTools.getWeb3()
@@ -125,13 +160,16 @@ async function send_ethereum(index, password, unit, amount) {
       balanceAfter
     }))
   } catch (error) {
+    console.log(JSON.stringify({
+      error: error.message
+    }))
     Logger.error('error occured: ' + error)
   }
 }
 
-async function send_dappchain(index, password, unit, amount) {
+async function send_dappchain(address, password, unit, amount) {
   try {
-    var Tools = await initTools(index, password)
+    var Tools = await initTools(address, password)
     var EtherTools = Tools.EtherTools
     var DappTools = Tools.DappTools
 
@@ -155,14 +193,17 @@ async function send_dappchain(index, password, unit, amount) {
         error: 'pending already exists'
       }))
     } else {
+      console.log(JSON.stringify({
+        error: error.message
+      }))
       Logger.error('error occured: ' + error)
     }
   }
 }
 
-async function withdraw(index, password) {
+async function withdraw(address, password) {
   try {
-    var Tools = await initTools(index, password)
+    var Tools = await initTools(address, password)
     var EtherTools = Tools.EtherTools
     var DappTools = Tools.DappTools
 
@@ -186,379 +227,552 @@ async function withdraw(index, password) {
       withdraw: EtherBaLance
     }))
   } catch (error) {
-    Logger.error('error occured: ' + error)
-  }
-}
-
-async function data_register(index, password, title) {
-  try {
-    var Tools = await initTools(index, password)
-    var EtherTools = Tools.EtherTools
-    var DappTools = Tools.DappTools
-
-    Logger.debug("register data...")
-    const newData = await DappTools.RegisterData(title)
-    console.log(JSON.stringify(newData))
-  } catch (error) {
-    Logger.error('error occured: ' + error)
-  }
-}
-
-async function data_list(index, password) {
-  try {
-    var Tools = await initTools(index, password)
-    var EtherTools = Tools.EtherTools
-    var DappTools = Tools.DappTools
-
-    const cids = await DappTools.GetOwnedDsAsync()
     console.log(JSON.stringify({
-      cids
+      error: error.message
     }))
-  } catch (error) {
     Logger.error('error occured: ' + error)
   }
 }
+//-------------------------------------------------------------------------------------------------------------------------------------//
 
-async function data_details(index, password, cid) {
+//---------------------------------------------------------------- msp ----------------------------------------------------------------//
+async function requestEnroll(address, password, role) {
   try {
-    var Tools = await initTools(index, password)
+    var Tools = await initTools(address, password)
     var EtherTools = Tools.EtherTools
     var DappTools = Tools.DappTools
 
-    if (!(await DappTools.IsExistsData(cid))) {
-      console.log(JSON.stringify({
-        error: 'unkown cid'
-      }))
+    Logger.debug("request role...")
+    const roleIndex = roles.indexOf(role)
+    if (roleIndex == -1) {
+      Logger.error('invalid role. choose P|CP|SP|D')
       return
     }
-    const details = await DappTools.GetDataWithID(cid)
+    await DappTools.requestEnroll(2 ** roleIndex)
     console.log(JSON.stringify({
-      details
+      result: 'succeed'
     }))
   } catch (error) {
+    console.log(JSON.stringify({
+      error: error.message
+    }))
     Logger.error('error occured: ' + error)
   }
 }
 
-async function hash_register(index, password, cid, hash, fee) {
+async function requestDetails(address, password) {
   try {
-    var Tools = await initTools(index, password)
+    var Tools = await initTools(address, password)
     var EtherTools = Tools.EtherTools
     var DappTools = Tools.DappTools
 
-    Logger.debug('register hash...')
-    const newHash = await DappTools.RegisterHash(cid, hash, fee)
-    console.log(JSON.stringify({
-      newHash
-    }))
+    const details = await DappTools.getRequestDetails()
+    console.log(JSON.stringify(details))
   } catch (error) {
+    console.log(JSON.stringify({
+      error: error.message
+    }))
     Logger.error('error occured: ' + error)
   }
 }
 
-async function hash_list(index, password) {
+async function requestApprove(address, password, approvals) {
   try {
-    var Tools = await initTools(index, password)
+    var Tools = await initTools(address, password)
     var EtherTools = Tools.EtherTools
     var DappTools = Tools.DappTools
 
-    var list = []
-    const cids = await DappTools.GetOwnedDsAsync()
-    for (var i = 0; i < cids.length; i++) {
-      const hashes = await DappTools.GetOwnedHsAsync(cids[i])
-      list.push({
-        cid: cids[i],
-        hashes
-      })
+    var approvalArray = approvals.split(',')
+    await DappTools.approveRole(approvals.split(','))
+    console.log(JSON.stringify({
+      result: 'succeed'
+    }))
+  } catch (error) {
+    console.log(JSON.stringify({
+      error: error.message
+    }))
+    Logger.error('error occured: ' + error)
+  }
+}
+
+async function revokeRole(address, password, target, role) {
+  try {
+    var Tools = await initTools(address, password)
+    var EtherTools = Tools.EtherTools
+    var DappTools = Tools.DappTools
+
+    const roleIndex = roles.indexOf(role)
+    if (roleIndex == -1) {
+      Logger.error('invalid role. choose P|CP|SP|D')
+      return
     }
+    await DappTools.revokeRole(target, 2 ** roleIndex)
+    console.log(JSON.stringify({
+      result: 'succeed'
+    }))
+  } catch (error) {
+    console.log(JSON.stringify({
+      error: error.message
+    }))
+    Logger.error('error occured: ' + error)
+  }
+}
+
+async function verifyRole(address, password, target, role) {
+  try {
+    var Tools = await initTools(address, password)
+    var EtherTools = Tools.EtherTools
+    var DappTools = Tools.DappTools
+
+    const roleIndex = roles.indexOf(role)
+    if (roleIndex == -1) {
+      Logger.error('invalid role. choose P|CP|SP|D')
+      return
+    }
+    const verify = await DappTools.verifyRole(target, 2 ** roleIndex)
+    console.log(JSON.stringify({
+      verify
+    }))
+  } catch (error) {
+    console.log(JSON.stringify({
+      error: error.message
+    }))
+    Logger.error('error occured: ' + error)
+  }
+}
+
+async function requestCleanup(address, password) {
+  try {
+    var Tools = await initTools(address, password)
+    var EtherTools = Tools.EtherTools
+    var DappTools = Tools.DappTools
+
+    await DappTools.requestCleanup()
+    console.log(JSON.stringify({
+      result: 'succeed'
+    }))
+  } catch (error) {
+    console.log(JSON.stringify({
+      error: error.message
+    }))
+    Logger.error('error occured: ' + error)
+  }
+}
+
+async function prepareTest() {
+  try {
+    var ContractOwner = '1ee77618b9e4f7651381e2ede71b0d389f27a5c6'
+    var ContentsPovider = '9bcecd9085fae8fa787ac3f3bd3c2f25a90e0610'
+    var Distributor = 'c7cf04aa9a7a6d548e6d1dac8f7401f4a36ad32b'
+
+    var Tools = []
+    var EtherTools = []
+    var DappTools = []
+    Tools.push(await initTools(ContractOwner, 'p@ssw0rd'))
+    Tools.push(await initTools(ContentsPovider, 'p@ssw0rd'))
+    Tools.push(await initTools(Distributor, 'p@ssw0rd'))
+    EtherTools.push(Tools[0].EtherTools)
+    EtherTools.push(Tools[1].EtherTools)
+    EtherTools.push(Tools[2].EtherTools)
+    DappTools.push(Tools[0].DappTools)
+    DappTools.push(Tools[1].DappTools)
+    DappTools.push(Tools[2].DappTools)
+
+    await DappTools[1].requestEnroll(2)
+    await DappTools[2].requestEnroll(8)
+    await DappTools[0].approveRole([true, true])
+    const verifyCP = await DappTools[0].verifyRole(ContentsPovider, 2)
+    const verifyD = await DappTools[0].verifyRole(Distributor, 8)
+  } catch (error) {
+    console.log(JSON.stringify({
+      error: error.message
+    }))
+    Logger.error('error occured: ' + error)
+  }
+}
+
+//-------------------------------------------------------------------------------------------------------------------------------------//
+
+//-------------------------------------------------------------- get cid --------------------------------------------------------------//
+async function getCID(address, password) {
+  try {
+    var Tools = await initTools(address, password)
+    var EtherTools = Tools.EtherTools
+    var DappTools = Tools.DappTools
+
+    const cid = await DappTools.getCID()
+    console.log(JSON.stringify({
+      cid
+    }))
+  } catch (error) {
+    console.log(JSON.stringify({
+      error: error.message
+    }))
+    Logger.error('error occured: ' + error)
+  }
+}
+//-------------------------------------------------------------------------------------------------------------------------------------//
+
+//-------------------------------------------------------- invoke transaction ---------------------------------------------------------//
+async function registData(address, password, cid, ccid, version, category, subCategory, title, fileDetails) {
+  try {
+    var Tools = await initTools(address, password)
+    var EtherTools = Tools.EtherTools
+    var DappTools = Tools.DappTools
+
+    const dataId = await DappTools.registData(cid, ccid, version, category, subCategory, title, fileDetails)
+    console.log(JSON.stringify({
+      data_id: dataId
+    }))
+  } catch (error) {
+    console.log(JSON.stringify({
+      error: error.message
+    }))
+    Logger.error('error occured: ' + error)
+  }
+}
+
+async function registFileFee(address, password, ccid, version, filePath, fee, chunks) {
+  try {
+    var Tools = await initTools(address, password)
+    var EtherTools = Tools.EtherTools
+    var DappTools = Tools.DappTools
+
+    await DappTools.registFileFee(ccid, version, filePath, fee, chunks)
+    console.log(JSON.stringify({
+      result: 'succeed'
+    }))
+  } catch (error) {
+    console.log(JSON.stringify({
+      error: error.message
+    }))
+    Logger.error('error occured: ' + error)
+  }
+}
+
+async function registProduct(address, password, ccid, version, filePath, price) {
+  try {
+    var Tools = await initTools(address, password)
+    var EtherTools = Tools.EtherTools
+    var DappTools = Tools.DappTools
+
+    const productId = await DappTools.registProduct(ccid, version, filePath, price)
+    console.log(JSON.stringify({
+      product_id: productId
+    }))
+  } catch (error) {
+    console.log(JSON.stringify({
+      error: error.message
+    }))
+    Logger.error('error occured: ' + error)
+  }
+}
+
+async function buyToken(address, password, productId) {
+  try {
+    var Tools = await initTools(address, password)
+    var EtherTools = Tools.EtherTools
+    var DappTools = Tools.DappTools
+
+    const tokenId = await DappTools.buyToken(productId)
+    console.log(JSON.stringify({
+      token_id: tokenId
+    }))
+  } catch (error) {
+    console.log(JSON.stringify({
+      error: error.message
+    }))
+    Logger.error('error occured: ' + error)
+  }
+}
+
+async function channelOpen(address, password, tokenId) {
+  try {
+    var Tools = await initTools(address, password)
+    var EtherTools = Tools.EtherTools
+    var DappTools = Tools.DappTools
+
+    const channelId = await DappTools.channelOpen(tokenId)
+    console.log(JSON.stringify({
+      channel_id: channelId
+    }))
+  } catch (error) {
+    console.log(JSON.stringify({
+      error: error.message
+    }))
+    Logger.error('error occured: ' + error)
+  }
+}
+
+async function channelOff(address, password, channelId) {
+  try {
+    var Tools = await initTools(address, password)
+    var EtherTools = Tools.EtherTools
+    var DappTools = Tools.DappTools
+
+    await DappTools.channelOff(channelId)
+    console.log(JSON.stringify({
+      result: 'succeed'
+    }))
+  } catch (error) {
+    console.log(JSON.stringify({
+      error: error.message
+    }))
+    Logger.error('error occured: ' + error)
+  }
+}
+
+async function channelSettle(address, password, channelId, senders, chunks) {
+  try {
+    var Tools = await initTools(address, password)
+    var EtherTools = Tools.EtherTools
+    var DappTools = Tools.DappTools
+
+    await DappTools.channelSettle(channelId, senders.split(','), chunks.split(','))
+    console.log(JSON.stringify({
+      result: 'succeed'
+    }))
+  } catch (error) {
+    console.log(JSON.stringify({
+      error: error.message
+    }))
+    Logger.error('error occured: ' + error)
+  }
+}
+
+//-------------------------------------------------------------------------------------------------------------------------------------//
+
+//--------------------------------------------------------------- list ----------------------------------------------------------------//
+async function listData(address, password) {
+  try {
+    var Tools = await initTools(address, password)
+    var EtherTools = Tools.EtherTools
+    var DappTools = Tools.DappTools
+
+    const list = await DappTools.getDataList()
     console.log(JSON.stringify({
       list
     }))
-
   } catch (error) {
-    Logger.error('error occured: ' + error)
-  }
-}
-
-async function hash_details(index, password, hash) {
-  try {
-    var Tools = await initTools(index, password)
-    var EtherTools = Tools.EtherTools
-    var DappTools = Tools.DappTools
-
-    if (!(await DappTools.IsExistsHash(hash))) {
-      console.log(JSON.stringify({
-        error: 'unkown hash'
-      }))
-      return
-    }
-    const details = await DappTools.GetHashWithCIDandHash(hash)
     console.log(JSON.stringify({
-      details
+      error: error.message
     }))
-  } catch (error) {
     Logger.error('error occured: ' + error)
   }
 }
 
-async function product_register(index, password, hash) {
+async function listProduct(address, password) {
   try {
-    var Tools = await initTools(index, password)
+    var Tools = await initTools(address, password)
     var EtherTools = Tools.EtherTools
     var DappTools = Tools.DappTools
 
-    if (!(await DappTools.IsExistsHash(hash))) {
-      console.log(JSON.stringify({
-        error: 'unkown hash'
-      }))
-      return
-    }
-    Logger.debug('register product...')
-    const newPToken = await DappTools.RegisterProduct(hash, 10000)
-    console.log(JSON.stringify({
-      newPToken
-    }))
-  } catch (error) {
-    Logger.error('error occured: ' + error)
-  }
-}
-
-async function product_list(index, password) {
-  try {
-    var Tools = await initTools(index, password)
-    var EtherTools = Tools.EtherTools
-    var DappTools = Tools.DappTools
-
-    const pTokenIds = await DappTools.GetOwnedPTsAsync()
-    console.log(JSON.stringify({
-      pTokenIds
-    }))
-  } catch (error) {
-    Logger.error('error occured: ' + error)
-  }
-}
-
-async function product_details(index, password, pTokenId) {
-  try {
-    var Tools = await initTools(index, password)
-    var EtherTools = Tools.EtherTools
-    var DappTools = Tools.DappTools
-
-    if (!(await DappTools.IsExistsPToken(pTokenId))) {
-      console.log(JSON.stringify({
-        error: 'unkown pTokenId'
-      }))
-      return
-    }
-
-    const details = await DappTools.GetPTWithID(pTokenId)
-    console.log(JSON.stringify({
-      details
-    }))
-  } catch (error) {
-    Logger.error('error occured: ' + error)
-  }
-}
-
-async function product_buy(index, password, pTokenId) {
-  try {
-    var Tools = await initTools(index, password)
-    var EtherTools = Tools.EtherTools
-    var DappTools = Tools.DappTools
-
-    Logger.debug('buy product...')
-    const newUToken = await DappTools.BuyToken(pTokenId)
-    console.log(JSON.stringify({
-      newUToken
-    }))
-  } catch (error) {
-    Logger.error('error occured: ' + error)
-  }
-}
-
-async function contract_contract(index, password, pTokenId, address, cost, isDc) {
-  try {
-    var Tools = await initTools(index, password)
-    var EtherTools = Tools.EtherTools
-    var DappTools = Tools.DappTools
-
-    if (!(await DappTools.IsExistsPToken(pTokenId))) {
-      console.log(JSON.stringify({
-        error: 'unkown pTokenId'
-      }))
-      return
-    }
-    if (isDc) {
-      Logger.debug('sign distribution contract...')
-      const newDC = await DappTools.DistributionContract(pTokenId, address, cost)
-      console.log(JSON.stringify({
-        newDC
-      }))
-    } else {
-      Logger.debug('sign search provider contract...')
-      const newSC = await DappTools.SearchProviderContract(pTokenId, address, cost)
-      console.log(JSON.stringify({
-        newSC
-      }))
-    }
-  } catch (error) {
-    Logger.error('error occured: ' + error)
-  }
-}
-
-async function contract_list(index, password, isDc) {
-  try {
-    var Tools = await initTools(index, password)
-    var EtherTools = Tools.EtherTools
-    var DappTools = Tools.DappTools
-
-    if (isDc) {
-      const dcList = await DappTools.GetOwnedDCsAsync()
-      console.log(JSON.stringify({
-        dcList
-      }))
-    } else {
-      const scList = await DappTools.GetOwnedSCsAsync()
-      console.log(JSON.stringify({
-        scList
-      }))
-    }
-  } catch (error) {
-    Logger.error('error occured: ' + error)
-  }
-}
-
-async function contract_List(index, password, pTokenId, isDc) {
-  try {
-    var Tools = await initTools(index, password)
-    var EtherTools = Tools.EtherTools
-    var DappTools = Tools.DappTools
-
-    if (!(await DappTools.IsExistsPToken(pTokenId))) {
-      console.log(JSON.stringify({
-        error: 'unkown pTokenId'
-      }))
-      return
-    }
-    if (isDc) {
-      const dcList = await DappTools.GetOwnedDCsWithPTokenAsync(pTokenId)
-      console.log(JSON.stringify({
-        dcList
-      }))
-    } else {
-      const scList = await DappTools.GetOwnedSCsWithPTokenAsync(pTokenId)
-      console.log(JSON.stringify({
-        scList
-      }))
-    }
-  } catch (error) {
-    Logger.error('error occured: ' + error)
-  }
-}
-
-async function contract_details(index, password, Index, isDc) {
-  try {
-    var Tools = await initTools(index, password)
-    var EtherTools = Tools.EtherTools
-    var DappTools = Tools.DappTools
-
-    if (isDc) {
-      const details = await DappTools.GetDCWithID(Index)
-      console.log(JSON.stringify({
-        details
-      }))
-    } else {
-      const details = await DappTools.GetSCWithID(Index)
-      console.log(JSON.stringify({
-        details
-      }))
-    }
-  } catch (error) {
-    Logger.error('error occured: ' + error)
-  }
-}
-
-async function token_list(index, password) {
-  try {
-    var Tools = await initTools(index, password)
-    var EtherTools = Tools.EtherTools
-    var DappTools = Tools.DappTools
-
-    const list = await DappTools.GetOwnedUTsAsync()
+    const list = await DappTools.getProductList()
     console.log(JSON.stringify({
       list
     }))
   } catch (error) {
+    console.log(JSON.stringify({
+      error: error.message
+    }))
     Logger.error('error occured: ' + error)
   }
-
 }
 
-async function token_details(index, password, uTokenId) {
+async function listToken(address, password) {
   try {
-    var Tools = await initTools(index, password)
+    var Tools = await initTools(address, password)
     var EtherTools = Tools.EtherTools
     var DappTools = Tools.DappTools
 
-    if (!(await DappTools.IsExistsUToken(uTokenId))) {
-      console.log(JSON.stringify({
-        error: 'unkown uTokenId'
-      }))
-      return
-    }
-    let details = await DappTools.GetUTWithID(uTokenId)
-    var state = ['sold', 'in progress', 'settled']
-    details.state = state[details.states]
+    const list = await DappTools.getTokenList()
+    console.log(JSON.stringify({
+      list
+    }))
+  } catch (error) {
+    console.log(JSON.stringify({
+      error: error.message
+    }))
+    Logger.error('error occured: ' + error)
+  }
+}
+//-------------------------------------------------------------------------------------------------------------------------------------//
+
+//-------------------------------------------------------------- details --------------------------------------------------------------//
+async function detailsData(address, password, dataId) {
+  try {
+    var Tools = await initTools(address, password)
+    var EtherTools = Tools.EtherTools
+    var DappTools = Tools.DappTools
+
+    var details = {}
+    const detailsInfo = await DappTools.getDataDetails(dataId)
+    details.owner = detailsInfo[0]
+    details.cid = detailsInfo[1]
+    details.ccid = detailsInfo[2]
+    details.version = detailsInfo[3]
+    details.category = detailsInfo[4]
+    details.subCategory = detailsInfo[5]
+    details.title = detailsInfo[6]
+    details.fileDetails = detailsInfo[7]
     console.log(JSON.stringify({
       details
     }))
   } catch (error) {
+    console.log(JSON.stringify({
+      error: error.message
+    }))
     Logger.error('error occured: ' + error)
   }
 }
 
-async function channel_open(index, password, cid, hash, numOfChunks) {
+async function fileFee(address, password, ccid, version, filePath) {
   try {
-    var Tools = await initTools(index, password)
+    var Tools = await initTools(address, password)
     var EtherTools = Tools.EtherTools
     var DappTools = Tools.DappTools
-    await DappTools.ChannelOpen(cid, hash, numOfChunks)
+
+    const fee = await DappTools.getFileFee(ccid, version, filePath)
+    console.log(JSON.stringify({
+      fee
+    }))
   } catch (error) {
+    console.log(JSON.stringify({
+      error: error.message
+    }))
     Logger.error('error occured: ' + error)
   }
 }
 
-async function channel_off(index, password, oTokenId) {
+async function detailsProduct(address, password, productId) {
   try {
-    var Tools = await initTools(index, password)
-    var EtherTools = Tools.EtherTools
-    var DappTools = Tools.DappTools
-    await DappTools.ChannelOff(oTokenId)
-  } catch (error) {
-    Logger.error('error occured: ' + error)
-  }
-
-}
-
-async function channel_details(index, password, oTokenId) {
-  try {
-    var Tools = await initTools(index, password)
+    var Tools = await initTools(address, password)
     var EtherTools = Tools.EtherTools
     var DappTools = Tools.DappTools
 
-    const details = await DappTools.GetOTWithID(oTokenId)
+    var details = {}
+    const detailsInfo = await DappTools.getProductDetails(productId)
+    details.owner = detailsInfo[0]
+    details.ccid = detailsInfo[1]
+    details.version = detailsInfo[2]
+    details.filePath = detailsInfo[3]
+    details.price = detailsInfo[4]
     console.log(JSON.stringify({
       details
     }))
   } catch (error) {
+    console.log(JSON.stringify({
+      error: error.message
+    }))
     Logger.error('error occured: ' + error)
   }
 }
 
-program
-  .version('0.1.0')
-  .option('-K, --keypath <path>', 'designate private key path')
+async function detailsToken(address, password, tokenId) {
+  try {
+    var Tools = await initTools(address, password)
+    var EtherTools = Tools.EtherTools
+    var DappTools = Tools.DappTools
 
+    var details = {}
+    var state = ['invalid', 'valid', 'in_progress']
+    const detailsInfo = await DappTools.getTokenDetails(tokenId)
+    details.owner = detailsInfo[0]
+    details.productId = detailsInfo[1]
+    details.state = state[detailsInfo[2]]
+    console.log(JSON.stringify({
+      details
+    }))
+  } catch (error) {
+    console.log(JSON.stringify({
+      error: error.message
+    }))
+    Logger.error('error occured: ' + error)
+  }
+}
+
+async function depositAmount(address, password, tokenId) {
+  try {
+    var Tools = await initTools(address, password)
+    var EtherTools = Tools.EtherTools
+    var DappTools = Tools.DappTools
+
+    const deposit = await DappTools.getDepositAmount(tokenId)
+    console.log(JSON.stringify({
+      deposit
+    }))
+  } catch (error) {
+    console.log(JSON.stringify({
+      error: error.message
+    }))
+    Logger.error('error occured: ' + error)
+  }
+}
+
+async function detailsChannel(address, password, channelId) {
+  try {
+    var Tools = await initTools(address, password)
+    var EtherTools = Tools.EtherTools
+    var DappTools = Tools.DappTools
+
+    var details = {}
+    var state = ['invalid', 'open', 'off', 'settle']
+    const detailsInfo = await DappTools.getChannelDetails(channelId)
+    details.receiver = detailsInfo[0]
+    details.productId = detailsInfo[1]
+    details.deposit = detailsInfo[2]
+    details.timestamp = detailsInfo[3]
+    details.leftTime = detailsInfo[4]
+    details.state = state[detailsInfo[5]]
+    console.log(JSON.stringify({
+      details
+    }))
+  } catch (error) {
+    console.log(JSON.stringify({
+      error: error.message
+    }))
+    Logger.error('error occured: ' + error)
+  }
+}
+//-------------------------------------------------------------------------------------------------------------------------------------//
+
+//------------------------------------------------------------- sign apis -------------------------------------------------------------//
+async function sign_receipt(address, password, msg) {
+  try {
+    var Tools = await initTools(address, password)
+    var EtherTools = Tools.EtherTools
+    var DappTools = Tools.DappTools
+
+    const sign = await DappTools.signReceipt(msg)
+    console.log(JSON.stringify(sign))
+  } catch (error) {
+    console.log(JSON.stringify({
+      error: error.message
+    }))
+    Logger.error('error occured: ' + error)
+  }
+}
+
+async function verify_receipt(address, password, sign, pubKey) {
+  try {
+    var Tools = await initTools(address, password)
+    var EtherTools = Tools.EtherTools
+    var DappTools = Tools.DappTools
+
+    const msg = await DappTools.verifyReceript(sign, pubKey)
+    console.log(JSON.stringify({
+      msg
+    }))
+  } catch (error) {
+    console.log(JSON.stringify({
+      error: error.message
+    }))
+    Logger.error('error occured: ' + error)
+  }
+}
+//-------------------------------------------------------------------------------------------------------------------------------------//
+
+//------------------------------------------------------------- commander -------------------------------------------------------------//
 program
   .command('account')
   .option('-g, --generate', 'generate account')
@@ -567,7 +781,7 @@ program
   .option('-r, --remove', 'remove account')
   .option('-l, --list', 'list up account')
   .option('-b, --balance', 'balance info')
-  .option('-I, --index <index>', 'account index')
+  .option('-d, --address <address>', 'address')
   .option('-p, --password <password>', 'account password')
   .option('-P, --privateKey <privateKey>', 'private key')
   .action(async function(options) {
@@ -581,7 +795,7 @@ program
     }
     if (options.export) {
       Logger.debug("account_export() called")
-      await account_export(options.index, options.password)
+      await account_export(options.address, options.password)
     }
     if (options.list) {
       Logger.debug("account_list() called")
@@ -589,11 +803,11 @@ program
     }
     if (options.remove) {
       Logger.debug("account_remove() called")
-      await account_remove(options.index)
+      await account_remove(options.address)
     }
     if (options.balance) {
       Logger.debug("account_balance() called")
-      await account_balance(options.index, options.password)
+      await account_balance(options.address, options.password)
     }
     process.exit(0)
   })
@@ -603,262 +817,254 @@ program
   .option('-e, --ethereum', 'send ether from ethereum to dappchain')
   .option('-d, --dappchain', 'send ether from dappchain to ethereum')
   .option('-w, --withdraw', 'withdraw from gateway')
-  .option('-i, --index <index>', 'account index')
+  .option('-i, --address <address>', 'account address')
   .option('-p, --password <password>', 'account password')
   .option('-u, --unit <unit>', 'ethereum currency unit wei|ether')
   .option('-a, --amount <amount>', 'ethere amount')
   .action(async function(options) {
     if (options.ethereum) {
       Logger.debug("send_ethereum() called")
-      await send_ethereum(options.index, options.password, options.unit, options.amount)
+      await send_ethereum(options.address, options.password, options.unit, options.amount)
     }
     if (options.dappchain) {
       Logger.debug("send_dappchain() called")
-      await send_dappchain(options.index, options.password, options.unit, options.amount)
+      await send_dappchain(options.address, options.password, options.unit, options.amount)
     }
     if (options.withdraw) {
       Logger.debug("withdraw() called")
-      await withdraw(options.index, options.password)
+      await withdraw(options.address, options.password)
+    }
+    process.exit(0)
+  })
+
+
+program
+  .command('msp')
+  .option('-r, --request', 'request role')
+  .option('-D, --details', 'get all request details (only contract owner)')
+  .option('-a, --approve', 'approve request')
+  .option('-V, --revoke', 'revoke role')
+  .option('-c, --clean', 'clean up request')
+  .option('-v, --verify', 'verify role')
+  .option('-T, --test', 'prepare test')
+  .option('-d, --address <address>', 'address')
+  .option('-p, --password <password>', 'password')
+  .option('-R, --role <role>', 'P|CP|SP|D')
+  .option('-A, --approval <approval>', 'request approvals')
+  .option('-t, --target <target>', 'target')
+  .action(async function(options) {
+    if (options.request) {
+      Logger.debug("requestEnroll() called")
+      await requestEnroll(options.address, options.password, options.role)
+    }
+    if (options.details) {
+      Logger.debug("requestDetails() called")
+      await requestDetails(options.address, options.password)
+    }
+    if (options.approve) {
+      Logger.debug("requestApprove() called")
+      await requestApprove(options.address, options.password, options.approval)
+    }
+    if (options.revoke) {
+      Logger.debug("revokeRole() called")
+      await revokeRole(options.address, options.password, options.target, options.role)
+    }
+    if (options.verify) {
+      Logger.debug("verifyRole() called")
+      await verifyRole(options.address, options.password, options.target, options.role)
+    }
+    if (options.clean) {
+      Logger.debug("requestCleanup() called")
+      await requestCleanup(options.address, options.password)
+    }
+    if (options.test) {
+      Logger.debug("prepareTest() called")
+      await prepareTest()
     }
     process.exit(0)
   })
 
 program
-  .command('data')
-  .option('-r, --register', 'register data')
-  .option('-l, --list', 'list up data')
-  .option('-d, --details', 'details of data')
-  .option('-I, --index <index>', 'account index')
-  .option('-p, --password <password>', 'account password')
-  .option('-t, --title <title>', 'data title')
+  .command('cid')
+  .option('-d, --address <address>', 'address')
+  .option('-p, --password <password>', 'password')
+  .action(async function(options) {
+    Logger.debug("getCID() called")
+    await getCID(options.address, options.password)
+    process.exit(0)
+  })
+
+program
+  .command('regist')
+  .option('-d, --data', 'regist data')
+  .option('-f, --file', 'regist file')
+  .option('-p, --product', 'regist product')
+  .option('-b, --buy', 'buy product')
+  .option('-o, --open', 'channel open')
+  .option('-o, --off', 'channel off')
+  .option('-s, --settle', 'channel settle')
+  .option('-d, --address <address>', 'address')
+  .option('-p, --password <password>', 'password')
   .option('-c, --cid <cid>', 'data cid')
+  .option('-C, --ccid <ccid>', 'data ccid')
+  .option('-v, --version <version>', 'data version')
+  .option('-g, --category <category>', 'data category')
+  .option('-G, --subCategory <subCategory>', 'data sub category')
+  .option('-t, --title <title>', 'data title')
+  .option('-D, --details <details>', 'data file details')
+  .option('-F, --filePath <filePath>', 'data file path')
+  .option('-f, --fee <fee>', 'data file fee')
+  .option('-c, --chunks <chunks>', 'data file chunks')
+  .option('-i, --id <id>', 'id')
+  .option('-s. --senders <senders>', 'senders')
   .action(async function(options) {
-    if (options.register) {
-      Logger.debug('data_register() called')
-      await data_register(options.index, options.password, options.title)
+    if (options.data) {
+      Logger.debug("registData() called")
+      await registData(options.address, options.password, options.cid, options.ccid, options.version, options.category, options.subCategory, options.title, options.details)
     }
-    if (options.list) {
-      Logger.debug("data_list() called")
-      await data_list(options.index, options.password)
+    if (options.file) {
+      Logger.debug("registFileFee() called")
+      await registFileFee(options.address, options.password, options.ccid, options.version, options.filePath, options.fee, options.chunks)
     }
-    if (options.details) {
-      Logger.debug("data_details() called")
-      await data_details(options.index, options.password, options.cid)
-    }
-    process.exit(0)
-  })
-
-program
-  .command('hash')
-  .option('-r, --register', 'register contents')
-  .option('-l, --list', 'list up contents')
-  .option('-d, --details', 'details of contents')
-  .option('-I, --index <index>', 'account index')
-  .option('-p, --password <password>', 'account password')
-  .option('-c, --cid <cid>', 'contents cid')
-  .option('-f, --fee <fee>', 'contents fee')
-  .option('-h, --hash <hash>', 'contents hash')
-  .action(async function(options) {
-    if (options.register) {
-      Logger.debug('hash_register() called')
-      await hash_register(options.index, options.password, options.cid, options.hash, options.fee)
-    }
-    if (options.list) {
-      Logger.debug("hash_list() called")
-      await hash_list(options.index, options.password)
-    }
-    if (options.details) {
-      Logger.debug("hash_details() called")
-      await hash_details(options.index, options.password, options.hash)
-    }
-    process.exit(0)
-  })
-
-program
-  .command('product')
-  .option('-r, --register', 'register contents')
-  .option('-l, --list', 'list up contents')
-  .option('-d, --details', 'details of contents')
-  .option('-b, --buy', 'buy contents')
-  .option('-I, --index <index>', 'account index')
-  .option('-p, --password <password>', 'account password')
-  .option('-P, --pTokenId <pTokenId>', 'product token id')
-  .option('-h, --hash <hash>', 'contents hash')
-
-  .action(async function(options) {
-    if (options.register) {
-      Logger.debug('product_register() called')
-      await product_register(options.index, options.password, options.hash)
-    }
-    if (options.list) {
-      Logger.debug("product_list() called")
-      await product_list(options.index, options.password)
-    }
-    if (options.details) {
-      Logger.debug("product_details() called")
-      await product_details(options.index, options.password, options.pTokenId)
+    if (options.product) {
+      Logger.debug("registProduct() called")
+      await registProduct(options.address, options.password, options.ccid, options.version, options.filePath, options.fee)
     }
     if (options.buy) {
-      Logger.debug("product_buy() called")
-      await product_buy(options.index, options.password, options.pTokenId)
+      Logger.debug("buyToken() called")
+      await buyToken(options.address, options.password, options.id)
     }
-    process.exit(0)
-  })
-
-program
-  .command('contract')
-  .option('-C, --contract', 'contract')
-  .option('-l, --list', 'list with owner')
-  .option('-L, --List', 'list with pTokenId')
-  .option('-D, --details', 'contract details')
-  .option('-d, --dc', 'distribution contract')
-  .option('-s, --sc', 'search provider contract')
-  .option('-i, --index <index>', 'account index')
-  .option('-P, --password <password', 'account password')
-  .option('-I, --Index <Index>', 'contract index')
-  .option('-p, --pTokenId <pTokenId>', 'pTokenId')
-  .option('-a. --address <address>', 'address')
-  .option('-c. --cost <cost>', 'cost')
-  .action(async function(options) {
-    if (options.contract) {
-      Logger.debug("contract_contract() called")
-      if (options.dc) {
-        await contract_contract(options.index, options.password, options.pTokenId, options.address, options.cost, true)
-      }
-      if (options.sc) {
-        await contract_contract(options.index, options.password, options.pTokenId, options.address, options.cost, false)
-      }
-    }
-    if (options.list) {
-      Logger.debug("contract_list() called")
-      if (options.dc) {
-        await contract_list(options.index, options.password, true)
-      }
-      if (options.sc) {
-        await contract_list(options.index, options.password, false)
-      }
-    }
-    if (options.List) {
-      Logger.debug("contract_List() called")
-      if (options.dc) {
-        await contract_List(options.index, options.password, options.pTokenId, true)
-      }
-      if (options.sc) {
-        await contract_List(options.index, options.password, options.pTokenId, false)
-      }
-    }
-    if (options.details) {
-      Logger.debug("contract_details() called")
-      if (options.dc) {
-        await contract_details(options.index, options.password, options.Index, true)
-      }
-      if (options.sc) {
-        await contract_details(options.index, options.password, options.Index, false)
-      }
-    }
-    process.exit(0)
-  })
-
-program
-  .command('token')
-  .option('-l, --list', 'list up token')
-  .option('-d, --details', 'details of token')
-  .option('-I, --index <index>', 'account index')
-  .option('-p, --password <password>', 'account password')
-  .option('-c, --uTokenId <uTokenId>', 'token id')
-  .action(async function(options) {
-    if (options.list) {
-      Logger.debug("token_list() called")
-      await token_list(options.index, options.password)
-    }
-    if (options.details) {
-      Logger.debug("token_details() called")
-      await token_details(options.index, options.password, options.uTokenId)
-    }
-    process.exit(0)
-  })
-
-program
-  .command('channel')
-  .option('-o, --open', 'channel open')
-  .option('-O, --off', 'channel off')
-  .option('-d, --details', 'channel details')
-  .option('-I, --index <index>', 'account index')
-  .option('-p, --password <password>', 'account password')
-  .option('-c, --cid <cid>', 'data cid')
-  .option('-h, --hash <hash>', 'contents hash')
-  .option('-n, --numOfChunks <numOfChunks>', 'number of chunks')
-  .option('-t, --oTokenId <oTokenId>', 'off-chain channel token id')
-  .action(async function(options) {
     if (options.open) {
-      Logger.debug("channel_open() called")
-      await channel_open(options.index, options.password, options.cid, options.hash, options.numOfChunks)
+      Logger.debug("channelOpen() called")
+      await channelOpen(options.address, options.password, options.id)
     }
     if (options.off) {
-      Logger.debug("channel_off() called")
-      await channel_off(options.index, options.password, options.oTokenId)
+      Logger.debug("channelOff() called")
+      await channelOff(options.address, options.password, options.id)
     }
-    if (options.details) {
-      Logger.debug("channel_details() called")
-      await channel_details(options.index, options.password, options.oTokenId)
+    if (options.settle) {
+      Logger.debug("channelSettle() called")
+      await channelSettle(options.address, options.password, options.id, options.senders, options.chunks)
     }
     process.exit(0)
   })
 
-//---------------------------------------------------- manager apis ----------------------------------------------------//
+program
+  .command('list')
+  .option('-d, --data', 'data list')
+  .option('-p, --product', 'product list')
+  .option('-t, --token', 'token list')
+  .option('-d, --address <address>', 'address')
+  .option('-p, --password <password>', 'password')
+  .action(async function(options) {
+    if (options.data) {
+      Logger.debug("listData() called")
+      await listData(options.address, options.password)
+    }
+    if (options.product) {
+      Logger.debug("listProduct() called")
+      await listProduct(options.address, options.password)
+    }
+    if (options.token) {
+      Logger.debug("listToken() called")
+      await listToken(options.address, options.password)
+    }
+    process.exit(0)
+  })
 
-async function sendAggregatedReceipt() {
+program
+  .command('details')
+  .option('-d, --data', 'data details')
+  .option('-f --file', 'file details')
+  .option('-p, --product', 'product details')
+  .option('-t, --token', 'token details')
+  .option('-d, --deposit', 'get deposit amount')
+  .option('-c, --channel', 'get channel details')
+  .option('-d, --address <address>', 'address')
+  .option('-p, --password <password>', 'password')
+  .option('-i, --id <id>', 'id')
+  .option('-c, --ccid <ccid>', 'ccid')
+  .option('-v, --version <version>', 'version')
+  .option('-F, --filePath <filePath>', 'file path')
+  .action(async function(options) {
+    if (options.data) {
+      Logger.debug("detailsData() called")
+      await detailsData(options.address, options.password, options.id)
+    }
+    if (options.file) {
+      Logger.debug("fileFee() called")
+      await fileFee(options.address, options.password, options.ccid, options.version, options.filePath)
+    }
+    if (options.product) {
+      Logger.debug("detailsProduct() called")
+      await detailsProduct(options.address, options.password, options.id)
+    }
+    if (options.token) {
+      Logger.debug("detailsToken() called")
+      await detailsToken(options.address, options.password, options.id)
+    }
+    if (options.deposit) {
+      Logger.debug("depositAmount() called")
+      await depositAmount(options.address, options.password, options.id)
+    }
+    if (options.channel) {
+      Logger.debug("detailsChannel() called")
+      await detailsChannel(options.address, options.password, options.id)
+    }
+    process.exit(0)
+  })
+
+program
+  .command('sign')
+  .option('-s, --sign', 'sign')
+  .option('-v, --verify', 'verify')
+  .option('-i, --address <address>', 'account address')
+  .option('-p, --password <password>', 'account password')
+  .option('-m, --msg <msg>', 'message to sign')
+  .option('-S, --signature <signature>', 'signature')
+  .option('-P, --publicKey <publicKey>', 'public key used to verify')
+  .action(async function(options) {
+    if (options.sign) {
+      Logger.debug("sign_receipt() called")
+      await sign_receipt(options.address, options.password, options.msg)
+    }
+    if (options.verify) {
+      Logger.debug("verify_receipt() called")
+      await verify_receipt(options.address, options.password, options.signature, options.publicKey)
+    }
+    process.exit(0)
+  })
+//-------------------------------------------------------------------------------------------------------------------------------------//
+
+//---------------------------------------------------------------- test ---------------------------------------------------------------//
+
+async function sendAggregatedReceipt(address, password, oTokenId, size) {
   try {
-    var Tools = await initTools(0, 'p@ssw0rd')
+    var Tools = await initTools(address, password)
     var EtherTools = Tools.EtherTools
     var DappTools = Tools.DappTools
-    await DappTools.sendAggregatedReceipt()
+    await DappTools.sendAggregatedReceipt(oTokenId, size)
   } catch (error) {
-    Logger.error('error occured: ' + error)
-  }
-}
-
-async function enrollDistributor(distributor) {
-  try {
-    var Tools = await initTools(0, 'p@ssw0rd')
-    var EtherTools = Tools.EtherTools
-    var DappTools = Tools.DappTools
-    await DappTools.EnrollDistributor(distributor)
-  } catch (error) {
-    Logger.error('error occured: ' + error)
-  }
-}
-
-async function enrollSearchProvider(searchProvider) {
-  try {
-    var Tools = await initTools(0, 'p@ssw0rd')
-    var EtherTools = Tools.EtherTools
-    var DappTools = Tools.DappTools
-    await DappTools.EnrollSearchProvider(searchProvider)
-  } catch (error) {
+    console.log(JSON.stringify({
+      error: error.message
+    }))
     Logger.error('error occured: ' + error)
   }
 }
 
 program
   .command('manager')
-  .option('-e, --enroll_dc', 'enroll distributor')
-  .option('-E, --enroll_sc', 'enroll search provider')
   .option('-s, --settle', 'settle')
-  .option('-t, --test', 'test')
+  .option('-t, --send_receipt', 'send receipt to verifier')
+  .option('-i, --address <address>', 'account address')
+  .option('-p, --password <password>', 'account password')
+  .option('-S, --size <size>', 'data size transfered')
+  .option('-o, --oTokenId <oTokenId>', 'off-chain token id')
   .option('-a, --address <address>', 'address')
   .action(async function(options) {
-    if (options.test) {
+    if (options.send_receipt) {
       Logger.debug("sendAggregatedReceipt() called")
-      await sendAggregatedReceipt()
-    }
-    if (options.enroll_dc) {
-      Logger.debug("enrollDistributor() called")
-      await enrollDistributor(options.address)
-    }
-    if (options.enroll_sc) {
-      Logger.debug("enrollSearchProvider() called")
-      await enrollSearchProvider(options.address)
+      await sendAggregatedReceipt(options.address, options.password, options.oTokenId, options.size)
     }
     process.exit(0)
   })
@@ -868,26 +1074,62 @@ async function addRequest() {
     var Tools = []
     var EtherTools = []
     var DappTools = []
-    var wallet = []
+    var Wallet = []
     Tools.push(await initTools(0, 'p@ssw0rd'))
+    Tools.push(await initTools(1, 'p@ssw0rd'))
     EtherTools.push(Tools[0].EtherTools)
+    EtherTools.push(Tools[1].EtherTools)
     DappTools.push(Tools[0].DappTools)
-    wallet.push(EtherTools[0].getWallet())
-    console.log(wallet.getPrivateKeyString())
+    DappTools.push(Tools[1].DappTools)
+    Wallet.push(EtherTools[0].getWallet())
+    Wallet.push(EtherTools[1].getWallet())
+
+    Logger.debug("address[0]: " + Wallet[0].getAddressString())
+    Logger.debug("address[1]: " + Wallet[1].getAddressString())
+
+    var Issuer = await DappTools[0].enrollIssuer(Wallet[1].getAddressString())
+    Logger.debug("Issuer: " + Issuer)
+
+    // var AddressKey = await DappTools[0].getAddressKey(Wallet[0].getAddressString())
+    var AddressKey = await DappTools[0].getAddressKey(DappTools[0].GetAddress())
+    Logger.debug("AddressKey: " + AddressKey.toString('hex'))
+
+    const Data = {
+      age: 18
+    }
+    var DataHash = await DappTools[0].getDataHash(AddressKey, Data)
+    Logger.debug("DataHash: " + DataHash.toString('hex'))
+
+    var ReqKey = await DappTools[1].requestAdd(AddressKey, DataHash, Wallet[1].getPrivateKey())
+    Logger.debug("request key: " + ReqKey)
+
+    await DappTools[0].approveAdd(DataHash, ReqKey, true)
+
+    var Signature = await DappTools[0].getSignature(AddressKey, DataHash)
+    Logger.debug("signatrue info: " + JSON.stringify({
+      signature: Signature.signature,
+      signer: Signature.signer
+    }))
+
+
   } catch (error) {
+    console.log(JSON.stringify({
+      error: error.message
+    }))
     Logger.error('error occured: ' + error)
   }
-
-  program
-    .command('identity')
-    .option('-t, --test', 'test')
-    .action(async function(options) {
-      if (options.test) {
-        Logger.debug("sendAggregatedReceipt() called")
-        await sendAggregatedReceipt()
-      }
-      process.exit(0)
-    })
 }
+
+program
+  .command('identity')
+  .option('-t, --test', 'test')
+  .action(async function(options) {
+    if (options.test) {
+      Logger.debug("addRequest() called")
+      await addRequest()
+    }
+    process.exit(0)
+  })
+//-------------------------------------------------------------------------------------------------------------------------------------//
 
 program.parse(process.argv)
