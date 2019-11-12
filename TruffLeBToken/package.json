@@ -21,6 +21,7 @@
     "@babel/runtime": "^7.0.0-beta.46",
     "axios": "^0.18.0",
     "bignumber.js": "^7.2.1",
+    "binary": "^0.3.0",
     "bn-chai": "^1.0.1",
     "bn.js": "^4.11.8",
     "chai": "^4.1.2",
@@ -30,15 +31,19 @@
     "eth-gas-reporter": "^0.1.10",
     "ethereumjs-util": "6.0.0",
     "ethereumjs-wallet": "0.6.0",
+    "git": "^0.1.5",
     "https": "^1.0.0",
     "loom-truffle-provider": "^0.8.0",
     "openzeppelin-solidity": "^1.12.0",
+    "package-lock.json": "^1.0.0",
+    "sha3": "^2.0.7",
     "solium": "^1.1.8",
     "truffle": "^4.1.13",
     "truffle-flattener": "^1.2.10",
     "truffle-hdwallet-provider": "^1.0.2",
     "truffle-privatekey-provider": "^1.0.0",
     "web3": "1.0.0-beta.33",
-    "web3-utils": "1.0.0-beta.33"
+    "web3-utils": "1.0.0-beta.33",
+    "yarn": "^1.17.3"
   }
 }
