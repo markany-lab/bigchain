@@ -1,94 +1,135 @@
-pragma solidity ^0.4.24;
+pragma solidity ^0.5.10;
 
-import "./BMSP.sol";
+// import "./BMSP.sol";
+import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 
-contract BFactory is BMSP {
+contract BMSPInterface {
+  function verifyRole(address target, uint8 role, bool isRevoke) view public returns (bool);
+}
 
+contract BFactory is Ownable {
+  uint8 public P = 1;             // packager
+  uint8 public CP = 2;            // contents provider
+  uint8 public SP = 4;            // storage provider
+  uint8 public D = 8;             // distributor
+  uint8 public M = 16;
+
+  BMSPInterface BMSPCon;
+  address mspAddr;
+  address channelAddr;
+
+  function setOnlyContracts(address _mspAddr, address _channelAddr) external onlyOwner {
+    mspAddr = _mspAddr;
+    channelAddr = _channelAddr;
+  }
+
+  function setBMSPCon(address _address) external onlyOwner {
+    BMSPCon = BMSPInterface(_address);
+  }
+
+  uint internal nonce = 0;
   enum TokenState {
     invalid,
     valid,
     in_progress
   }
 
+  enum RequestState {
+    request,
+    approved,
+    denied
+  }
+
+  struct _CID {
+    address owner;
+    bool validity;
+  }
+
   struct _Data {
     address owner;
-    uint8 cid;
-    string ccid;
-    string version;
-    string category;
-    string subCategory;
-    string title;
-    string fileDetails;
+    uint cid;
+    string c;
+    string v;
+    uint fee;
+    uint BN;
+    bool validity;
+  }
+
+  struct _DataAttr {
+    string info;
+    address[] TD;
+    address[] TU;    
+    uint[] ad;
   }
 
   struct _File {
-    uint fee;
+    uint dataId;
     uint chunks;
-    bool validity;
   }
 
   struct _Product {
     address owner;
-    string ccid;
-    string version;
-    string filePath;
+    uint dataId;
     uint price;
+    address[] TU;
+    bool validity;
   }
 
   struct _Token {
     address owner;
-    uint pTokenId;
+    uint productId;
     TokenState state;
   }
 
-  mapping (uint => address) internal Cid2O;                        //  cid => cid owner
-  mapping (address => uint[]) public O2Dids;                       //  data owner => data ids
-  mapping (bytes32 => uint) internal K2Did;                        //  data key => data id
-  mapping (bytes32 => _File) internal K2F;                         //  file key => file
-  mapping (address => uint[]) internal O2Pids;                     //  product owner => product ids
-  mapping (address => uint[]) internal O2Tids;                     //  token owner => token ids
+  mapping (uint => _CID) internal C2O;                           //  cid => cid structure
+  mapping (uint => _Data) internal _Ds;                            //  data id => data structure
+  mapping (uint => _DataAttr) internal _DAs;                       //  data id => data attribute structure
+  mapping (uint => _File) internal _Fs;                            //  file id => file structure
+  mapping (uint => _Product) internal _Ps;                         //  product id => product structure
+  mapping (uint => _Token) internal _Ts;                           //  token id => token structure
+  mapping (uint => mapping(uint8 => uint[])) internal I2I;         //  data id => file ids or data id => product ids
+  mapping (address => mapping(uint8 => uint[])) internal O2I;      //  owner => ids (0: data id, 1: product id, 2: token id)
+  mapping (address => mapping(uint => uint[])) internal OC2T;     //  owner & cid => token ids
 
-  event NewID(uint Id);
+  event NewID(uint flag, uint Id);                                 //  0: cid, 1: data id, 2: file id, 3: product id, 4: token id, 5: channel id
 
-  _Data[] public _Ds;
-  _Product[] public _Ps;
-  _Token[] internal _Ts;
+  uint[] public _DIDs;
 
-  modifier onlyVDOf(uint dataId) {
-    require(_Ds[dataId].owner != address(0));
+  modifier onlyRoleOf(address target, uint8 role, bool isRevoke) {
+    require(target != address(0));
+    if(!isRevoke) {
+      require(BMSPCon.verifyRole(target, role, false));
+    } else {
+      require(!BMSPCon.verifyRole(target, role, true));
+    }
     _;
   }
 
-  modifier onlyVFOf(string ccid, string version, string filePath) {
-    require(getFileInfo(ccid, version, filePath).validity);
-    _;
+  function splitByLengths(string _src) pure internal returns (bytes[]) {
+    bytes memory src = bytes(_src);
+    require(src.length % 46 == 0);
+    uint num = src.length / 46;
+    bytes[] memory split = new bytes[](num);
+    uint start = 0;
+    for(uint i = 0; i < num; i++) {
+      bytes memory tmp = new bytes(46);
+      for(uint j = 0; j < 46; j++) {
+        tmp[j] = src[start + j];
+      }
+      split[i] = tmp;
+      start += 46;
+    }
+    return split;
   }
 
-  modifier onlyVPOf(uint pTokenId) {
-    require(_Ps[pTokenId].owner != address(0));
-    _;
-  }
-
-  modifier onlyVTOf(uint uTokenId) {
-    require(_Ts[uTokenId].state == TokenState.valid);
-    _;
-  }
-
-  modifier onlyUOf(uint uTokenId) {
-    require(msg.sender != address(0));
-    require(_Ts[uTokenId].owner == msg.sender);
-    _;
-  }
-
-  function getDataIndex(string ccid, string version)
-  view internal
-  returns(uint) {
-    return K2Did[keccak256(abi.encodePacked(ccid, version))];
-  }
-
-  function getFileInfo(string ccid, string version, string filePath)
-  view internal
-  returns(_File) {
-    return K2F[keccak256(abi.encodePacked(ccid, version, filePath))];
+  function checkAddr(address[] src, address target) pure internal returns (bool) {
+    bool res = false;
+    for (uint i = 0; i < src.length; i++) {
+      if (src[i] == target) {
+        res = true;
+        break;
+      }
+    }
+    return res;
   }
 }
