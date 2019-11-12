@@ -1,4 +1,4 @@
-var Env = require('../../.env.json')
+var Env = require('./.env.json')
 const jsonGateway = require('./Gateway.json')
 var crypto = require('crypto')
 var Web3 = require('web3')
@@ -10,7 +10,15 @@ var Https = require('https')
 var Axios = require('axios')
 var Log4JS = require('log4js')
 var Logger = Log4JS.getLogger('Ether')
-Logger.level = Env.log_level
+// Logger.level = Env.log_level
+
+var homePath= "";
+function getHomeDir() {
+  if( homePath == "" ) {
+     homePath =  __dirname
+  }
+  return homePath;
+}
 
 var FiLeSystem = require('fs')
 const {
@@ -43,19 +51,23 @@ function getKeyFiles(path) {
 }
 
 async function saveKeyStore(path, wallet, password) {
+  var fs = require('fs')
+  if (!fs.existsSync(path)) {
+    fs.mkdirSync(path)
+  }
   var FiLeS = getKeyFiles(path)
   var RedundancyCheck = FiLeS.findIndex(function(el) {
     return el.indexOf(wallet.getAddressString().substring(2)) != -1
   })
-
   if (RedundancyCheck != -1) {
     Logger.debug("account already exists")
     return 0
   }
-
   var FiLeName = wallet.getV3Filename(Date.now())
-  const V3 = wallet.toV3(password)
+  var V3 = wallet.toV3(password)
+
   writeFileSync(path + FiLeName, JSON.stringify(V3), 'utf8')
+
   return 1
 }
 
@@ -168,21 +180,21 @@ function getEthContract(web3) {
 module.exports = class EtherInit_ {
   static async generateAccount(password) {
     const wallet = ethWaLLet.generate()
-    return [await saveKeyStore('./keystore/', wallet, password), wallet.getAddressString().substring(2)]
+    return [await saveKeyStore( getHomeDir() + '/keystore/', wallet, password), wallet.getAddressString().substring(2)]
   }
 
   static async importAccount(privateKey, password) {
     const wallet = ethWaLLet.fromPrivateKey(ethUtiL.toBuffer(privateKey))
-    return [await saveKeyStore('./keystore/', wallet, password), wallet.getAddressString().substring(2)]
+    return [await saveKeyStore(getHomeDir() + '/keystore/', wallet, password), wallet.getAddressString().substring(2)]
   }
 
   static async exportAccount(address, password) {
-    const wallet = await loadKeyStore(address, './keystore/', password)
+    const wallet = await loadKeyStore(address, getHomeDir() + '/keystore/', password)
     return wallet.getPrivateKeyString()
   }
 
   static async removeAccount(address) {
-    var FiLeS = getKeyFiles('./keystore/')
+    var FiLeS = getKeyFiles(getHomeDir() + '/keystore/')
     var KeyFiLe = FiLeS.find(function(el) {
       return el.indexOf(address) != -1
     })
@@ -191,20 +203,22 @@ module.exports = class EtherInit_ {
       Logger.error('no such address: ' + address)
       return 'no such address key file'
     }
-    unlinkSync('./keystore/' + KeyFiLe)
-    return 'remove succeed'
+    unlinkSync(getHomeDir() + '/keystore/' + KeyFiLe)
+    return 'succeed'
   }
 
   static async listAccount() {
-    return getKeyFiles('./keystore/')
+    return getKeyFiles(getHomeDir() + '/keystore/')
   }
 
   static async createAsync(address, password) {
+    Logger.debug('====>path :' + getHomeDir() )
+    Logger.debug('createAsync :' + address )
     var Provider = new Web3.providers.WebsocketProvider('wss://rinkeby.infura.io/ws')
     var web3 = new Web3(Provider)
     Logger.debug("web3 version: " + web3.version)
 
-    const wallet = await loadKeyStore(address, './keystore/', password)
+    const wallet = await loadKeyStore(address, getHomeDir() + '/keystore/', password)
     const dappPrvKey = await getDappPrivateKey(wallet)
     const con = getEthContract(web3)
 
@@ -298,4 +312,11 @@ module.exports = class EtherInit_ {
   async GetBaLanceAsync(address) {
     return await this._Web3.eth.getBalance(address)
   }
+
+  static async setHomeDir ( homedir ) {
+   homePath = homedir
+  }
+  static async setLogger( log ) {
+    Logger = log
+ }
 }
