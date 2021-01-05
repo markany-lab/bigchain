@@ -73,7 +73,7 @@
       "@babel/preset-env": "^7.0.0-beta.46",
       "@babel/preset-react": "^7.0.0-beta.55",
       "@babel/runtime": "^7.0.0-beta.46",
-      "axios": "^0.18.0",
+      "axios": "^0.21.1",
       "bigi": "^1.4.2",
       "bn.js": "^4.11.8",
       "commander": "2.8.1",
