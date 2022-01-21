@@ -20,7 +20,7 @@
     "https": "^1.0.0",
     "jsonwebtoken": "^8.5.0",
     "lockfile": "^1.0.4",
-    "log4js": "^4.0.2",
+    "log4js": "^6.4.0",
     "loom-js": "^1.47.0",
     "mongoose": "^5.4.19",
     "os": "^0.1.1",
